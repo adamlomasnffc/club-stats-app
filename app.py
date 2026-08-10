@@ -8,6 +8,24 @@ st.set_page_config(
     layout="wide"
 )
 
+# Custom CSS to force center alignment on all table headers and cells
+st.markdown("""
+    <style>
+    /* Center align table headers */
+    [data-testid="stTable"] th, 
+    [data-testid="stDataFrame"] th,
+    div[role="columnheader"] {
+        text-align: center !important;
+        justify-content: center !important;
+    }
+    /* Center align table cell content */
+    [data-testid="stTable"] td, 
+    [data-testid="stDataFrame"] td {
+        text-align: center !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("🐧 Penguins Club Stats")
 
 # --- SPREADSHEET CONFIGURATION ---
@@ -36,17 +54,21 @@ with tab_stats:
     try:
         df = load_sheet("Socials_Player_Stats")
         
-        # Top KPI Metrics Cards at the top
+        # Calculate 4 Top KPI Metrics
+        top_apps = df.sort_values(by="Appearances", ascending=False).iloc[0]
         top_scorer = df.sort_values(by="Goals", ascending=False).iloc[0]
         top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
         top_involvements = df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
 
-        col1, col2, col3 = st.columns(3)
+        # 4 Metric Columns Layout
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("⚽ Top Scorer", f"{top_scorer['Player']}", f"{int(top_scorer['Goals'])} Goals")
+            st.metric("🏃 Most Appearances", f"{top_apps['Player']}", f"{int(top_apps['Appearances'])} Apps")
         with col2:
-            st.metric("🅰️ Top Assister", f"{top_assister['Player']}", f"{int(top_assister['Assists'])} Assists")
+            st.metric("⚽ Top Scorer", f"{top_scorer['Player']}", f"{int(top_scorer['Goals'])} Goals")
         with col3:
+            st.metric("🅰️ Top Assister", f"{top_assister['Player']}", f"{int(top_assister['Assists'])} Assists")
+        with col4:
             st.metric("🔥 Top Contributor", f"{top_involvements['Player']}", f"{int(top_involvements['Goal Involvements'])} G+A")
 
         st.divider()
@@ -56,7 +78,7 @@ with tab_stats:
         if search_query:
             df = df[df["Player"].str.contains(search_query, case=False, na=False)]
 
-        # Interactive Leaderboard Table (Centrally aligned headers & data)
+        # Interactive Leaderboard Table
         st.subheader("Player Leaderboard")
         st.dataframe(
             df,
