@@ -15,11 +15,17 @@ SPREADSHEET_ID = "19wTGruEyetdVNhfjkyVqLDueyV9joVtRsI51RAqurjA"
 
 @st.cache_data(ttl=60) # Refreshes every 60 seconds when you update the Google Sheet
 def load_sheet(sheet_name):
-    # Standard CSV export URL using Google Visualization API
     url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
     df = pd.read_csv(url)
-    # Clean up column names just in case there are trailing spaces
     df.columns = df.columns.str.strip()
+    
+    # Keep strictly the first 8 columns (Columns A to H) to remove extra empty columns
+    df = df.iloc[:, :8]
+    
+    # Drop rows where Player name is empty
+    if "Player" in df.columns:
+        df = df.dropna(subset=["Player"])
+        
     return df
 
 # Navigation Tabs
@@ -50,22 +56,12 @@ with tab_stats:
         if search_query:
             df = df[df["Player"].str.contains(search_query, case=False, na=False)]
 
-        # Interactive Leaderboard Table
+        # Interactive Leaderboard Table (Exact sheet headers, no blank columns)
         st.subheader("Player Leaderboard")
         st.dataframe(
             df,
             use_container_width=True,
-            hide_index=True,
-            column_config={
-                "Player": st.column_config.TextColumn("Player Name", width="medium"),
-                "Appearances": st.column_config.NumberColumn("Apps", format="%d"),
-                "Goals": st.column_config.NumberColumn("Goals", format="%d"),
-                "Assists": st.column_config.NumberColumn("Assists", format="%d"),
-                "Goal Involvements": st.column_config.NumberColumn("G+A", format="%d"),
-                "Goals Per Game": st.column_config.NumberColumn("G/Game", format="%.1f"),
-                "Assists Per Game": st.column_config.NumberColumn("A/Game", format="%.1f"),
-                "Goal Involvements Per Game": st.column_config.NumberColumn("G+A/Game", format="%.1f"),
-            }
+            hide_index=True
         )
 
     except Exception as e:
