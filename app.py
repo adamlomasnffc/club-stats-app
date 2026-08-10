@@ -28,22 +28,44 @@ def load_sheet(sheet_name):
         
     return df
 
-# Helper function to format numbers and render centered tables
+# Helper function to format numbers and render centered tables with equal column widths
 def display_centered_table(df):
-    # Copy dataframe to avoid mutating original data
     formatted_df = df.copy()
 
-    # Format float columns to 1 decimal place and integer columns cleanly
-    for col in formatted_df.select_dtypes(include=['float', 'float64']).columns:
-        formatted_df[col] = formatted_df[col].apply(lambda x: f"{x:.1f}" if pd.notnull(x) else "")
+    # Format values: integers/whole floats as "0", true decimals as "0.3"
+    for col in formatted_df.columns:
+        if col != "Player":
+            formatted_df[col] = formatted_df[col].apply(
+                lambda x: f"{int(x)}" if pd.notnull(x) and float(x).is_integer() 
+                else (f"{x:.1f}" if pd.notnull(x) else "")
+            )
 
-    for col in formatted_df.select_dtypes(include=['int', 'int64']).columns:
-        formatted_df[col] = formatted_df[col].apply(lambda x: f"{x:d}" if pd.notnull(x) else "")
+    # Calculate equal width per column
+    num_cols = len(formatted_df.columns)
+    col_width = f"{100 / num_cols:.2f}%"
 
-    # Apply CSS styling for centered headers and text
+    # Apply CSS styling for centered headers/cells and equal widths
     styled_df = formatted_df.style.set_table_styles([
-        {'selector': 'th', 'props': [('text-align', 'center !important')]},
-        {'selector': 'td', 'props': [('text-align', 'center !important')]}
+        {
+            'selector': 'th',
+            'props': [
+                ('text-align', 'center !important'),
+                ('width', col_width),
+                ('max-width', col_width)
+            ]
+        },
+        {
+            'selector': 'td',
+            'props': [
+                ('text-align', 'center !important'),
+                ('width', col_width),
+                ('max-width', col_width)
+            ]
+        },
+        {
+            'selector': 'table',
+            'props': [('table-layout', 'fixed'), ('width', '100%')]
+        }
     ])
     
     st.table(styled_df)
