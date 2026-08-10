@@ -69,6 +69,8 @@ with tab_stats:
             filtered_df = filtered_df[filtered_df["Player"].str.contains(search_query, case=False, na=False)]
 
         ascending = True if sort_order == "Ascending" else False
+        
+        # Reset index to guarantee pristine zebra banding regardless of sort
         filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
 
         # Centered HTML Table Rendering
@@ -107,12 +109,24 @@ with tab_matches:
             result = str(row.get("Result", "")).strip()
             date = str(row.get("Date", "")).strip()
             
-            label = f"vs {opponent}"
+            venue_val = str(row.get("Home or Away?", row.get("Home/Away", row.get("Venue", "Home")))).strip().lower()
+            is_away = venue_val.startswith("a")
+            
             if result and result.lower() != "nan":
-                label += f" ({result})"
+                if is_away:
+                    scores = [s.strip() for s in result.split("-")]
+                    if len(scores) == 2:
+                        match_title = f"{opponent} {scores[1]}-{scores[0]} Socials"
+                    else:
+                        match_title = f"{opponent} {result} Socials"
+                else:
+                    match_title = f"Socials {result} {opponent}"
+            else:
+                match_title = f"{opponent} vs Socials" if is_away else f"Socials vs {opponent}"
+            
             if date and date.lower() != "nan":
-                label += f" — {date}"
-            return label
+                return f"{match_title} ({date})"
+            return match_title
 
         game_options = {create_game_label(row): row["GameID"] for _, row in games_df.iterrows()}
 
@@ -142,7 +156,6 @@ with tab_matches:
             formation = str(game_data.get("Formation", "4-3-3")).strip()
             st.subheader(f"🟢 Starting Lineup ({formation})")
 
-            # All position keys
             all_pos_keys = ["GK", "LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB", 
                             "CDM", "CM", "CM1", "CM2", "CM3", "CAM", "LM", "RM", 
                             "LW", "ST", "ST1", "ST2", "ST3", "RW"]
@@ -164,7 +177,7 @@ with tab_matches:
                 </div>
                 """
 
-            # Strategic 5-tier vertical division
+            # 5 Tactical Bands
             gk_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k == "GK"])
             def_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB"]])
             cdm_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["CDM"]])
@@ -172,7 +185,6 @@ with tab_matches:
             cam_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["CAM"]])
             att_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["LW", "ST", "ST1", "ST2", "ST3", "RW"]])
 
-            # Pure HTML Pitch Graphic Container
             pitch_component = f"""
             <!DOCTYPE html>
             <html>
