@@ -28,12 +28,24 @@ def load_sheet(sheet_name):
         
     return df
 
-# Helper function to render tables with strictly centered headers and data cells
+# Helper function to format numbers and render centered tables
 def display_centered_table(df):
-    styled_df = df.style.set_table_styles([
+    # Copy dataframe to avoid mutating original data
+    formatted_df = df.copy()
+
+    # Format float columns to 1 decimal place and integer columns cleanly
+    for col in formatted_df.select_dtypes(include=['float', 'float64']).columns:
+        formatted_df[col] = formatted_df[col].apply(lambda x: f"{x:.1f}" if pd.notnull(x) else "")
+
+    for col in formatted_df.select_dtypes(include=['int', 'int64']).columns:
+        formatted_df[col] = formatted_df[col].apply(lambda x: f"{x:d}" if pd.notnull(x) else "")
+
+    # Apply CSS styling for centered headers and text
+    styled_df = formatted_df.style.set_table_styles([
         {'selector': 'th', 'props': [('text-align', 'center !important')]},
         {'selector': 'td', 'props': [('text-align', 'center !important')]}
     ])
+    
     st.table(styled_df)
 
 # Navigation Tabs
@@ -68,7 +80,7 @@ with tab_stats:
         if search_query:
             df = df[df["Player"].str.contains(search_query, case=False, na=False)]
 
-        # Interactive Leaderboard Table (Centrally aligned headers & cells)
+        # Interactive Leaderboard Table
         st.subheader("Player Leaderboard")
         display_centered_table(df)
 
