@@ -56,9 +56,16 @@ with tab_stats:
         if search_query:
             df = df[df["Player"].str.contains(search_query, case=False, na=False)]
 
-        # Interactive Leaderboard Table (Exact sheet headers, no blank columns)
+        # Interactive Leaderboard Table (Centrally aligned headers & data)
         st.subheader("Player Leaderboard")
-        {col: st.column_config.Column(alignment="center") for col in df.columns}
+        st.dataframe(
+            df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                col: st.column_config.Column(alignment="center") for col in df.columns
+            }
+        )
 
     except Exception as e:
         st.error("Unable to load player stats. Ensure Google Sheet sharing is set to 'Anyone with the link can view'.")
@@ -69,7 +76,14 @@ with tab_matches:
     st.header("Match Results & Fixtures")
     try:
         matches_df = load_sheet("Socials_Matches")
-        st.dataframe(matches_df, use_container_width=True, hide_index=True)
+        st.dataframe(
+            matches_df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                col: st.column_config.Column(alignment="center") for col in matches_df.columns
+            }
+        )
     except Exception:
         st.info("Set up your 'Socials_Matches' tab to display match logs here!")
 
