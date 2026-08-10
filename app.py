@@ -13,7 +13,7 @@ st.set_page_config(
 # Custom Mobile CSS Injection (Centering & Penguin Yellow Theme)
 st.markdown("""
 <style>
-    /* Center align metric cards & remove extra blank whitespace on mobile */
+    /* Center align all metric components (Label, Value, Subtext) */
     [data-testid="stMetric"] {
         text-align: center !important;
         justify-content: center !important;
@@ -23,14 +23,28 @@ st.markdown("""
         padding: 10px !important;
         border: 1px solid #333;
     }
-    [data-testid="stMetricValue"] {
-        font-size: 1.2rem !important;
-        justify-content: center !important;
-        color: #FFB81C !important; /* Penguin Yellow */
-    }
     [data-testid="stMetricLabel"] {
         font-size: 0.85rem !important;
+        display: flex !important;
         justify-content: center !important;
+        text-align: center !important;
+        width: 100% !important;
+    }
+    [data-testid="stMetricLabel"] > div {
+        justify-content: center !important;
+        text-align: center !important;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 1.2rem !important;
+        display: flex !important;
+        justify-content: center !important;
+        text-align: center !important;
+        color: #FFB81C !important; /* Penguin Yellow */
+        width: 100% !important;
+    }
+    [data-testid="stMetricValue"] > div {
+        justify-content: center !important;
+        text-align: center !important;
     }
 
     /* Make tables horizontally scrollable on small screens */
@@ -70,9 +84,9 @@ def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
 # Navigation Tabs
-tab_stats, tab_fixtures, tab_matches, tab_news = st.tabs([
+tab_stats, tab_results, tab_matches, tab_news = st.tabs([
     "📊 Player Stats", 
-    "📅 Fixtures", 
+    "📅 Results", 
     "⚽ Match Center", 
     "📰 News"
 ])
@@ -144,10 +158,10 @@ with tab_stats:
         st.exception(e)
 
 # ==========================================
-# --- FIXTURES & RESULTS TAB ---
+# --- RESULTS TAB ---
 # ==========================================
-with tab_fixtures:
-    st.header("📅 Season Fixtures & Results")
+with tab_results:
+    st.header("📅 Results")
     try:
         games_df = load_sheet("Socials_Games")
         
@@ -180,14 +194,14 @@ with tab_fixtures:
         st.markdown(f_table_html, unsafe_allow_html=True)
 
     except Exception as e:
-        st.error("Error loading fixtures data.")
+        st.error("Error loading results data.")
         st.exception(e)
 
 # ==========================================
 # --- MATCH CENTER & PITCH TAB ---
 # ==========================================
 with tab_matches:
-    st.header("Match Center & Lineups")
+    st.markdown("<h2 style='text-align: center;'>Match Center & Lineups</h2>", unsafe_allow_html=True)
     try:
         games_df = load_sheet("Socials_Games")
 
@@ -241,7 +255,7 @@ with tab_matches:
 
         with pitch_col:
             formation = str(game_data.get("Formation", "4-3-3")).strip()
-            st.subheader(f" Dynamic Lineup ({formation})")
+            st.subheader(f"Dynamic Lineup ({formation})")
 
             goal_counts, assist_counts = {}, {}
             try:
@@ -361,7 +375,7 @@ with tab_matches:
             components.html(pitch_component, height=500)
 
         with details_col:
-            st.subheader("⚽ Goals & Assists")
+            st.markdown("<h3 style='text-align: center;'>⚽ Goals & Assists</h3>", unsafe_allow_html=True)
             try:
                 goals_df = load_sheet("Socials_Goals")
                 match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
@@ -373,25 +387,25 @@ with tab_matches:
                         assist = row.get("Assist", "")
                         
                         if pd.notnull(assist) and str(assist).strip().lower() not in ["", "none", "-", "unassisted", "nan"]:
-                            st.write(f"• **{scorer}** ⚽ ( {str(assist).strip()} 🅰️ )")
+                            st.markdown(f"<div style='text-align: center;'>• <b>{scorer}</b> ⚽ ( {str(assist).strip()} 🅰️ )</div>", unsafe_allow_html=True)
                         else:
-                            st.write(f"• **{scorer}** ⚽")
+                            st.markdown(f"<div style='text-align: center;'>• <b>{scorer}</b> ⚽</div>", unsafe_allow_html=True)
                 else:
-                    st.info("No goals recorded.")
+                    st.markdown("<div style='text-align: center; color: #aaa;'>No goals recorded.</div>", unsafe_allow_html=True)
             except Exception:
-                st.info("Goal log loading...")
+                st.markdown("<div style='text-align: center;'>Goal log loading...</div>", unsafe_allow_html=True)
 
             st.divider()
 
-            st.subheader("👥 Substitutes")
+            st.markdown("<h3 style='text-align: center;'>👥 Substitutes</h3>", unsafe_allow_html=True)
             subs = [game_data.get(f"SUB{i}") for i in range(1, 7)]
             active_subs = [str(s).strip() for s in subs if pd.notnull(s) and str(s).strip().lower() not in ["", "-", "nan", "none"]]
             
             if active_subs:
                 for sub in active_subs:
-                    st.write(f"• {sub}")
+                    st.markdown(f"<div style='text-align: center;'>• {sub}</div>", unsafe_allow_html=True)
             else:
-                st.write("No substitutes listed.")
+                st.markdown("<div style='text-align: center; color: #aaa;'>No substitutes listed.</div>", unsafe_allow_html=True)
 
     except Exception as e:
         st.error("Error loading match data.")
