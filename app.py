@@ -10,9 +10,29 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom Mobile CSS Injection
+# Custom Mobile CSS Injection (Centering & Penguin Yellow Theme)
 st.markdown("""
 <style>
+    /* Center align metric cards & remove extra blank whitespace on mobile */
+    [data-testid="stMetric"] {
+        text-align: center !important;
+        justify-content: center !important;
+        align-items: center !important;
+        background-color: #1a1c23;
+        border-radius: 8px;
+        padding: 10px !important;
+        border: 1px solid #333;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 1.2rem !important;
+        justify-content: center !important;
+        color: #FFB81C !important; /* Penguin Yellow */
+    }
+    [data-testid="stMetricLabel"] {
+        font-size: 0.85rem !important;
+        justify-content: center !important;
+    }
+
     /* Make tables horizontally scrollable on small screens */
     .mobile-table-container {
         width: 100%;
@@ -22,18 +42,13 @@ st.markdown("""
         margin-bottom: 20px;
     }
     
-    /* Optimize metric cards for mobile view */
-    [data-testid="stMetricValue"] {
-        font-size: 1.2rem !important;
-    }
-    [data-testid="stMetricLabel"] {
-        font-size: 0.85rem !important;
-    }
-    
-    /* Tab label font adjustment */
+    /* Tab label font adjustment & active tab highlight */
     button[data-baseweb="tab"] {
         padding: 8px 12px !important;
         font-size: 14px !important;
+    }
+    button[aria-selected="true"] {
+        color: #FFB81C !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -107,18 +122,18 @@ with tab_stats:
         # Centered HTML Table Rendering wrapped in mobile scrolling container
         table_html = "<div class='mobile-table-container'>"
         table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 600px;'>"
-        table_html += "<tr style='background-color: #262730; color: white;'>"
+        table_html += "<tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
         for col in filtered_df.columns:
-            table_html += f"<th style='padding: 10px; border-bottom: 2px solid #555; text-align: center; font-size: 13px;'>{col}</th>"
+            table_html += f"<th style='padding: 10px; border-bottom: 2px solid #333; text-align: center; font-size: 13px;'>{col}</th>"
         table_html += "</tr>"
 
         for idx, row in filtered_df.iterrows():
-            bg_color = "#1e1e1e" if idx % 2 == 0 else "#0e1117"
+            bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
             table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 13px;'>"
             for col in filtered_df.columns:
                 val = row[col]
                 formatted_val = f"{int(val)}" if pd.notnull(val) and isinstance(val, (int, float)) and float(val).is_integer() else (f"{val:.1f}" if isinstance(val, float) else str(val))
-                table_html += f"<td style='padding: 8px; border-bottom: 1px solid #333; text-align: center;'>{formatted_val}</td>"
+                table_html += f"<td style='padding: 8px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
             table_html += "</tr>"
         table_html += "</table></div>"
 
@@ -147,18 +162,18 @@ with tab_fixtures:
         # Responsive HTML Table Display
         f_table_html = "<div class='mobile-table-container'>"
         f_table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 550px;'>"
-        f_table_html += "<tr style='background-color: #1e5622; color: white; font-weight: bold; font-size: 13px;'>"
+        f_table_html += "<tr style='background-color: #FFB81C; color: #111; font-weight: bold; font-size: 13px;'>"
         for col in fixtures_df.columns:
-            f_table_html += f"<th style='padding: 10px; border-bottom: 2px solid #2e7d32; text-align: center;'>{col}</th>"
+            f_table_html += f"<th style='padding: 10px; border-bottom: 2px solid #333; text-align: center;'>{col}</th>"
         f_table_html += "</tr>"
 
         for idx, row in fixtures_df.reset_index(drop=True).iterrows():
-            bg_color = "#1e1e1e" if idx % 2 == 0 else "#0e1117"
+            bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
             f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 13px;'>"
             for col in fixtures_df.columns:
                 val = row[col]
                 formatted_val = "-" if pd.isnull(val) or str(val).strip().lower() in ["nan", "none", ""] else str(val).strip()
-                f_table_html += f"<td style='padding: 8px; border-bottom: 1px solid #333; text-align: center;'>{formatted_val}</td>"
+                f_table_html += f"<td style='padding: 8px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
             f_table_html += "</tr>"
         f_table_html += "</table></div>"
 
@@ -226,7 +241,7 @@ with tab_matches:
 
         with pitch_col:
             formation = str(game_data.get("Formation", "4-3-3")).strip()
-            st.subheader(f"🟢 Lineup ({formation})")
+            st.subheader(f" Dynamic Lineup ({formation})")
 
             goal_counts, assist_counts = {}, {}
             try:
@@ -246,7 +261,7 @@ with tab_matches:
             except Exception:
                 pass
 
-            # Ordering maps to keep explicit tactical order (Left -> Center -> Right)
+            # Ordering maps (Left -> Center -> Right)
             def_order = ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RWB", "RB"]
             cdm_order = ["CDM", "CDM1", "CDM2"]
             mid_order = ["LM", "CM", "CM1", "CM2", "CM3", "RM"]
@@ -274,16 +289,15 @@ with tab_matches:
                 badge_html = f'<div style="font-size: 9px; margin-top: auto; padding-top: 2px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
 
                 return f"""
-                <div style="background: white; color: #1b5e20; border-radius: 5px; padding: 4px 5px; margin: 2px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); min-width: 55px; max-width: 90px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+                <div style="background: #111; color: white; border: 1px solid #333; border-radius: 5px; padding: 4px 5px; margin: 2px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); min-width: 55px; max-width: 90px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
                     <div>
-                        <div style="font-size: 9px; color: #2e7d32; font-weight: bold;">{c_pos}</div>
-                        <div style="font-size: 10px; font-weight: 800; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{name}</div>
+                        <div style="font-size: 9px; color: #FFB81C; font-weight: bold;">{c_pos}</div>
+                        <div style="font-size: 10px; font-weight: 800; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{name}</div>
                     </div>
                     {badge_html}
                 </div>
                 """
 
-            # Build tactical rows using explicit left-to-right ordering
             gk_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k == "GK"])
             def_html = "".join([make_player_card(k, lineup[k]) for k in def_order if k in lineup])
             cdm_html = "".join([make_player_card(k, lineup[k]) for k in cdm_order if k in lineup])
@@ -298,8 +312,8 @@ with tab_matches:
             <style>
             body {{ margin: 0; font-family: sans-serif; }}
             .pitch {{
-                background: linear-gradient(180deg, #1e5622 0%, #2e7d32 100%);
-                border: 3px solid #ffffff;
+                background: #181a20;
+                border: 2px solid #FFB81C;
                 border-radius: 10px;
                 padding: 10px 5px;
                 position: relative;
@@ -312,12 +326,12 @@ with tab_matches:
             }}
             .halfway-line {{
                 position: absolute; top: 50%; left: 0; right: 0;
-                border-top: 2px solid rgba(255,255,255,0.4);
+                border-top: 1px dashed rgba(255, 184, 28, 0.3);
             }}
             .center-circle {{
                 position: absolute; top: calc(50% - 35px); left: calc(50% - 35px);
                 width: 70px; height: 70px;
-                border: 2px solid rgba(255,255,255,0.4);
+                border: 1px dashed rgba(255, 184, 28, 0.3);
                 border-radius: 50%;
             }}
             .row {{
