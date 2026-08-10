@@ -10,9 +10,19 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom Mobile CSS Injection (Centering & Penguin Yellow Theme)
+# Custom Mobile CSS Injection (Centering, Padding & Penguin Yellow Theme)
 st.markdown("""
 <style>
+    /* Reduce top padding/space above main content */
+    .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {
+        padding-top: 1.5rem !important;
+    }
+
+    /* Center align main app title */
+    h1 {
+        text-align: center !important;
+    }
+
     /* Center align all metric components (Label, Value, Subtext & Flex wrappers) */
     [data-testid="stMetric"] {
         text-align: center !important;
@@ -78,7 +88,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🐧 Penguins Club Stats")
+st.markdown("<h1 style='text-align: center;'>🐧 Penguins Club Stats</h1>", unsafe_allow_html=True)
 
 # --- SPREADSHEET CONFIGURATION ---
 SPREADSHEET_ID = "19wTGruEyetdVNhfjkyVqLDueyV9joVtRsI51RAqurjA"
@@ -125,7 +135,7 @@ with tab_stats:
 
         st.divider()
 
-        st.subheader("Player Leaderboard")
+        st.markdown("<h3 style='text-align: center;'>Player Stats</h3>", unsafe_allow_html=True)
 
         # Custom Interactive Controls
         f_col1, f_col2, f_col3 = st.columns([2, 2, 1])
@@ -172,7 +182,7 @@ with tab_stats:
 # --- RESULTS TAB ---
 # ==========================================
 with tab_results:
-    st.header("📅 Results")
+    st.markdown("<h2 style='text-align: center;'>📅 Results</h2>", unsafe_allow_html=True)
     try:
         games_df = load_sheet("Socials_Games")
         
@@ -426,5 +436,5 @@ with tab_matches:
 # --- NEWS TAB ---
 # ==========================================
 with tab_news:
-    st.header("Club Announcements")
+    st.markdown("<h2 style='text-align: center;'>📰 Club Announcements</h2>", unsafe_allow_html=True)
     st.info("📢 Training details, match locations, and announcements go here.")
