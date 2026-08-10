@@ -9,9 +9,23 @@ st.set_page_config(
     layout="wide"
 )
 
+# Global CSS: Force center alignment on st.dataframe headers & cells
+st.markdown("""
+    <style>
+    /* Force centered headers on st.dataframe */
+    [data-testid="stDataFrame"] div[role="columnheader"] div {
+        justify-content: center !important;
+        text-align: center !important;
+    }
+    [data-testid="stDataFrame"] div[role="gridcell"] {
+        justify-content: center !important;
+        text-align: center !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("🐧 Penguins Club Stats")
 
-# --- SPREADSHEET CONFIGURATION ---
 SPREADSHEET_ID = "19wTGruEyetdVNhfjkyVqLDueyV9joVtRsI51RAqurjA"
 
 @st.cache_data(ttl=60)
@@ -21,11 +35,9 @@ def load_sheet(sheet_name):
     df.columns = df.columns.str.strip()
     return df
 
-# Helper to clean position titles (e.g., 'CB1' -> 'CB', 'ST2' -> 'ST')
-def clean_position_label(pos_key):
-    return re.sub(r'\d+$', '', pos_key)
+def clean_pos_label(pos):
+    return re.sub(r'\d+$', '', pos)
 
-# Navigation Tabs
 tab_stats, tab_matches, tab_news = st.tabs(["📊 Player Stats", "⚽ Matches", "📰 News"])
 
 # --- PLAYER STATS TAB ---
@@ -35,7 +47,7 @@ with tab_stats:
         if "Player" in df.columns:
             df = df.dropna(subset=["Player"])
 
-        # Top KPI Metric Cards
+        # Metric Cards
         top_apps = df.sort_values(by="Appearances", ascending=False).iloc[0]
         top_scorer = df.sort_values(by="Goals", ascending=False).iloc[0]
         top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
@@ -53,24 +65,21 @@ with tab_stats:
 
         st.divider()
 
-        # Custom Filters & Interactive Leaderboard
         st.subheader("Player Leaderboard")
-        st.caption("💡 Click any column header to sort. Use the controls below to filter.")
-
+        
         f_col1, f_col2 = st.columns(2)
         with f_col1:
             search_query = st.text_input("🔍 Search Player Name", "")
         with f_col2:
             min_apps = st.slider("Filter by Minimum Appearances", 0, int(df["Appearances"].max()), 0)
 
-        # Apply Filters
         filtered_df = df.copy()
         if search_query:
             filtered_df = filtered_df[filtered_df["Player"].str.contains(search_query, case=False, na=False)]
         if min_apps > 0:
             filtered_df = filtered_df[filtered_df["Appearances"] >= min_apps]
 
-        # Fully interactive, sortable, and filterable table
+        # Centered interactive table
         st.dataframe(
             filtered_df,
             use_container_width=True,
@@ -81,10 +90,10 @@ with tab_stats:
         )
 
     except Exception as e:
-        st.error("Unable to load player stats sheet.")
+        st.error("Error loading stats.")
         st.exception(e)
 
-# --- MATCHES & PITCH VISUALISER TAB ---
+# --- MATCHES & PITCH TAB ---
 with tab_matches:
     st.header("Match Center & Tactical Lineups")
     try:
@@ -97,7 +106,6 @@ with tab_matches:
 
         game_data = games_df[games_df["GameID"] == selected_game_id].iloc[0]
 
-        # Top Match Summary Cards
         m_col1, m_col2, m_col3, m_col4 = st.columns(4)
         m_col1.metric("🗓️ Date", str(game_data.get("Date", "-")))
         m_col2.metric("🛡️ Opponent", str(game_data.get("Opponent", "-")))
@@ -109,98 +117,62 @@ with tab_matches:
         pitch_col, details_col = st.columns([2, 1])
 
         with pitch_col:
-            formation = str(game_data.get("Formation", "4-4-2")).strip()
+            formation = str(game_data.get("Formation", "4-3-3")).strip()
             st.subheader(f"🟢 Starting Lineup ({formation})")
 
-            # Custom pitch CSS with white pitch markings and grass gradient
-            st.markdown("""
-                <style>
-                .football-pitch {
-                    background: #2e7d32;
-                    background-image: 
-                        linear-gradient(to bottom, rgba(255,255,255,0.3) 2px, transparent 2px),
-                        radial-gradient(circle, transparent 40%, rgba(0,0,0,0.1) 100%);
-                    border: 4px solid #ffffff;
-                    border-radius: 12px;
-                    padding: 25px 15px;
-                    position: relative;
-                    box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
-                }
-                .pitch-line-halfway {
-                    border-top: 2px solid rgba(255, 255, 255, 0.7);
-                    margin: 15px 0;
-                }
-                .player-card {
-                    background-color: #ffffff;
-                    color: #1b5e20;
-                    font-weight: 800;
-                    border-radius: 6px;
-                    padding: 8px 4px;
-                    margin: 4px;
-                    text-align: center;
-                    font-size: 13px;
-                    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-                    border: 1px solid #c8e6c9;
-                }
-                .pos-label {
-                    color: #2e7d32;
-                    font-size: 11px;
-                    display: block;
-                    text-transform: uppercase;
-                }
-                </style>
-            """, unsafe_allow_html=True)
+            # Exhaustive position fetcher to never miss players
+            all_pos_keys = ["GK", "LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB", 
+                            "CDM", "CM", "CM1", "CM2", "CM3", "CAM", "LM", "RM", 
+                            "LW", "ST", "ST1", "ST2", "ST3", "RW"]
 
-            def get_player(pos):
-                val = game_data.get(pos, None)
+            lineup = {}
+            for k in all_pos_keys:
+                val = game_data.get(k, None)
                 if pd.notnull(val) and str(val).strip() not in ["", "-", "nan"]:
-                    return str(val).strip()
-                return None
+                    lineup[k] = str(val).strip()
 
-            # Group positions into tactical bands
-            def_keys = ["LWB", "LB", "CB1", "CB2", "CB3", "RB", "RWB"]
-            mid_keys = ["LM", "CDM", "CM", "CM1", "CM2", "CM3", "CAM", "RM"]
-            att_keys = ["LW", "ST1", "ST2", "ST3", "RW"]
+            # Dynamic pitch card HTML builder
+            def make_player_badge(pos_key, name):
+                c_pos = clean_pos_label(pos_key)
+                return f"""
+                <div style="background: white; color: #1b5e20; border-radius: 6px; padding: 6px 10px; margin: 4px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.4); flex: 1; min-width: 90px; max-width: 140px;">
+                    <div style="font-size: 10px; color: #2e7d32; font-weight: bold;">{c_pos}</div>
+                    <div style="font-size: 12px; font-weight: 800;">{name}</div>
+                </div>
+                """
 
-            gk = get_player("GK")
-            defenders = [(k, get_player(k)) for k in def_keys if get_player(k)]
-            midfielders = [(k, get_player(k)) for k in mid_keys if get_player(k)]
-            attackers = [(k, get_player(k)) for k in att_keys if get_player(k)]
+            # Group into tactical rows
+            gk_html = "".join([make_player_badge(k, lineup[k]) for k in lineup if k == "GK"])
+            def_html = "".join([make_player_badge(k, lineup[k]) for k in lineup if k in ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB"]])
+            mid_html = "".join([make_player_badge(k, lineup[k]) for k in lineup if k in ["CDM", "CM", "CM1", "CM2", "CM3", "CAM", "LM", "RM"]])
+            att_html = "".join([make_player_badge(k, lineup[k]) for k in lineup if k in ["LW", "ST", "ST1", "ST2", "ST3", "RW"]])
 
-            with st.container():
-                st.markdown('<div class="football-pitch">', unsafe_allow_html=True)
-
-                # --- GOALKEEPER ---
-                if gk:
-                    st.markdown(f'<div class="player-card"><span class="pos-label">GK</span>🧤 {gk}</div>', unsafe_allow_html=True)
-                    st.write("")
-
-                # --- DEFENDERS ---
-                if defenders:
-                    d_cols = st.columns(len(defenders))
-                    for idx, (pos_key, p_name) in enumerate(defenders):
-                        clean_pos = clean_position_label(pos_key)
-                        d_cols[idx].markdown(f'<div class="player-card"><span class="pos-label">{clean_pos}</span>{p_name}</div>', unsafe_allow_html=True)
-                    st.write("")
-
-                st.markdown('<div class="pitch-line-halfway"></div>', unsafe_allow_html=True)
-
-                # --- MIDFIELDERS ---
-                if midfielders:
-                    m_cols = st.columns(len(midfielders))
-                    for idx, (pos_key, p_name) in enumerate(midfielders):
-                        clean_pos = clean_position_label(pos_key)
-                        m_cols[idx].markdown(f'<div class="player-card"><span class="pos-label">{clean_pos}</span>{p_name}</div>', unsafe_allow_html=True)
-                    st.write("")
-
-                # --- ATTACKERS ---
-                if attackers:
-                    a_cols = st.columns(len(attackers))
-                    for idx, (pos_key, p_name) in enumerate(attackers):
-                        clean_pos = clean_position_label(pos_key)
-                        a_cols[idx].markdown(f'<div class="player-card"><span class="pos-label">{clean_pos}</span>{p_name}</div>', unsafe_allow_html=True)
-
-                st.markdown('</div>', unsafe_allow_html=True)
+            # SVG pitch visualizer container
+            pitch_html = f"""
+            <div style="background: linear-gradient(180deg, #1e5622 0%, #2e7d32 100%); border: 3px solid #ffffff; border-radius: 12px; padding: 20px 10px; position: relative; box-shadow: inset 0 0 15px rgba(0,0,0,0.5);">
+                <!-- Pitch lines -->
+                <div style="border-top: 2px solid rgba(255,255,255,0.6); position: absolute; top: 50%; left: 0; right: 0;"></div>
+                <div style="border: 2px solid rgba(255,255,255,0.6); border-radius: 50%; width: 80px; height: 80px; position: absolute; top: calc(50% - 40px); left: calc(50% - 40px);"></div>
+                
+                <!-- Goalkeeper -->
+                <div style="display: flex; justify-content: center; position: relative; z-index: 2; margin-bottom: 25px;">
+                    {gk_html}
+                </div>
+                <!-- Defenders -->
+                <div style="display: flex; justify-content: space-around; position: relative; z-index: 2; margin-bottom: 35px;">
+                    {def_html}
+                </div>
+                <!-- Midfielders -->
+                <div style="display: flex; justify-content: space-around; position: relative; z-index: 2; margin-bottom: 35px;">
+                    {mid_html}
+                </div>
+                <!-- Attackers -->
+                <div style="display: flex; justify-content: space-around; position: relative; z-index: 2;">
+                    {att_html}
+                </div>
+            </div>
+            """
+            st.markdown(pitch_html, unsafe_allow_html=True)
 
         with details_col:
             st.subheader("⚽ Goals & Assists")
@@ -213,14 +185,12 @@ with tab_matches:
                     for _, row in match_goals.iterrows():
                         scorer = row.get("Goalscorer", row.get("Scorer", "Unknown"))
                         assist = row.get("Assist", "")
-                        
                         if pd.notnull(assist) and str(assist).strip() not in ["", "None", "-", "Unassisted", "nan"]:
                             st.write(f"• **{scorer}** ⚽ (🅰️ {assist})")
                         else:
                             st.write(f"• **{scorer}** ⚽")
                 else:
                     st.info("No goals recorded for this match.")
-
             except Exception:
                 st.info("Goal log loading...")
 
@@ -237,7 +207,7 @@ with tab_matches:
                 st.write("No substitutes listed.")
 
     except Exception as e:
-        st.error("Error loading match data from 'Socials_Games'.")
+        st.error("Error loading match data.")
         st.exception(e)
 
 # --- NEWS TAB ---
