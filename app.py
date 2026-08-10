@@ -10,6 +10,34 @@ st.set_page_config(
     layout="wide"
 )
 
+# Custom Mobile CSS Injection
+st.markdown("""
+<style>
+    /* Make tables horizontally scrollable on small screens */
+    .mobile-table-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
+    
+    /* Optimize metric cards for mobile view */
+    [data-testid="stMetricValue"] {
+        font-size: 1.2rem !important;
+    }
+    [data-testid="stMetricLabel"] {
+        font-size: 0.85rem !important;
+    }
+    
+    /* Tab label font adjustment */
+    button[data-baseweb="tab"] {
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("🐧 Penguins Club Stats")
 
 # --- SPREADSHEET CONFIGURATION ---
@@ -29,7 +57,7 @@ def clean_pos_label(pos):
 # Navigation Tabs
 tab_stats, tab_fixtures, tab_matches, tab_news = st.tabs([
     "📊 Player Stats", 
-    "📅 Fixtures & Results", 
+    "📅 Fixtures", 
     "⚽ Match Center", 
     "📰 News"
 ])
@@ -74,26 +102,25 @@ with tab_stats:
             filtered_df = filtered_df[filtered_df["Player"].str.contains(search_query, case=False, na=False)]
 
         ascending = True if sort_order == "Ascending" else False
-        
-        # Reset index to guarantee pristine zebra banding regardless of sort
         filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
 
-        # Centered HTML Table Rendering
-        table_html = "<table style='width:100%; border-collapse: collapse; text-align: center; margin-top: 15px; font-family: sans-serif;'>"
+        # Centered HTML Table Rendering wrapped in mobile scrolling container
+        table_html = "<div class='mobile-table-container'>"
+        table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 600px;'>"
         table_html += "<tr style='background-color: #262730; color: white;'>"
         for col in filtered_df.columns:
-            table_html += f"<th style='padding: 12px; border-bottom: 2px solid #555; text-align: center;'>{col}</th>"
+            table_html += f"<th style='padding: 10px; border-bottom: 2px solid #555; text-align: center; font-size: 13px;'>{col}</th>"
         table_html += "</tr>"
 
         for idx, row in filtered_df.iterrows():
             bg_color = "#1e1e1e" if idx % 2 == 0 else "#0e1117"
-            table_html += f"<tr style='background-color: {bg_color}; color: white;'>"
+            table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 13px;'>"
             for col in filtered_df.columns:
                 val = row[col]
                 formatted_val = f"{int(val)}" if pd.notnull(val) and isinstance(val, (int, float)) and float(val).is_integer() else (f"{val:.1f}" if isinstance(val, float) else str(val))
-                table_html += f"<td style='padding: 10px; border-bottom: 1px solid #333; text-align: center;'>{formatted_val}</td>"
+                table_html += f"<td style='padding: 8px; border-bottom: 1px solid #333; text-align: center;'>{formatted_val}</td>"
             table_html += "</tr>"
-        table_html += "</table>"
+        table_html += "</table></div>"
 
         st.markdown(table_html, unsafe_allow_html=True)
 
@@ -109,7 +136,6 @@ with tab_fixtures:
     try:
         games_df = load_sheet("Socials_Games")
         
-        # Filter for the relevant display columns if present
         target_cols = ["GameID", "Date", "Location", "Opponent", "KO Time", "Result", "Outcome"]
         display_cols = [c for c in target_cols if c in games_df.columns]
         
@@ -118,22 +144,23 @@ with tab_fixtures:
             
         fixtures_df = games_df[display_cols].copy().dropna(subset=[display_cols[0]])
 
-        # HTML Table Display
-        f_table_html = "<table style='width:100%; border-collapse: collapse; text-align: center; margin-top: 15px; font-family: sans-serif;'>"
-        f_table_html += "<tr style='background-color: #1e5622; color: white; font-weight: bold;'>"
+        # Responsive HTML Table Display
+        f_table_html = "<div class='mobile-table-container'>"
+        f_table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 550px;'>"
+        f_table_html += "<tr style='background-color: #1e5622; color: white; font-weight: bold; font-size: 13px;'>"
         for col in fixtures_df.columns:
-            f_table_html += f"<th style='padding: 12px; border-bottom: 2px solid #2e7d32; text-align: center;'>{col}</th>"
+            f_table_html += f"<th style='padding: 10px; border-bottom: 2px solid #2e7d32; text-align: center;'>{col}</th>"
         f_table_html += "</tr>"
 
         for idx, row in fixtures_df.reset_index(drop=True).iterrows():
             bg_color = "#1e1e1e" if idx % 2 == 0 else "#0e1117"
-            f_table_html += f"<tr style='background-color: {bg_color}; color: white;'>"
+            f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 13px;'>"
             for col in fixtures_df.columns:
                 val = row[col]
                 formatted_val = "-" if pd.isnull(val) or str(val).strip().lower() in ["nan", "none", ""] else str(val).strip()
-                f_table_html += f"<td style='padding: 10px; border-bottom: 1px solid #333; text-align: center;'>{formatted_val}</td>"
+                f_table_html += f"<td style='padding: 8px; border-bottom: 1px solid #333; text-align: center;'>{formatted_val}</td>"
             f_table_html += "</tr>"
-        f_table_html += "</table>"
+        f_table_html += "</table></div>"
 
         st.markdown(f_table_html, unsafe_allow_html=True)
 
@@ -145,7 +172,7 @@ with tab_fixtures:
 # --- MATCH CENTER & PITCH TAB ---
 # ==========================================
 with tab_matches:
-    st.header("Match Center & Tactical Lineups")
+    st.header("Match Center & Lineups")
     try:
         games_df = load_sheet("Socials_Games")
 
@@ -154,7 +181,6 @@ with tab_matches:
             result = str(row.get("Result", "")).strip()
             date = str(row.get("Date", "")).strip()
             
-            # Robust lookup for Home/Away column
             venue_val = ""
             for col in row.index:
                 col_lower = str(col).strip().lower()
@@ -166,33 +192,25 @@ with tab_matches:
 
             if result and result.lower() != "nan":
                 if is_away:
-                    # Away game: Opponent is Home team -> Opponent Score - Socials Score
                     scores = [s.strip() for s in result.split("-")]
-                    if len(scores) == 2:
-                        match_title = f"{opponent} {scores[1]}-{scores[0]} Socials"
-                    else:
-                        match_title = f"{opponent} {result} Socials"
+                    match_title = f"{opponent} {scores[1]}-{scores[0]} Socials" if len(scores) == 2 else f"{opponent} {result} Socials"
                 else:
-                    # Home game: Socials Score - Opponent Score
                     match_title = f"Socials {result} {opponent}"
             else:
                 match_title = f"{opponent} vs Socials" if is_away else f"Socials vs {opponent}"
             
-            if date and date.lower() != "nan":
-                return f"{match_title} ({date})"
-            return match_title
+            return f"{match_title} ({date})" if date and date.lower() != "nan" else match_title
 
         game_options = {create_game_label(row): row["GameID"] for _, row in games_df.iterrows()}
 
         selected_label = st.selectbox(
-            "Select Game to View Details & Lineup:",
+            "Select Game:",
             options=list(game_options.keys())
         )
 
         selected_game_id = game_options[selected_label]
         game_data = games_df[games_df["GameID"] == selected_game_id].iloc[0]
 
-        # Clean MOTM lookup logic to prevent "nan"
         raw_motm = str(game_data.get("MOTM", "")).strip()
         motm_val = raw_motm if raw_motm and raw_motm.lower() not in ["nan", "none", "-"] else "-"
 
@@ -208,11 +226,9 @@ with tab_matches:
 
         with pitch_col:
             formation = str(game_data.get("Formation", "4-3-3")).strip()
-            st.subheader(f"🟢 Starting Lineup ({formation})")
+            st.subheader(f"🟢 Lineup ({formation})")
 
-            # Calculate goal and assist counts for pitch badges
-            goal_counts = {}
-            assist_counts = {}
+            goal_counts, assist_counts = {}, {}
             try:
                 goals_df = load_sheet("Socials_Goals")
                 match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
@@ -242,10 +258,9 @@ with tab_matches:
                     if pd.notnull(val) and str(val).strip().lower() not in ["", "-", "nan", "none"]:
                         lineup[col_clean] = str(val).strip()
 
+            # Compact card design for mobile screens
             def make_player_card(pos_key, name):
                 c_pos = clean_pos_label(pos_key)
-                
-                # Check for goals/assists in current match
                 g_count = goal_counts.get(name, 0)
                 a_count = assist_counts.get(name, 0)
                 
@@ -255,17 +270,16 @@ with tab_matches:
                 if a_count > 0:
                     icons.append("🅰️" * a_count)
                 
-                badge_html = f'<div style="font-size: 11px; margin-top: 2px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
+                badge_html = f'<div style="font-size: 9px; margin-top: 1px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
 
                 return f"""
-                <div style="background: white; color: #1b5e20; border-radius: 6px; padding: 6px 8px; margin: 4px; text-align: center; box-shadow: 0 3px 6px rgba(0,0,0,0.4); min-width: 80px; max-width: 120px; flex: 1;">
-                    <div style="font-size: 10px; color: #2e7d32; font-weight: bold; text-transform: uppercase;">{c_pos}</div>
-                    <div style="font-size: 12px; font-weight: 800; color: #111;">{name}</div>
+                <div style="background: white; color: #1b5e20; border-radius: 5px; padding: 4px 5px; margin: 2px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); min-width: 55px; max-width: 90px; flex: 1;">
+                    <div style="font-size: 9px; color: #2e7d32; font-weight: bold;">{c_pos}</div>
+                    <div style="font-size: 10px; font-weight: 800; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{name}</div>
                     {badge_html}
                 </div>
                 """
 
-            # 5 Tactical Bands
             gk_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k == "GK"])
             def_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB"]])
             cdm_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["CDM"]])
@@ -281,12 +295,12 @@ with tab_matches:
             body {{ margin: 0; font-family: sans-serif; }}
             .pitch {{
                 background: linear-gradient(180deg, #1e5622 0%, #2e7d32 100%);
-                border: 4px solid #ffffff;
-                border-radius: 12px;
-                padding: 15px 10px;
+                border: 3px solid #ffffff;
+                border-radius: 10px;
+                padding: 10px 5px;
                 position: relative;
                 box-sizing: border-box;
-                min-height: 520px;
+                min-height: 480px;
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
@@ -294,12 +308,12 @@ with tab_matches:
             }}
             .halfway-line {{
                 position: absolute; top: 50%; left: 0; right: 0;
-                border-top: 2px solid rgba(255,255,255,0.5);
+                border-top: 2px solid rgba(255,255,255,0.4);
             }}
             .center-circle {{
-                position: absolute; top: calc(50% - 40px); left: calc(50% - 40px);
-                width: 80px; height: 80px;
-                border: 2px solid rgba(255,255,255,0.5);
+                position: absolute; top: calc(50% - 35px); left: calc(50% - 35px);
+                width: 70px; height: 70px;
+                border: 2px solid rgba(255,255,255,0.4);
                 border-radius: 50%;
             }}
             .row {{
@@ -326,7 +340,7 @@ with tab_matches:
             </body>
             </html>
             """
-            components.html(pitch_component, height=540)
+            components.html(pitch_component, height=500)
 
         with details_col:
             st.subheader("⚽ Goals & Assists")
@@ -345,7 +359,7 @@ with tab_matches:
                         else:
                             st.write(f"• **{scorer}** ⚽")
                 else:
-                    st.info("No goals recorded for this match.")
+                    st.info("No goals recorded.")
             except Exception:
                 st.info("Goal log loading...")
 
