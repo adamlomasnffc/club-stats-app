@@ -27,7 +27,12 @@ def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
 # Navigation Tabs
-tab_stats, tab_matches, tab_news = st.tabs(["📊 Player Stats", "⚽ Matches", "📰 News"])
+tab_stats, tab_fixtures, tab_matches, tab_news = st.tabs([
+    "📊 Player Stats", 
+    "📅 Fixtures & Results", 
+    "⚽ Match Center", 
+    "📰 News"
+])
 
 # ==========================================
 # --- PLAYER STATS TAB ---
@@ -97,7 +102,47 @@ with tab_stats:
         st.exception(e)
 
 # ==========================================
-# --- MATCHES & PITCH TAB ---
+# --- FIXTURES & RESULTS TAB ---
+# ==========================================
+with tab_fixtures:
+    st.header("📅 Season Fixtures & Results")
+    try:
+        games_df = load_sheet("Socials_Games")
+        
+        # Filter for the relevant display columns if present
+        target_cols = ["GameID", "Date", "Location", "Opponent", "KO Time", "Result", "Outcome"]
+        display_cols = [c for c in target_cols if c in games_df.columns]
+        
+        if not display_cols:
+            display_cols = list(games_df.columns[:7])
+            
+        fixtures_df = games_df[display_cols].copy().dropna(subset=[display_cols[0]])
+
+        # HTML Table Display
+        f_table_html = "<table style='width:100%; border-collapse: collapse; text-align: center; margin-top: 15px; font-family: sans-serif;'>"
+        f_table_html += "<tr style='background-color: #1e5622; color: white; font-weight: bold;'>"
+        for col in fixtures_df.columns:
+            f_table_html += f"<th style='padding: 12px; border-bottom: 2px solid #2e7d32; text-align: center;'>{col}</th>"
+        f_table_html += "</tr>"
+
+        for idx, row in fixtures_df.reset_index(drop=True).iterrows():
+            bg_color = "#1e1e1e" if idx % 2 == 0 else "#0e1117"
+            f_table_html += f"<tr style='background-color: {bg_color}; color: white;'>"
+            for col in fixtures_df.columns:
+                val = row[col]
+                formatted_val = "-" if pd.isnull(val) or str(val).strip().lower() in ["nan", "none", ""] else str(val).strip()
+                f_table_html += f"<td style='padding: 10px; border-bottom: 1px solid #333; text-align: center;'>{formatted_val}</td>"
+            f_table_html += "</tr>"
+        f_table_html += "</table>"
+
+        st.markdown(f_table_html, unsafe_allow_html=True)
+
+    except Exception as e:
+        st.error("Error loading fixtures data.")
+        st.exception(e)
+
+# ==========================================
+# --- MATCH CENTER & PITCH TAB ---
 # ==========================================
 with tab_matches:
     st.header("Match Center & Tactical Lineups")
@@ -109,17 +154,26 @@ with tab_matches:
             result = str(row.get("Result", "")).strip()
             date = str(row.get("Date", "")).strip()
             
-            venue_val = str(row.get("Home or Away?", row.get("Home/Away", row.get("Venue", "Home")))).strip().lower()
-            is_away = venue_val.startswith("a")
+            # Robust lookup for Home/Away column
+            venue_val = ""
+            for col in row.index:
+                col_lower = str(col).strip().lower()
+                if "home" in col_lower or "away" in col_lower or col_lower == "venue":
+                    venue_val = str(row[col]).strip().lower()
+                    break
             
+            is_away = venue_val.startswith("a")
+
             if result and result.lower() != "nan":
                 if is_away:
+                    # Away game: Opponent is Home team -> Opponent Score - Socials Score
                     scores = [s.strip() for s in result.split("-")]
                     if len(scores) == 2:
                         match_title = f"{opponent} {scores[1]}-{scores[0]} Socials"
                     else:
                         match_title = f"{opponent} {result} Socials"
                 else:
+                    # Home game: Socials Score - Opponent Score
                     match_title = f"Socials {result} {opponent}"
             else:
                 match_title = f"{opponent} vs Socials" if is_away else f"Socials vs {opponent}"
