@@ -58,11 +58,7 @@ with tab_stats:
 
         # Interactive Leaderboard Table (Exact sheet headers, no blank columns)
         st.subheader("Player Leaderboard")
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True
-        )
+        {col: st.column_config.Column(alignment="center") for col in df.columns}
 
     except Exception as e:
         st.error("Unable to load player stats. Ensure Google Sheet sharing is set to 'Anyone with the link can view'.")
