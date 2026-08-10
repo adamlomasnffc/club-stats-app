@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit.components.v1 as components
 import re
 
+# Page Configuration for Mobile Optimization
 st.set_page_config(
     page_title="Penguins Master Stats",
     page_icon="🐧",
@@ -11,6 +12,7 @@ st.set_page_config(
 
 st.title("🐧 Penguins Club Stats")
 
+# --- SPREADSHEET CONFIGURATION ---
 SPREADSHEET_ID = "19wTGruEyetdVNhfjkyVqLDueyV9joVtRsI51RAqurjA"
 
 @st.cache_data(ttl=60)
@@ -20,18 +22,23 @@ def load_sheet(sheet_name):
     df.columns = df.columns.str.strip()
     return df
 
+# Helper to clean position titles (e.g., 'CB1' -> 'CB', 'ST2' -> 'ST')
 def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
+# Navigation Tabs
 tab_stats, tab_matches, tab_news = st.tabs(["📊 Player Stats", "⚽ Matches", "📰 News"])
 
+# ==========================================
 # --- PLAYER STATS TAB ---
+# ==========================================
 with tab_stats:
     try:
         df = load_sheet("Socials_Player_Stats").iloc[:, :8]
         if "Player" in df.columns:
             df = df.dropna(subset=["Player"])
 
+        # Metric Cards
         top_apps = df.sort_values(by="Appearances", ascending=False).iloc[0]
         top_scorer = df.sort_values(by="Goals", ascending=False).iloc[0]
         top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
@@ -47,6 +54,7 @@ with tab_stats:
 
         st.subheader("Player Leaderboard")
 
+        # Custom Interactive Controls
         f_col1, f_col2, f_col3 = st.columns([2, 2, 1])
         with f_col1:
             search_query = st.text_input("🔍 Search Player", "")
@@ -55,14 +63,17 @@ with tab_stats:
         with f_col3:
             sort_order = st.radio("Order", ["Descending", "Ascending"], horizontal=True)
 
+        # Apply Filtering & Sorting
         filtered_df = df.copy()
         if search_query:
             filtered_df = filtered_df[filtered_df["Player"].str.contains(search_query, case=False, na=False)]
 
         ascending = True if sort_order == "Ascending" else False
-        filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending)
+        
+        # .reset_index(drop=True) guarantees zebra stripes remain uniform regardless of sort field
+        filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
 
-        # Centered HTML Table rendering
+        # Centered HTML Table Rendering
         table_html = "<table style='width:100%; border-collapse: collapse; text-align: center; margin-top: 15px; font-family: sans-serif;'>"
         table_html += "<tr style='background-color: #262730; color: white;'>"
         for col in filtered_df.columns:
@@ -85,7 +96,9 @@ with tab_stats:
         st.error("Error loading stats.")
         st.exception(e)
 
+# ==========================================
 # --- MATCHES & PITCH TAB ---
+# ==========================================
 with tab_matches:
     st.header("Match Center & Tactical Lineups")
     try:
@@ -139,7 +152,7 @@ with tab_matches:
             mid_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["CDM", "CM", "CM1", "CM2", "CM3", "CAM", "LM", "RM"]])
             att_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["LW", "ST", "ST1", "ST2", "ST3", "RW"]])
 
-            # Pure HTML pitch container
+            # Pure HTML Pitch Graphic Container inside st.components iframe
             pitch_component = f"""
             <!DOCTYPE html>
             <html>
@@ -229,7 +242,9 @@ with tab_matches:
         st.error("Error loading match data.")
         st.exception(e)
 
+# ==========================================
 # --- NEWS TAB ---
+# ==========================================
 with tab_news:
     st.header("Club Announcements")
     st.info("📢 Training details, match locations, and announcements go here.")
