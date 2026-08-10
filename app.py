@@ -156,6 +156,26 @@ with tab_matches:
             formation = str(game_data.get("Formation", "4-3-3")).strip()
             st.subheader(f"🟢 Starting Lineup ({formation})")
 
+            # Calculate goal and assist counts for pitch badges
+            goal_counts = {}
+            assist_counts = {}
+            try:
+                goals_df = load_sheet("Socials_Goals")
+                match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
+                match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
+
+                if not match_goals.empty:
+                    for _, row in match_goals.iterrows():
+                        scorer = str(row.get("Goalscorer", row.get("Scorer", ""))).strip()
+                        assist = str(row.get("Assist", "")).strip()
+                        
+                        if scorer and scorer.lower() not in ["unknown", "none", "-", "nan", ""]:
+                            goal_counts[scorer] = goal_counts.get(scorer, 0) + 1
+                        if assist and assist.lower() not in ["none", "-", "unassisted", "nan", ""]:
+                            assist_counts[assist] = assist_counts.get(assist, 0) + 1
+            except Exception:
+                pass
+
             all_pos_keys = ["GK", "LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB", 
                             "CDM", "CM", "CM1", "CM2", "CM3", "CAM", "LM", "RM", 
                             "LW", "ST", "ST1", "ST2", "ST3", "RW"]
@@ -170,10 +190,24 @@ with tab_matches:
 
             def make_player_card(pos_key, name):
                 c_pos = clean_pos_label(pos_key)
+                
+                # Check for goals/assists in current match
+                g_count = goal_counts.get(name, 0)
+                a_count = assist_counts.get(name, 0)
+                
+                icons = []
+                if g_count > 0:
+                    icons.append("⚽" * g_count)
+                if a_count > 0:
+                    icons.append("🅰️" * a_count)
+                
+                badge_html = f'<div style="font-size: 11px; margin-top: 2px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
+
                 return f"""
                 <div style="background: white; color: #1b5e20; border-radius: 6px; padding: 6px 8px; margin: 4px; text-align: center; box-shadow: 0 3px 6px rgba(0,0,0,0.4); min-width: 80px; max-width: 120px; flex: 1;">
                     <div style="font-size: 10px; color: #2e7d32; font-weight: bold; text-transform: uppercase;">{c_pos}</div>
                     <div style="font-size: 12px; font-weight: 800; color: #111;">{name}</div>
+                    {badge_html}
                 </div>
                 """
 
