@@ -252,10 +252,15 @@ with tab_matches:
             return f"{match_title} ({date})" if date and date.lower() != "nan" else match_title
 
         game_options = {create_game_label(row): row["GameID"] for _, row in games_df.iterrows()}
+        options_list = list(game_options.keys())
+
+        # Default to the most recent game (the last entry in the sheet)
+        default_idx = len(options_list) - 1 if options_list else 0
 
         selected_label = st.selectbox(
             "Select Game:",
-            options=list(game_options.keys())
+            options=options_list,
+            index=default_idx
         )
 
         selected_game_id = game_options[selected_label]
