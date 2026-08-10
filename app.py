@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import re
 
 # Page Configuration for Mobile Optimization
 st.set_page_config(
@@ -13,35 +14,16 @@ st.title("🐧 Penguins Club Stats")
 # --- SPREADSHEET CONFIGURATION ---
 SPREADSHEET_ID = "19wTGruEyetdVNhfjkyVqLDueyV9joVtRsI51RAqurjA"
 
-@st.cache_data(ttl=60) # Refreshes every 60 seconds when Google Sheet updates
+@st.cache_data(ttl=60)
 def load_sheet(sheet_name):
     url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
     df = pd.read_csv(url)
     df.columns = df.columns.str.strip()
     return df
 
-# Helper function to render centered stats tables
-def display_centered_table(df):
-    formatted_df = df.copy()
-
-    # Format numbers: integers as "0", decimals as "0.3"
-    for col in formatted_df.columns:
-        if col != "Player":
-            formatted_df[col] = formatted_df[col].apply(
-                lambda x: f"{int(x)}" if pd.notnull(x) and float(x).is_integer() 
-                else (f"{x:.1f}" if pd.notnull(x) else "")
-            )
-
-    num_cols = len(formatted_df.columns)
-    col_width = f"{100 / num_cols:.2f}%"
-
-    styled_df = formatted_df.style.set_table_styles([
-        {'selector': 'th', 'props': [('text-align', 'center !important'), ('width', col_width), ('max-width', col_width)]},
-        {'selector': 'td', 'props': [('text-align', 'center !important'), ('width', col_width), ('max-width', col_width)]},
-        {'selector': 'table', 'props': [('table-layout', 'fixed'), ('width', '100%')]}
-    ])
-    
-    st.table(styled_df)
+# Helper to clean position titles (e.g., 'CB1' -> 'CB', 'ST2' -> 'ST')
+def clean_position_label(pos_key):
+    return re.sub(r'\d+$', '', pos_key)
 
 # Navigation Tabs
 tab_stats, tab_matches, tab_news = st.tabs(["📊 Player Stats", "⚽ Matches", "📰 News"])
@@ -53,13 +35,12 @@ with tab_stats:
         if "Player" in df.columns:
             df = df.dropna(subset=["Player"])
 
-        # Calculate 4 Top KPI Metrics
+        # Top KPI Metric Cards
         top_apps = df.sort_values(by="Appearances", ascending=False).iloc[0]
         top_scorer = df.sort_values(by="Goals", ascending=False).iloc[0]
         top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
         top_involvements = df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
 
-        # 4 Metric Columns Layout
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("🏃 Most Appearances", f"{top_apps['Player']}", f"{int(top_apps['Appearances'])} Apps")
@@ -72,17 +53,35 @@ with tab_stats:
 
         st.divider()
 
-        # Search Bar for Players
-        search_query = st.text_input("🔍 Search Player Name", "")
-        if search_query:
-            df = df[df["Player"].str.contains(search_query, case=False, na=False)]
-
-        # Interactive Leaderboard Table
+        # Custom Filters & Interactive Leaderboard
         st.subheader("Player Leaderboard")
-        display_centered_table(df)
+        st.caption("💡 Click any column header to sort. Use the controls below to filter.")
+
+        f_col1, f_col2 = st.columns(2)
+        with f_col1:
+            search_query = st.text_input("🔍 Search Player Name", "")
+        with f_col2:
+            min_apps = st.slider("Filter by Minimum Appearances", 0, int(df["Appearances"].max()), 0)
+
+        # Apply Filters
+        filtered_df = df.copy()
+        if search_query:
+            filtered_df = filtered_df[filtered_df["Player"].str.contains(search_query, case=False, na=False)]
+        if min_apps > 0:
+            filtered_df = filtered_df[filtered_df["Appearances"] >= min_apps]
+
+        # Fully interactive, sortable, and filterable table
+        st.dataframe(
+            filtered_df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                col: st.column_config.Column(alignment="center") for col in filtered_df.columns
+            }
+        )
 
     except Exception as e:
-        st.error("Unable to load player stats. Ensure Google Sheet sharing is set to 'Anyone with the link can view'.")
+        st.error("Unable to load player stats sheet.")
         st.exception(e)
 
 # --- MATCHES & PITCH VISUALISER TAB ---
@@ -91,7 +90,6 @@ with tab_matches:
     try:
         games_df = load_sheet("Socials_Games")
 
-        # Match Selection Dropdown
         selected_game_id = st.selectbox(
             "Select Game to View Details & Lineup:",
             options=games_df["GameID"].unique()
@@ -108,79 +106,99 @@ with tab_matches:
 
         st.divider()
 
-        # Side-by-Side Pitch and Details
         pitch_col, details_col = st.columns([2, 1])
 
         with pitch_col:
             formation = str(game_data.get("Formation", "4-4-2")).strip()
             st.subheader(f"🟢 Starting Lineup ({formation})")
 
-            # Custom styling for football pitch layout
+            # Custom pitch CSS with white pitch markings and grass gradient
             st.markdown("""
                 <style>
-                .pitch-container {
-                    background-color: #2e7d32;
+                .football-pitch {
+                    background: #2e7d32;
+                    background-image: 
+                        linear-gradient(to bottom, rgba(255,255,255,0.3) 2px, transparent 2px),
+                        radial-gradient(circle, transparent 40%, rgba(0,0,0,0.1) 100%);
                     border: 4px solid #ffffff;
-                    border-radius: 10px;
-                    padding: 15px;
-                    color: white;
-                    text-align: center;
-                    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+                    border-radius: 12px;
+                    padding: 25px 15px;
+                    position: relative;
+                    box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
+                }
+                .pitch-line-halfway {
+                    border-top: 2px solid rgba(255, 255, 255, 0.7);
+                    margin: 15px 0;
                 }
                 .player-card {
-                    background-color: rgba(255, 255, 255, 0.95);
+                    background-color: #ffffff;
                     color: #1b5e20;
-                    font-weight: bold;
-                    border-radius: 5px;
-                    padding: 6px;
+                    font-weight: 800;
+                    border-radius: 6px;
+                    padding: 8px 4px;
                     margin: 4px;
                     text-align: center;
                     font-size: 13px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+                    border: 1px solid #c8e6c9;
+                }
+                .pos-label {
+                    color: #2e7d32;
+                    font-size: 11px;
+                    display: block;
+                    text-transform: uppercase;
                 }
                 </style>
             """, unsafe_allow_html=True)
 
-            # Helper function to get player name safely
-            def get_p(pos_key):
-                val = game_data.get(pos_key, None)
+            def get_player(pos):
+                val = game_data.get(pos, None)
                 if pd.notnull(val) and str(val).strip() not in ["", "-", "nan"]:
                     return str(val).strip()
                 return None
 
+            # Group positions into tactical bands
+            def_keys = ["LWB", "LB", "CB1", "CB2", "CB3", "RB", "RWB"]
+            mid_keys = ["LM", "CDM", "CM", "CM1", "CM2", "CM3", "CAM", "RM"]
+            att_keys = ["LW", "ST1", "ST2", "ST3", "RW"]
+
+            gk = get_player("GK")
+            defenders = [(k, get_player(k)) for k in def_keys if get_player(k)]
+            midfielders = [(k, get_player(k)) for k in mid_keys if get_player(k)]
+            attackers = [(k, get_player(k)) for k in att_keys if get_player(k)]
+
             with st.container():
-                st.markdown('<div class="pitch-container">', unsafe_allow_html=True)
+                st.markdown('<div class="football-pitch">', unsafe_allow_html=True)
 
-                # --- GK (Always present) ---
-                if get_p("GK"):
-                    st.markdown(f'<div class="player-card">🧤 GK: {get_p("GK")}</div>', unsafe_allow_html=True)
+                # --- GOALKEEPER ---
+                if gk:
+                    st.markdown(f'<div class="player-card"><span class="pos-label">GK</span>🧤 {gk}</div>', unsafe_allow_html=True)
                     st.write("")
 
-                # --- DEFENCE LINE ---
-                def_players = [("LB", get_p("LB")), ("CB1", get_p("CB1")), ("CB2", get_p("CB2")), ("RB", get_p("RB"))]
-                active_def = [p for p in def_players if p[1]]
-                if active_def:
-                    d_cols = st.columns(len(active_def))
-                    for idx, (label, name) in enumerate(active_def):
-                        d_cols[idx].markdown(f'<div class="player-card">{label}: {name}</div>', unsafe_allow_html=True)
+                # --- DEFENDERS ---
+                if defenders:
+                    d_cols = st.columns(len(defenders))
+                    for idx, (pos_key, p_name) in enumerate(defenders):
+                        clean_pos = clean_position_label(pos_key)
+                        d_cols[idx].markdown(f'<div class="player-card"><span class="pos-label">{clean_pos}</span>{p_name}</div>', unsafe_allow_html=True)
                     st.write("")
 
-                # --- MIDFIELD LINE ---
-                mid_players = [("CDM", get_p("CDM")), ("CM", get_p("CM")), ("CM1", get_p("CM1")), ("CM2", get_p("CM2")), ("CM3", get_p("CM3")), ("CAM", get_p("CAM"))]
-                active_mid = [p for p in mid_players if p[1]]
-                if active_mid:
-                    m_cols = st.columns(len(active_mid))
-                    for idx, (label, name) in enumerate(active_mid):
-                        m_cols[idx].markdown(f'<div class="player-card">{label}: {name}</div>', unsafe_allow_html=True)
+                st.markdown('<div class="pitch-line-halfway"></div>', unsafe_allow_html=True)
+
+                # --- MIDFIELDERS ---
+                if midfielders:
+                    m_cols = st.columns(len(midfielders))
+                    for idx, (pos_key, p_name) in enumerate(midfielders):
+                        clean_pos = clean_position_label(pos_key)
+                        m_cols[idx].markdown(f'<div class="player-card"><span class="pos-label">{clean_pos}</span>{p_name}</div>', unsafe_allow_html=True)
                     st.write("")
 
-                # --- ATTACK LINE ---
-                att_players = [("LW", get_p("LW")), ("ST1", get_p("ST1")), ("ST2", get_p("ST2")), ("RW", get_p("RW"))]
-                active_att = [p for p in att_players if p[1]]
-                if active_att:
-                    a_cols = st.columns(len(active_att))
-                    for idx, (label, name) in enumerate(active_att):
-                        a_cols[idx].markdown(f'<div class="player-card">{label}: {name}</div>', unsafe_allow_html=True)
+                # --- ATTACKERS ---
+                if attackers:
+                    a_cols = st.columns(len(attackers))
+                    for idx, (pos_key, p_name) in enumerate(attackers):
+                        clean_pos = clean_position_label(pos_key)
+                        a_cols[idx].markdown(f'<div class="player-card"><span class="pos-label">{clean_pos}</span>{p_name}</div>', unsafe_allow_html=True)
 
                 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -188,7 +206,6 @@ with tab_matches:
             st.subheader("⚽ Goals & Assists")
             try:
                 goals_df = load_sheet("Socials_Goals")
-                # Support "Match ID" or "GameID" header name flexibly
                 match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
                 match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
 
@@ -204,12 +221,11 @@ with tab_matches:
                 else:
                     st.info("No goals recorded for this match.")
 
-            except Exception as e:
+            except Exception:
                 st.info("Goal log loading...")
 
             st.divider()
 
-            # Substitutes Breakdown
             st.subheader("👥 Substitutes")
             subs = [game_data.get(f"SUB{i}") for i in range(1, 7)]
             active_subs = [str(s).strip() for s in subs if pd.notnull(s) and str(s).strip() not in ["", "-", "nan"]]
@@ -221,7 +237,7 @@ with tab_matches:
                 st.write("No substitutes listed.")
 
     except Exception as e:
-        st.error("Error loading match data. Check sheet tab name 'Socials_Games'.")
+        st.error("Error loading match data from 'Socials_Games'.")
         st.exception(e)
 
 # --- NEWS TAB ---
