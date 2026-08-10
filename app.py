@@ -13,7 +13,7 @@ st.set_page_config(
 # Custom Mobile CSS Injection (Centering & Penguin Yellow Theme)
 st.markdown("""
 <style>
-    /* Center align all metric components (Label, Value, Subtext) */
+    /* Center align all metric components (Label, Value, Subtext & Flex wrappers) */
     [data-testid="stMetric"] {
         text-align: center !important;
         justify-content: center !important;
@@ -22,6 +22,13 @@ st.markdown("""
         border-radius: 8px;
         padding: 10px !important;
         border: 1px solid #333;
+    }
+    [data-testid="stMetric"] > div {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
     }
     [data-testid="stMetricLabel"] {
         font-size: 0.85rem !important;
@@ -33,6 +40,8 @@ st.markdown("""
     [data-testid="stMetricLabel"] > div {
         justify-content: center !important;
         text-align: center !important;
+        display: flex !important;
+        width: 100% !important;
     }
     [data-testid="stMetricValue"] {
         font-size: 1.2rem !important;
@@ -45,6 +54,8 @@ st.markdown("""
     [data-testid="stMetricValue"] > div {
         justify-content: center !important;
         text-align: center !important;
+        display: flex !important;
+        width: 100% !important;
     }
 
     /* Make tables horizontally scrollable on small screens */
@@ -255,7 +266,7 @@ with tab_matches:
 
         with pitch_col:
             formation = str(game_data.get("Formation", "4-3-3")).strip()
-            st.subheader(f"Dynamic Lineup ({formation})")
+            st.subheader(f"Starting 11 ({formation})")
 
             goal_counts, assist_counts = {}, {}
             try:
