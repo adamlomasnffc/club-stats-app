@@ -246,19 +246,20 @@ with tab_matches:
             except Exception:
                 pass
 
-            all_pos_keys = ["GK", "LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB", 
-                            "CDM", "CM", "CM1", "CM2", "CM3", "CAM", "LM", "RM", 
-                            "LW", "ST", "ST1", "ST2", "ST3", "RW"]
+            # Ordering maps to keep explicit tactical order (Left -> Center -> Right)
+            def_order = ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RWB", "RB"]
+            cdm_order = ["CDM", "CDM1", "CDM2"]
+            mid_order = ["LM", "CM", "CM1", "CM2", "CM3", "RM"]
+            cam_order = ["CAM", "CAM1", "CAM2"]
+            att_order = ["LW", "ST", "ST1", "ST2", "ST3", "RW"]
 
             lineup = {}
             for col_name in game_data.index:
                 col_clean = str(col_name).strip()
-                if col_clean in all_pos_keys:
-                    val = game_data.get(col_name)
-                    if pd.notnull(val) and str(val).strip().lower() not in ["", "-", "nan", "none"]:
-                        lineup[col_clean] = str(val).strip()
+                val = game_data.get(col_name)
+                if pd.notnull(val) and str(val).strip().lower() not in ["", "-", "nan", "none"]:
+                    lineup[col_clean] = str(val).strip()
 
-            # Compact card design for mobile screens
             def make_player_card(pos_key, name):
                 c_pos = clean_pos_label(pos_key)
                 g_count = goal_counts.get(name, 0)
@@ -270,22 +271,25 @@ with tab_matches:
                 if a_count > 0:
                     icons.append("🅰️" * a_count)
                 
-                badge_html = f'<div style="font-size: 9px; margin-top: 1px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
+                badge_html = f'<div style="font-size: 9px; margin-top: auto; padding-top: 2px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
 
                 return f"""
-                <div style="background: white; color: #1b5e20; border-radius: 5px; padding: 4px 5px; margin: 2px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); min-width: 55px; max-width: 90px; flex: 1;">
-                    <div style="font-size: 9px; color: #2e7d32; font-weight: bold;">{c_pos}</div>
-                    <div style="font-size: 10px; font-weight: 800; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{name}</div>
+                <div style="background: white; color: #1b5e20; border-radius: 5px; padding: 4px 5px; margin: 2px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); min-width: 55px; max-width: 90px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+                    <div>
+                        <div style="font-size: 9px; color: #2e7d32; font-weight: bold;">{c_pos}</div>
+                        <div style="font-size: 10px; font-weight: 800; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{name}</div>
+                    </div>
                     {badge_html}
                 </div>
                 """
 
+            # Build tactical rows using explicit left-to-right ordering
             gk_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k == "GK"])
-            def_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB"]])
-            cdm_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["CDM"]])
-            mid_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["CM", "CM1", "CM2", "CM3", "LM", "RM"]])
-            cam_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["CAM"]])
-            att_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["LW", "ST", "ST1", "ST2", "ST3", "RW"]])
+            def_html = "".join([make_player_card(k, lineup[k]) for k in def_order if k in lineup])
+            cdm_html = "".join([make_player_card(k, lineup[k]) for k in cdm_order if k in lineup])
+            mid_html = "".join([make_player_card(k, lineup[k]) for k in mid_order if k in lineup])
+            cam_html = "".join([make_player_card(k, lineup[k]) for k in cam_order if k in lineup])
+            att_html = "".join([make_player_card(k, lineup[k]) for k in att_order if k in lineup])
 
             pitch_component = f"""
             <!DOCTYPE html>
@@ -319,7 +323,7 @@ with tab_matches:
             .row {{
                 display: flex;
                 justify-content: space-around;
-                align-items: center;
+                align-items: stretch;
                 position: relative;
                 z-index: 2;
                 width: 100%;
