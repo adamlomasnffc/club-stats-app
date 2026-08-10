@@ -1,28 +1,13 @@
 import streamlit as st
 import pandas as pd
+import streamlit.components.v1 as components
 import re
 
-# Page Configuration for Mobile Optimization
 st.set_page_config(
     page_title="Penguins Master Stats",
     page_icon="🐧",
     layout="wide"
 )
-
-# Global CSS: Force center alignment on st.dataframe headers & cells
-st.markdown("""
-    <style>
-    /* Force centered headers on st.dataframe */
-    [data-testid="stDataFrame"] div[role="columnheader"] div {
-        justify-content: center !important;
-        text-align: center !important;
-    }
-    [data-testid="stDataFrame"] div[role="gridcell"] {
-        justify-content: center !important;
-        text-align: center !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 st.title("🐧 Penguins Club Stats")
 
@@ -47,47 +32,54 @@ with tab_stats:
         if "Player" in df.columns:
             df = df.dropna(subset=["Player"])
 
-        # Metric Cards
         top_apps = df.sort_values(by="Appearances", ascending=False).iloc[0]
         top_scorer = df.sort_values(by="Goals", ascending=False).iloc[0]
         top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
         top_involvements = df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
 
         col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("🏃 Most Appearances", f"{top_apps['Player']}", f"{int(top_apps['Appearances'])} Apps")
-        with col2:
-            st.metric("⚽ Top Scorer", f"{top_scorer['Player']}", f"{int(top_scorer['Goals'])} Goals")
-        with col3:
-            st.metric("🅰️ Top Assister", f"{top_assister['Player']}", f"{int(top_assister['Assists'])} Assists")
-        with col4:
-            st.metric("🔥 Top Contributor", f"{top_involvements['Player']}", f"{int(top_involvements['Goal Involvements'])} G+A")
+        col1.metric("🏃 Most Apps", f"{top_apps['Player']}", f"{int(top_apps['Appearances'])} Apps")
+        col2.metric("⚽ Top Scorer", f"{top_scorer['Player']}", f"{int(top_scorer['Goals'])} Goals")
+        col3.metric("🅰️ Top Assister", f"{top_assister['Player']}", f"{int(top_assister['Assists'])} Assists")
+        col4.metric("🔥 Top Contributor", f"{top_involvements['Player']}", f"{int(top_involvements['Goal Involvements'])} G+A")
 
         st.divider()
 
         st.subheader("Player Leaderboard")
-        
-        f_col1, f_col2 = st.columns(2)
+
+        f_col1, f_col2, f_col3 = st.columns([2, 2, 1])
         with f_col1:
-            search_query = st.text_input("🔍 Search Player Name", "")
+            search_query = st.text_input("🔍 Search Player", "")
         with f_col2:
-            min_apps = st.slider("Filter by Minimum Appearances", 0, int(df["Appearances"].max()), 0)
+            sort_by = st.selectbox("Sort By Column", options=df.columns, index=1)
+        with f_col3:
+            sort_order = st.radio("Order", ["Descending", "Ascending"], horizontal=True)
 
         filtered_df = df.copy()
         if search_query:
             filtered_df = filtered_df[filtered_df["Player"].str.contains(search_query, case=False, na=False)]
-        if min_apps > 0:
-            filtered_df = filtered_df[filtered_df["Appearances"] >= min_apps]
 
-        # Centered interactive table
-        st.dataframe(
-            filtered_df,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                col: st.column_config.Column(alignment="center") for col in filtered_df.columns
-            }
-        )
+        ascending = True if sort_order == "Ascending" else False
+        filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending)
+
+        # Centered HTML Table rendering
+        table_html = "<table style='width:100%; border-collapse: collapse; text-align: center; margin-top: 15px; font-family: sans-serif;'>"
+        table_html += "<tr style='background-color: #262730; color: white;'>"
+        for col in filtered_df.columns:
+            table_html += f"<th style='padding: 12px; border-bottom: 2px solid #555; text-align: center;'>{col}</th>"
+        table_html += "</tr>"
+
+        for idx, row in filtered_df.iterrows():
+            bg_color = "#1e1e1e" if idx % 2 == 0 else "#0e1117"
+            table_html += f"<tr style='background-color: {bg_color}; color: white;'>"
+            for col in filtered_df.columns:
+                val = row[col]
+                formatted_val = f"{int(val)}" if pd.notnull(val) and isinstance(val, (int, float)) and float(val).is_integer() else (f"{val:.1f}" if isinstance(val, float) else str(val))
+                table_html += f"<td style='padding: 10px; border-bottom: 1px solid #333; text-align: center;'>{formatted_val}</td>"
+            table_html += "</tr>"
+        table_html += "</table>"
+
+        st.markdown(table_html, unsafe_allow_html=True)
 
     except Exception as e:
         st.error("Error loading stats.")
@@ -120,59 +112,86 @@ with tab_matches:
             formation = str(game_data.get("Formation", "4-3-3")).strip()
             st.subheader(f"🟢 Starting Lineup ({formation})")
 
-            # Exhaustive position fetcher to never miss players
+            # Column lookup list
             all_pos_keys = ["GK", "LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB", 
                             "CDM", "CM", "CM1", "CM2", "CM3", "CAM", "LM", "RM", 
                             "LW", "ST", "ST1", "ST2", "ST3", "RW"]
 
             lineup = {}
-            for k in all_pos_keys:
-                val = game_data.get(k, None)
-                if pd.notnull(val) and str(val).strip() not in ["", "-", "nan"]:
-                    lineup[k] = str(val).strip()
+            for col_name in game_data.index:
+                col_clean = str(col_name).strip()
+                if col_clean in all_pos_keys:
+                    val = game_data.get(col_name)
+                    if pd.notnull(val) and str(val).strip() not in ["", "-", "nan", "None"]:
+                        lineup[col_clean] = str(val).strip()
 
-            # Dynamic pitch card HTML builder
-            def make_player_badge(pos_key, name):
+            def make_player_card(pos_key, name):
                 c_pos = clean_pos_label(pos_key)
                 return f"""
-                <div style="background: white; color: #1b5e20; border-radius: 6px; padding: 6px 10px; margin: 4px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.4); flex: 1; min-width: 90px; max-width: 140px;">
-                    <div style="font-size: 10px; color: #2e7d32; font-weight: bold;">{c_pos}</div>
-                    <div style="font-size: 12px; font-weight: 800;">{name}</div>
+                <div style="background: white; color: #1b5e20; border-radius: 6px; padding: 6px 8px; margin: 4px; text-align: center; box-shadow: 0 3px 6px rgba(0,0,0,0.4); min-width: 80px; max-width: 120px; flex: 1;">
+                    <div style="font-size: 10px; color: #2e7d32; font-weight: bold; text-transform: uppercase;">{c_pos}</div>
+                    <div style="font-size: 12px; font-weight: 800; color: #111;">{name}</div>
                 </div>
                 """
 
-            # Group into tactical rows
-            gk_html = "".join([make_player_badge(k, lineup[k]) for k in lineup if k == "GK"])
-            def_html = "".join([make_player_badge(k, lineup[k]) for k in lineup if k in ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB"]])
-            mid_html = "".join([make_player_badge(k, lineup[k]) for k in lineup if k in ["CDM", "CM", "CM1", "CM2", "CM3", "CAM", "LM", "RM"]])
-            att_html = "".join([make_player_badge(k, lineup[k]) for k in lineup if k in ["LW", "ST", "ST1", "ST2", "ST3", "RW"]])
+            gk_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k == "GK"])
+            def_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB"]])
+            mid_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["CDM", "CM", "CM1", "CM2", "CM3", "CAM", "LM", "RM"]])
+            att_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["LW", "ST", "ST1", "ST2", "ST3", "RW"]])
 
-            # SVG pitch visualizer container
-            pitch_html = f"""
-            <div style="background: linear-gradient(180deg, #1e5622 0%, #2e7d32 100%); border: 3px solid #ffffff; border-radius: 12px; padding: 20px 10px; position: relative; box-shadow: inset 0 0 15px rgba(0,0,0,0.5);">
-                <!-- Pitch lines -->
-                <div style="border-top: 2px solid rgba(255,255,255,0.6); position: absolute; top: 50%; left: 0; right: 0;"></div>
-                <div style="border: 2px solid rgba(255,255,255,0.6); border-radius: 50%; width: 80px; height: 80px; position: absolute; top: calc(50% - 40px); left: calc(50% - 40px);"></div>
-                
-                <!-- Goalkeeper -->
-                <div style="display: flex; justify-content: center; position: relative; z-index: 2; margin-bottom: 25px;">
-                    {gk_html}
-                </div>
-                <!-- Defenders -->
-                <div style="display: flex; justify-content: space-around; position: relative; z-index: 2; margin-bottom: 35px;">
-                    {def_html}
-                </div>
-                <!-- Midfielders -->
-                <div style="display: flex; justify-content: space-around; position: relative; z-index: 2; margin-bottom: 35px;">
-                    {mid_html}
-                </div>
-                <!-- Attackers -->
-                <div style="display: flex; justify-content: space-around; position: relative; z-index: 2;">
-                    {att_html}
-                </div>
+            # Pure HTML pitch container
+            pitch_component = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <style>
+            body {{ margin: 0; font-family: sans-serif; }}
+            .pitch {{
+                background: linear-gradient(180deg, #1e5622 0%, #2e7d32 100%);
+                border: 4px solid #ffffff;
+                border-radius: 12px;
+                padding: 15px 10px;
+                position: relative;
+                box-sizing: border-box;
+                height: 480px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                overflow: hidden;
+            }}
+            .halfway-line {{
+                position: absolute; top: 50%; left: 0; right: 0;
+                border-top: 2px solid rgba(255,255,255,0.5);
+            }}
+            .center-circle {{
+                position: absolute; top: calc(50% - 40px); left: calc(50% - 40px);
+                width: 80px; height: 80px;
+                border: 2px solid rgba(255,255,255,0.5);
+                border-radius: 50%;
+            }}
+            .row {{
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                position: relative;
+                z-index: 2;
+                width: 100%;
+            }}
+            </style>
+            </head>
+            <body>
+            <div class="pitch">
+                <div class="halfway-line"></div>
+                <div class="center-circle"></div>
+                <div class="row">{gk_html}</div>
+                <div class="row">{def_html}</div>
+                <div class="row">{mid_html}</div>
+                <div class="row">{att_html}</div>
             </div>
+            </body>
+            </html>
             """
-            st.markdown(pitch_html, unsafe_allow_html=True)
+            components.html(pitch_component, height=500)
 
         with details_col:
             st.subheader("⚽ Goals & Assists")
