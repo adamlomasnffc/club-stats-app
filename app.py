@@ -8,24 +8,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS to force center alignment on all table headers and cells
-st.markdown("""
-    <style>
-    /* Center align table headers */
-    [data-testid="stTable"] th, 
-    [data-testid="stDataFrame"] th,
-    div[role="columnheader"] {
-        text-align: center !important;
-        justify-content: center !important;
-    }
-    /* Center align table cell content */
-    [data-testid="stTable"] td, 
-    [data-testid="stDataFrame"] td {
-        text-align: center !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 st.title("🐧 Penguins Club Stats")
 
 # --- SPREADSHEET CONFIGURATION ---
@@ -37,7 +19,7 @@ def load_sheet(sheet_name):
     df = pd.read_csv(url)
     df.columns = df.columns.str.strip()
     
-    # Keep strictly the first 8 columns (Columns A to H) to remove extra empty columns
+    # Keep strictly the first 8 columns (Columns A to H)
     df = df.iloc[:, :8]
     
     # Drop rows where Player name is empty
@@ -45,6 +27,14 @@ def load_sheet(sheet_name):
         df = df.dropna(subset=["Player"])
         
     return df
+
+# Helper function to render tables with strictly centered headers and data cells
+def display_centered_table(df):
+    styled_df = df.style.set_table_styles([
+        {'selector': 'th', 'props': [('text-align', 'center !important')]},
+        {'selector': 'td', 'props': [('text-align', 'center !important')]}
+    ])
+    st.table(styled_df)
 
 # Navigation Tabs
 tab_stats, tab_matches, tab_news = st.tabs(["📊 Player Stats", "⚽ Matches", "📰 News"])
@@ -78,16 +68,9 @@ with tab_stats:
         if search_query:
             df = df[df["Player"].str.contains(search_query, case=False, na=False)]
 
-        # Interactive Leaderboard Table
+        # Interactive Leaderboard Table (Centrally aligned headers & cells)
         st.subheader("Player Leaderboard")
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                col: st.column_config.Column(alignment="center") for col in df.columns
-            }
-        )
+        display_centered_table(df)
 
     except Exception as e:
         st.error("Unable to load player stats. Ensure Google Sheet sharing is set to 'Anyone with the link can view'.")
@@ -98,14 +81,7 @@ with tab_matches:
     st.header("Match Results & Fixtures")
     try:
         matches_df = load_sheet("Socials_Matches")
-        st.dataframe(
-            matches_df,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                col: st.column_config.Column(alignment="center") for col in matches_df.columns
-            }
-        )
+        display_centered_table(matches_df)
     except Exception:
         st.info("Set up your 'Socials_Matches' tab to display match logs here!")
 
