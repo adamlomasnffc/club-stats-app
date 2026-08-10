@@ -69,8 +69,6 @@ with tab_stats:
             filtered_df = filtered_df[filtered_df["Player"].str.contains(search_query, case=False, na=False)]
 
         ascending = True if sort_order == "Ascending" else False
-        
-        # .reset_index(drop=True) guarantees zebra stripes remain uniform regardless of sort field
         filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
 
         # Centered HTML Table Rendering
@@ -104,18 +102,37 @@ with tab_matches:
     try:
         games_df = load_sheet("Socials_Games")
 
-        selected_game_id = st.selectbox(
+        def create_game_label(row):
+            opponent = str(row.get("Opponent", "Unknown")).strip()
+            result = str(row.get("Result", "")).strip()
+            date = str(row.get("Date", "")).strip()
+            
+            label = f"vs {opponent}"
+            if result and result.lower() != "nan":
+                label += f" ({result})"
+            if date and date.lower() != "nan":
+                label += f" — {date}"
+            return label
+
+        game_options = {create_game_label(row): row["GameID"] for _, row in games_df.iterrows()}
+
+        selected_label = st.selectbox(
             "Select Game to View Details & Lineup:",
-            options=games_df["GameID"].unique()
+            options=list(game_options.keys())
         )
 
+        selected_game_id = game_options[selected_label]
         game_data = games_df[games_df["GameID"] == selected_game_id].iloc[0]
+
+        # Clean MOTM lookup logic to prevent "nan"
+        raw_motm = str(game_data.get("MOTM", "")).strip()
+        motm_val = raw_motm if raw_motm and raw_motm.lower() not in ["nan", "none", "-"] else "-"
 
         m_col1, m_col2, m_col3, m_col4 = st.columns(4)
         m_col1.metric("🗓️ Date", str(game_data.get("Date", "-")))
         m_col2.metric("🛡️ Opponent", str(game_data.get("Opponent", "-")))
         m_col3.metric("⚽ Score", str(game_data.get("Result", "-")))
-        m_col4.metric("🏆 MOTM", str(game_data.get("MOTM", "-")))
+        m_col4.metric("🏆 MOTM", motm_val)
 
         st.divider()
 
@@ -125,7 +142,7 @@ with tab_matches:
             formation = str(game_data.get("Formation", "4-3-3")).strip()
             st.subheader(f"🟢 Starting Lineup ({formation})")
 
-            # Column lookup list
+            # All position keys
             all_pos_keys = ["GK", "LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB", 
                             "CDM", "CM", "CM1", "CM2", "CM3", "CAM", "LM", "RM", 
                             "LW", "ST", "ST1", "ST2", "ST3", "RW"]
@@ -135,7 +152,7 @@ with tab_matches:
                 col_clean = str(col_name).strip()
                 if col_clean in all_pos_keys:
                     val = game_data.get(col_name)
-                    if pd.notnull(val) and str(val).strip() not in ["", "-", "nan", "None"]:
+                    if pd.notnull(val) and str(val).strip().lower() not in ["", "-", "nan", "none"]:
                         lineup[col_clean] = str(val).strip()
 
             def make_player_card(pos_key, name):
@@ -147,12 +164,15 @@ with tab_matches:
                 </div>
                 """
 
+            # Strategic 5-tier vertical division
             gk_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k == "GK"])
             def_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RB", "RWB"]])
-            mid_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["CDM", "CM", "CM1", "CM2", "CM3", "CAM", "LM", "RM"]])
+            cdm_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["CDM"]])
+            mid_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["CM", "CM1", "CM2", "CM3", "LM", "RM"]])
+            cam_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["CAM"]])
             att_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k in ["LW", "ST", "ST1", "ST2", "ST3", "RW"]])
 
-            # Pure HTML Pitch Graphic Container inside st.components iframe
+            # Pure HTML Pitch Graphic Container
             pitch_component = f"""
             <!DOCTYPE html>
             <html>
@@ -166,7 +186,7 @@ with tab_matches:
                 padding: 15px 10px;
                 position: relative;
                 box-sizing: border-box;
-                height: 480px;
+                min-height: 520px;
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
@@ -196,15 +216,17 @@ with tab_matches:
             <div class="pitch">
                 <div class="halfway-line"></div>
                 <div class="center-circle"></div>
-                <div class="row">{gk_html}</div>
-                <div class="row">{def_html}</div>
-                <div class="row">{mid_html}</div>
-                <div class="row">{att_html}</div>
+                {"<div class='row'>" + gk_html + "</div>" if gk_html else ""}
+                {"<div class='row'>" + def_html + "</div>" if def_html else ""}
+                {"<div class='row'>" + cdm_html + "</div>" if cdm_html else ""}
+                {"<div class='row'>" + mid_html + "</div>" if mid_html else ""}
+                {"<div class='row'>" + cam_html + "</div>" if cam_html else ""}
+                {"<div class='row'>" + att_html + "</div>" if att_html else ""}
             </div>
             </body>
             </html>
             """
-            components.html(pitch_component, height=500)
+            components.html(pitch_component, height=540)
 
         with details_col:
             st.subheader("⚽ Goals & Assists")
@@ -217,8 +239,9 @@ with tab_matches:
                     for _, row in match_goals.iterrows():
                         scorer = row.get("Goalscorer", row.get("Scorer", "Unknown"))
                         assist = row.get("Assist", "")
-                        if pd.notnull(assist) and str(assist).strip() not in ["", "None", "-", "Unassisted", "nan"]:
-                            st.write(f"• **{scorer}** ⚽ (🅰️ {assist})")
+                        
+                        if pd.notnull(assist) and str(assist).strip().lower() not in ["", "none", "-", "unassisted", "nan"]:
+                            st.write(f"• **{scorer}** ⚽ ( {str(assist).strip()} 🅰️ )")
                         else:
                             st.write(f"• **{scorer}** ⚽")
                 else:
@@ -230,7 +253,7 @@ with tab_matches:
 
             st.subheader("👥 Substitutes")
             subs = [game_data.get(f"SUB{i}") for i in range(1, 7)]
-            active_subs = [str(s).strip() for s in subs if pd.notnull(s) and str(s).strip() not in ["", "-", "nan"]]
+            active_subs = [str(s).strip() for s in subs if pd.notnull(s) and str(s).strip().lower() not in ["", "-", "nan", "none"]]
             
             if active_subs:
                 for sub in active_subs:
