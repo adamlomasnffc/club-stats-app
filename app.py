@@ -71,44 +71,58 @@ st.markdown(f"""
             display: block !important;
         }}
 
-        /* TARGET NAVIGATION COLUMNS ONLY: Super compact single row */
-        div[data-testid="stHorizontalBlock"]:has(div.stButton) {{
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important; /* Force single line */
-            justify-content: space-between !important;
-            gap: 2px !important; /* Tiny spaces between buttons */
-            width: 100% !important;
-            padding-bottom: 4px !important;
+        /* CORE FIX: Prevent the scrollable horizontal ribbon and kill huge gaps */
+        div[data-testid="stHorizontalBlock"] {{
+            flex-wrap: nowrap !important;
+            overflow-x: hidden !important; 
+            gap: 2px !important; 
         }}
 
-        div[data-testid="stHorizontalBlock"]:has(div.stButton) > div[data-testid="column"] {{
-            flex: 1 1 0 !important; /* Squeeze equally to fit the screen */
-            min-width: 0 !important; /* Allow shrinking below text size if necessary */
-            width: auto !important;
+        /* Allow all columns to shrink infinitely so they all fit on one screen */
+        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {{
+            min-width: 0 !important;
             padding: 0 !important;
-            margin: 0 !important;
         }}
 
-        /* BUTTON STYLING: Ultra compact */
+        /* BUTTON STYLING: Scale text dynamically to screen width so it cannot scroll */
+        div.stButton {{
+            width: 100% !important;
+            min-width: 0 !important;
+        }}
+        
         div.stButton > button {{
             width: 100% !important;
+            min-width: 0 !important;
             background-color: #1a1c23 !important;
             color: #ffffff !important;
             border: 1px solid #333333 !important;
             border-radius: 4px !important;
-            padding: 4px 1px !important; /* Minimal padding */
-            font-weight: 600 !important;
-            font-size: 0.65rem !important; /* Very small text to fit */
+            padding: 4px 1px !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
             transition: all 0.2s ease-in-out !important;
-            line-height: 1.1 !important;
-            min-height: 0 !important;
-            white-space: nowrap !important; /* Prevent text wrapping inside button */
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
+            line-height: 1.1 !important;
+        }}
+        
+        div.stButton > button p {{
+            margin: 0 !important;
+            font-size: 2.7vw !important; /* THE FIX: Text scales exactly with screen width */
+            font-weight: 600 !important;
+            white-space: nowrap !important; 
+            overflow: hidden !important;
             text-overflow: clip !important;
+        }}
+
+        /* Cap the sizes for Desktop so the buttons don't get massive */
+        @media (min-width: 600px) {{
+            div[data-testid="stHorizontalBlock"] {{
+                gap: 10px !important;
+            }}
+            div.stButton > button p {{
+                font-size: 14px !important;
+            }}
         }}
         
         div.stButton > button:hover {{
@@ -142,7 +156,7 @@ st.markdown(f"""
             padding: 10px !important;
             border: 1px solid #333 !important;
             text-align: center !important;
-            min-width: 130px !important;
+            min-width: 0 !important;
         }}
         [data-testid="stMetricValue"] {{
             color: #FFB81C !important;
