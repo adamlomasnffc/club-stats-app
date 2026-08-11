@@ -16,13 +16,18 @@ st.set_page_config(
 # Mobile Home Screen Icon Injection CSS & Custom Styles
 st.markdown(f"""
     <head>
-        <link rel="apple-touch-icon" href="{LOGO_URL}">
+        <!-- Apple & Android Mobile Web App Home Screen Icons -->
+        <link rel="apple-touch-icon" sizes="180x180" href="{LOGO_URL}">
+        <link rel="apple-touch-icon-precomposed" href="{LOGO_URL}">
         <link rel="icon" type="image/png" sizes="192x192" href="{LOGO_URL}">
+        <link rel="shortcut icon" href="{LOGO_URL}">
+        <meta name="apple-mobile-web-app-title" content="Derby Penguins">
+        <meta name="apple-mobile-web-app-capable" content="yes">
     </head>
     <style>
         /* Top padding and overall centering adjustments */
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
-            padding-top: 3rem !important;
+            padding-top: 2rem !important;
         }}
 
         /* Center all headers */
@@ -36,13 +41,39 @@ st.markdown(f"""
             max-height: 90px;
             object-fit: contain;
             display: block;
-            margin: 25px auto 5px auto !important;
-            padding-top: 10px;
+            margin: 20px auto 5px auto !important;
+            padding-top: 5px;
         }}
 
-        /* Center align st.markdown paragraphs */
-        .stMarkdown p {{
-            text-align: center !important;
+        /* Team Navigation Radio Bar Styling */
+        div[data-testid="stRadio"] > div {{
+            justify-content: center;
+            gap: 10px;
+        }}
+
+        /* Responsive Video Container */
+        .video-wrapper {{
+            max-width: 480px;
+            margin: 0 auto;
+            width: 100%;
+        }}
+        .video-wrapper video {{
+            border-radius: 10px;
+            max-height: 550px;
+            object-fit: contain;
+        }}
+
+        /* Responsive Facebook Feed Wrapper */
+        .fb-container {{
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 10px;
+        }}
+        .fb-container iframe {{
+            width: 100% !important;
+            max-width: 100% !important;
         }}
 
         /* Center align metrics */
@@ -69,24 +100,12 @@ st.markdown(f"""
             text-align: center !important;
             width: 100% !important;
         }}
-        [data-testid="stMetricLabel"] > div {{
-            justify-content: center !important;
-            text-align: center !important;
-            display: flex !important;
-            width: 100% !important;
-        }}
         [data-testid="stMetricValue"] {{
             font-size: 1.2rem !important;
             display: flex !important;
             justify-content: center !important;
             text-align: center !important;
             color: #FFB81C !important;
-            width: 100% !important;
-        }}
-        [data-testid="stMetricValue"] > div {{
-            justify-content: center !important;
-            text-align: center !important;
-            display: flex !important;
             width: 100% !important;
         }}
 
@@ -114,7 +133,7 @@ st.markdown(f"""
 st.markdown(f"""
     <div style="text-align: center;">
         <img src="{LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
-        <h1 style="margin-top: 5px;">Derby Penguins App</h1>
+        <h1 style="margin-top: 5px; margin-bottom: 5px;">Derby Penguins App</h1>
     </div>
 """, unsafe_allow_html=True)
 
@@ -131,403 +150,446 @@ def load_sheet(sheet_name):
 def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
-# 4. NAVIGATION TABS
-tab_home, tab_stats, tab_results, tab_matches, tab_news = st.tabs([
-    "🏠 Home",
-    "📊 Player Stats", 
-    "📅 Results", 
-    "⚽ Match Center", 
-    "📰 News"
-])
+# 4. PRIMARY TEAM NAVIGATION (Replaces Top Tabs)
+selected_team = st.radio(
+    "Select Team Section:",
+    options=["🐧 Penguins", "📱 Socials", "🤝 Community", "📊 Total Club"],
+    horizontal=True,
+    label_visibility="collapsed"
+)
+
+st.divider()
 
 # ==========================================
-# --- HOMEPAGE TAB ---
+# --- 1. PENGUINS SUB-HOMEPAGE ---
 # ==========================================
-with tab_home:
-    # --- Quick Links ---
-    st.markdown("### Quick Links")
-    link_col1, link_col2, link_col3, link_col4 = st.columns(4)
+if selected_team == "🐧 Penguins":
+    st.markdown("## 🐧 Derby Penguins First Team")
+    tab_p_home, tab_p_stats, tab_p_results, tab_p_matches, tab_p_news = st.tabs([
+        "🏠 Home", "📊 Player Stats", "📅 Results", "⚽ Match Center", "📰 News"
+    ])
 
-    with link_col1:
-        st.link_button("🐧 Penguins", "https://your-external-link-here.com", use_container_width=True)
-    with link_col2:
-        st.link_button("📱 Socials", "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/", use_container_width=True)
-    with link_col3:
-        st.link_button("🤝 Community", "https://your-community-link.com", use_container_width=True)
-    with link_col4:
-        st.link_button("📊 Total Club Overview", "https://your-overview-link.com", use_container_width=True)
+    with tab_p_home:
+        st.markdown("### Welcome to Penguins First Team")
+        st.info("First team stats, updates, and rosters will be populated here soon.")
 
-    st.divider()
+    with tab_p_stats:
+        st.markdown("### 📊 Penguins Player Stats")
+        st.info("Penguins stats sheet integration coming soon.")
 
-    # --- About Us / Ethos / Lore ---
-    st.markdown("### About Us")
-    st.markdown("""
-        <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 700px; margin: 0 auto; text-align: center;">
-            <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">Our Ethos</p>
-            <p style="margin-bottom: 15px;">At Derby Penguins, we are dedicated to grassroots football, sportsmanship, and building a supportive team community on and off the pitch.</p>
-            <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">Club Lore</p>
-            <p style="margin-bottom: 0;">Founded to bring together passionate players, Derby Penguins provides a competitive, welcoming environment to train, play, and win together.</p>
-        </div>
-    """, unsafe_allow_html=True)
+    with tab_p_results:
+        st.markdown("### 📅 Penguins Results")
+        st.info("Penguins match results coming soon.")
 
-    st.divider()
+    with tab_p_matches:
+        st.markdown("### ⚽ Penguins Match Center")
+        st.info("Penguins match lineup pitch coming soon.")
 
-    # --- Native GitHub Video Integration ---
-    st.markdown("### 🎥 Club Feature Video")
+    with tab_p_news:
+        st.markdown("### 📰 Penguins News")
+        st.info("Penguins team announcements and updates.")
+
+
+# ==========================================
+# --- 2. SOCIALS SUB-HOMEPAGE (CURRENT DATA) ---
+# ==========================================
+elif selected_team == "📱 Socials":
+    st.markdown("## 📱 Derby Penguins Socials")
     
-    v_col1, v_col2, v_col3 = st.columns([1, 2, 1])
-    with v_col2:
-        st.video(VIDEO_URL)
+    tab_home, tab_stats, tab_results, tab_matches, tab_news = st.tabs([
+        "🏠 Home", "📊 Player Stats", "📅 Results", "⚽ Match Center", "📰 News"
+    ])
 
-    st.divider()
-
-    # --- Facebook Feed ---
-    st.markdown("### 📲 Latest Club Updates")
-    
-    fb_page_url = "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/" 
-
-    fb_iframe = f"""
-    <div style="display: flex; justify-content: center; width: 100%;">
-        <iframe 
-            src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
-            width="500" 
-            height="600" 
-            style="border:none;overflow:hidden;border-radius:10px;" 
-            scrolling="no" 
-            frameborder="0" 
-            allowfullscreen="true" 
-            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
-        </iframe>
-    </div>
-    """
-    components.html(fb_iframe, height=620, scrolling=True)
-
-
-# ==========================================
-# --- PLAYER STATS TAB ---
-# ==========================================
-with tab_stats:
-    try:
-        df = load_sheet("Socials_Player_Stats").iloc[:, :8]
-        if "Player" in df.columns:
-            df = df.dropna(subset=["Player"])
-
-        top_apps = df.sort_values(by="Appearances", ascending=False).iloc[0]
-        top_scorer = df.sort_values(by="Goals", ascending=False).iloc[0]
-        top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
-        top_involvements = df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
-
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("🏃 Most Apps", f"{top_apps['Player']}", f"{int(top_apps['Appearances'])} Apps")
-        col2.metric("⚽ Top Scorer", f"{top_scorer['Player']}", f"{int(top_scorer['Goals'])} Goals")
-        col3.metric("🅰️ Top Assister", f"{top_assister['Player']}", f"{int(top_assister['Assists'])} Assists")
-        col4.metric("🔥 Top Contributor", f"{top_involvements['Player']}", f"{int(top_involvements['Goal Involvements'])} G+A")
-
-        st.divider()
-
-        st.markdown("<h3 style='text-align: center;'>Player Stats</h3>", unsafe_allow_html=True)
-
-        f_col1, f_col2, f_col3 = st.columns([2, 2, 1])
-        with f_col1:
-            search_query = st.text_input("🔍 Search Player", "")
-        with f_col2:
-            sort_by = st.selectbox("Sort By Column", options=df.columns, index=1)
-        with f_col3:
-            sort_order = st.radio("Order", ["Descending", "Ascending"], horizontal=True)
-
-        filtered_df = df.copy()
-        if search_query:
-            filtered_df = filtered_df[filtered_df["Player"].str.contains(search_query, case=False, na=False)]
-
-        ascending = True if sort_order == "Ascending" else False
-        filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
-
-        table_html = "<div class='mobile-table-container'>"
-        table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 600px;'>"
-        table_html += "<tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
-        for col in filtered_df.columns:
-            table_html += f"<th style='padding: 10px; border-bottom: 2px solid #333; text-align: center; font-size: 13px;'>{col}</th>"
-        table_html += "</tr>"
-
-        for idx, row in filtered_df.iterrows():
-            bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
-            table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 13px;'>"
-            for col in filtered_df.columns:
-                val = row[col]
-                formatted_val = f"{int(val)}" if pd.notnull(val) and isinstance(val, (int, float)) and float(val).is_integer() else (f"{val:.1f}" if isinstance(val, float) else str(val))
-                table_html += f"<td style='padding: 8px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
-            table_html += "</tr>"
-        table_html += "</table></div>"
-
-        st.markdown(table_html, unsafe_allow_html=True)
-
-    except Exception as e:
-        st.error("Error loading stats.")
-        st.exception(e)
-
-
-# ==========================================
-# --- RESULTS TAB ---
-# ==========================================
-with tab_results:
-    st.markdown("<h2 style='text-align: center;'>📅 Results</h2>", unsafe_allow_html=True)
-    try:
-        games_df = load_sheet("Socials_Games")
-        
-        target_cols = ["GameID", "Date", "Location", "Opponent", "KO Time", "Result", "Outcome"]
-        display_cols = [c for c in target_cols if c in games_df.columns]
-        
-        if not display_cols:
-            display_cols = list(games_df.columns[:7])
-            
-        fixtures_df = games_df[display_cols].copy().dropna(subset=[display_cols[0]])
-
-        f_table_html = "<div class='mobile-table-container'>"
-        f_table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 550px;'>"
-        f_table_html += "<tr style='background-color: #FFB81C; color: #111; font-weight: bold; font-size: 13px;'>"
-        for col in fixtures_df.columns:
-            f_table_html += f"<th style='padding: 10px; border-bottom: 2px solid #333; text-align: center;'>{col}</th>"
-        f_table_html += "</tr>"
-
-        for idx, row in fixtures_df.reset_index(drop=True).iterrows():
-            bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
-            f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 13px;'>"
-            for col in fixtures_df.columns:
-                val = row[col]
-                formatted_val = "-" if pd.isnull(val) or str(val).strip().lower() in ["nan", "none", ""] else str(val).strip()
-                f_table_html += f"<td style='padding: 8px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
-            f_table_html += "</tr>"
-        f_table_html += "</table></div>"
-
-        st.markdown(f_table_html, unsafe_allow_html=True)
-
-    except Exception as e:
-        st.error("Error loading results data.")
-        st.exception(e)
-
-
-# ==========================================
-# --- MATCH CENTER & PITCH TAB ---
-# ==========================================
-with tab_matches:
-    st.markdown("<h2 style='text-align: center;'>Match Center & Lineups</h2>", unsafe_allow_html=True)
-    try:
-        games_df = load_sheet("Socials_Games")
-
-        def create_game_label(row):
-            opponent = str(row.get("Opponent", "Unknown")).strip()
-            result = str(row.get("Result", "")).strip()
-            date = str(row.get("Date", "")).strip()
-            
-            venue_val = ""
-            for col in row.index:
-                col_lower = str(col).strip().lower()
-                if "home" in col_lower or "away" in col_lower or col_lower == "venue":
-                    venue_val = str(row[col]).strip().lower()
-                    break
-            
-            is_away = venue_val.startswith("a")
-
-            if result and result.lower() != "nan":
-                if is_away:
-                    scores = [s.strip() for s in result.split("-")]
-                    match_title = f"{opponent} {scores[1]}-{scores[0]} Socials" if len(scores) == 2 else f"{opponent} {result} Socials"
-                else:
-                    match_title = f"Socials {result} {opponent}"
-            else:
-                match_title = f"{opponent} vs Socials" if is_away else f"Socials vs {opponent}"
-            
-            return f"{match_title} ({date})" if date and date.lower() != "nan" else match_title
-
-        game_options = {create_game_label(row): row["GameID"] for _, row in games_df.iterrows()}
-        options_list = list(game_options.keys())
-
-        # Default to the most recent game
-        default_idx = len(options_list) - 1 if options_list else 0
-
-        selected_label = st.selectbox(
-            "Select Game:",
-            options=options_list,
-            index=default_idx
-        )
-
-        selected_game_id = game_options[selected_label]
-        game_data = games_df[games_df["GameID"] == selected_game_id].iloc[0]
-
-        raw_motm = str(game_data.get("MOTM", "")).strip()
-        motm_val = raw_motm if raw_motm and raw_motm.lower() not in ["nan", "none", "-"] else "-"
-
-        m_col1, m_col2, m_col3, m_col4 = st.columns(4)
-        m_col1.metric("🗓️ Date", str(game_data.get("Date", "-")))
-        m_col2.metric("🛡️ Opponent", str(game_data.get("Opponent", "-")))
-        m_col3.metric("⚽ Score", str(game_data.get("Result", "-")))
-        m_col4.metric("🏆 MOTM", motm_val)
-
-        st.divider()
-
-        pitch_col, details_col = st.columns([2, 1])
-
-        with pitch_col:
-            formation = str(game_data.get("Formation", "4-3-3")).strip()
-            st.subheader(f"Starting 11 ({formation})")
-
-            goal_counts, assist_counts = {}, {}
-            try:
-                goals_df = load_sheet("Socials_Goals")
-                match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
-                match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
-
-                if not match_goals.empty:
-                    for _, row in match_goals.iterrows():
-                        scorer = str(row.get("Goalscorer", row.get("Scorer", ""))).strip()
-                        assist = str(row.get("Assist", "")).strip()
-                        
-                        if scorer and scorer.lower() not in ["unknown", "none", "-", "nan", ""]:
-                            goal_counts[scorer] = goal_counts.get(scorer, 0) + 1
-                        if assist and assist.lower() not in ["none", "-", "unassisted", "nan", ""]:
-                            assist_counts[assist] = assist_counts.get(assist, 0) + 1
-            except Exception:
-                pass
-
-            def_order = ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RWB", "RB"]
-            cdm_order = ["CDM", "CDM1", "CDM2"]
-            mid_order = ["LM", "CM", "CM1", "CM2", "CM3", "RM"]
-            cam_order = ["CAM", "CAM1", "CAM2"]
-            att_order = ["LW", "ST", "ST1", "ST2", "ST3", "RW"]
-
-            lineup = {}
-            for col_name in game_data.index:
-                col_clean = str(col_name).strip()
-                val = game_data.get(col_name)
-                if pd.notnull(val) and str(val).strip().lower() not in ["", "-", "nan", "none"]:
-                    lineup[col_clean] = str(val).strip()
-
-            def make_player_card(pos_key, name):
-                c_pos = clean_pos_label(pos_key)
-                g_count = goal_counts.get(name, 0)
-                a_count = assist_counts.get(name, 0)
-                
-                icons = []
-                if g_count > 0:
-                    icons.append("⚽" * g_count)
-                if a_count > 0:
-                    icons.append("🅰️" * a_count)
-                
-                badge_html = f'<div style="font-size: 9px; margin-top: auto; padding-top: 2px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
-
-                return f"""
-                <div style="background: #111; color: white; border: 1px solid #333; border-radius: 5px; padding: 4px 5px; margin: 2px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); min-width: 55px; max-width: 90px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
-                    <div>
-                        <div style="font-size: 9px; color: #FFB81C; font-weight: bold;">{c_pos}</div>
-                        <div style="font-size: 10px; font-weight: 800; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{name}</div>
-                    </div>
-                    {badge_html}
-                </div>
-                """
-
-            gk_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k == "GK"])
-            def_html = "".join([make_player_card(k, lineup[k]) for k in def_order if k in lineup])
-            cdm_html = "".join([make_player_card(k, lineup[k]) for k in cdm_order if k in lineup])
-            mid_html = "".join([make_player_card(k, lineup[k]) for k in mid_order if k in lineup])
-            cam_html = "".join([make_player_card(k, lineup[k]) for k in cam_order if k in lineup])
-            att_html = "".join([make_player_card(k, lineup[k]) for k in att_order if k in lineup])
-
-            pitch_component = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-            <style>
-            body {{ margin: 0; font-family: sans-serif; }}
-            .pitch {{
-                background: #181a20;
-                border: 2px solid #FFB81C;
-                border-radius: 10px;
-                padding: 10px 5px;
-                position: relative;
-                box-sizing: border-box;
-                min-height: 480px;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                overflow: hidden;
-            }}
-            .halfway-line {{
-                position: absolute; top: 50%; left: 0; right: 0;
-                border-top: 1px dashed rgba(255, 184, 28, 0.3);
-            }}
-            .center-circle {{
-                position: absolute; top: calc(50% - 35px); left: calc(50% - 35px);
-                width: 70px; height: 70px;
-                border: 1px dashed rgba(255, 184, 28, 0.3);
-                border-radius: 50%;
-            }}
-            .row {{
-                display: flex;
-                justify-content: space-around;
-                align-items: stretch;
-                position: relative;
-                z-index: 2;
-                width: 100%;
-            }}
-            </style>
-            </head>
-            <body>
-            <div class="pitch">
-                <div class="halfway-line"></div>
-                <div class="center-circle"></div>
-                {"<div class='row'>" + gk_html + "</div>" if gk_html else ""}
-                {"<div class='row'>" + def_html + "</div>" if def_html else ""}
-                {"<div class='row'>" + cdm_html + "</div>" if cdm_html else ""}
-                {"<div class='row'>" + mid_html + "</div>" if mid_html else ""}
-                {"<div class='row'>" + cam_html + "</div>" if cam_html else ""}
-                {"<div class='row'>" + att_html + "</div>" if att_html else ""}
+    # --- SOCIALS HOME TAB ---
+    with tab_home:
+        st.markdown("### About Socials Team")
+        st.markdown("""
+            <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 700px; margin: 0 auto; text-align: center;">
+                <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">Our Ethos</p>
+                <p style="margin-bottom: 15px;">Dedicated to competitive grassroots football, team camaraderie, and community performance.</p>
             </div>
-            </body>
-            </html>
-            """
-            components.html(pitch_component, height=500)
+        """, unsafe_allow_html=True)
 
-        with details_col:
-            st.markdown("<h3 style='text-align: center;'>⚽ Goals & Assists</h3>", unsafe_allow_html=True)
-            try:
-                goals_df = load_sheet("Socials_Goals")
-                match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
-                match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
+        st.divider()
 
-                if not match_goals.empty:
-                    for _, row in match_goals.iterrows():
-                        scorer = row.get("Goalscorer", row.get("Scorer", "Unknown"))
-                        assist = row.get("Assist", "")
-                        
-                        if pd.notnull(assist) and str(assist).strip().lower() not in ["", "none", "-", "unassisted", "nan"]:
-                            st.markdown(f"<div style='text-align: center;'>• <b>{scorer}</b> ⚽ ( {str(assist).strip()} 🅰️ )</div>", unsafe_allow_html=True)
-                        else:
-                            st.markdown(f"<div style='text-align: center;'>• <b>{scorer}</b> ⚽</div>", unsafe_allow_html=True)
-                else:
-                    st.markdown("<div style='text-align: center; color: #aaa;'>No goals recorded.</div>", unsafe_allow_html=True)
-            except Exception:
-                st.markdown("<div style='text-align: center;'>Goal log loading...</div>", unsafe_allow_html=True)
+        st.markdown("### 🎥 Socials Feature Video")
+        st.markdown("<div class='video-wrapper'>", unsafe_allow_html=True)
+        st.video(VIDEO_URL)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.divider()
+
+        st.markdown("### 📲 Latest Club Updates")
+        fb_page_url = "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/" 
+        fb_iframe = f"""
+        <div class="fb-container">
+            <iframe 
+                src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
+                height="600" 
+                style="border:none;overflow:hidden;width:100%;" 
+                scrolling="no" 
+                frameborder="0" 
+                allowfullscreen="true" 
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+            </iframe>
+        </div>
+        """
+        components.html(fb_iframe, height=620, scrolling=True)
+
+    # --- SOCIALS STATS TAB ---
+    with tab_stats:
+        try:
+            df = load_sheet("Socials_Player_Stats").iloc[:, :8]
+            if "Player" in df.columns:
+                df = df.dropna(subset=["Player"])
+
+            top_apps = df.sort_values(by="Appearances", ascending=False).iloc[0]
+            top_scorer = df.sort_values(by="Goals", ascending=False).iloc[0]
+            top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
+            top_involvements = df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
+
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("🏃 Most Apps", f"{top_apps['Player']}", f"{int(top_apps['Appearances'])} Apps")
+            col2.metric("⚽ Top Scorer", f"{top_scorer['Player']}", f"{int(top_scorer['Goals'])} Goals")
+            col3.metric("🅰️ Top Assister", f"{top_assister['Player']}", f"{int(top_assister['Assists'])} Assists")
+            col4.metric("🔥 Top Contributor", f"{top_involvements['Player']}", f"{int(top_involvements['Goal Involvements'])} G+A")
 
             st.divider()
 
-            st.markdown("<h3 style='text-align: center;'>👥 Substitutes</h3>", unsafe_allow_html=True)
-            subs = [game_data.get(f"SUB{i}") for i in range(1, 7)]
-            active_subs = [str(s).strip() for s in subs if pd.notnull(s) and str(s).strip().lower() not in ["", "-", "nan", "none"]]
-            
-            if active_subs:
-                for sub in active_subs:
-                    st.markdown(f"<div style='text-align: center;'>• {sub}</div>", unsafe_allow_html=True)
-            else:
-                st.markdown("<div style='text-align: center; color: #aaa;'>No substitutes listed.</div>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center;'>Socials Player Stats</h3>", unsafe_allow_html=True)
 
-    except Exception as e:
-        st.error("Error loading match data.")
-        st.exception(e)
+            f_col1, f_col2, f_col3 = st.columns([2, 2, 1])
+            with f_col1:
+                search_query = st.text_input("🔍 Search Player", "")
+            with f_col2:
+                sort_by = st.selectbox("Sort By Column", options=df.columns, index=1)
+            with f_col3:
+                sort_order = st.radio("Order", ["Descending", "Ascending"], horizontal=True)
+
+            filtered_df = df.copy()
+            if search_query:
+                filtered_df = filtered_df[filtered_df["Player"].str.contains(search_query, case=False, na=False)]
+
+            ascending = True if sort_order == "Ascending" else False
+            filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
+
+            table_html = "<div class='mobile-table-container'>"
+            table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 600px;'>"
+            table_html += "<tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
+            for col in filtered_df.columns:
+                table_html += f"<th style='padding: 10px; border-bottom: 2px solid #333; text-align: center; font-size: 13px;'>{col}</th>"
+            table_html += "</tr>"
+
+            for idx, row in filtered_df.iterrows():
+                bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
+                table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 13px;'>"
+                for col in filtered_df.columns:
+                    val = row[col]
+                    formatted_val = f"{int(val)}" if pd.notnull(val) and isinstance(val, (int, float)) and float(val).is_integer() else (f"{val:.1f}" if isinstance(val, float) else str(val))
+                    table_html += f"<td style='padding: 8px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
+                table_html += "</tr>"
+            table_html += "</table></div>"
+
+            st.markdown(table_html, unsafe_allow_html=True)
+
+        except Exception as e:
+            st.error("Error loading stats.")
+            st.exception(e)
+
+    # --- SOCIALS RESULTS TAB ---
+    with tab_results:
+        st.markdown("<h2 style='text-align: center;'>📅 Socials Results</h2>", unsafe_allow_html=True)
+        try:
+            games_df = load_sheet("Socials_Games")
+            target_cols = ["GameID", "Date", "Location", "Opponent", "KO Time", "Result", "Outcome"]
+            display_cols = [c for c in target_cols if c in games_df.columns]
+            if not display_cols:
+                display_cols = list(games_df.columns[:7])
+                
+            fixtures_df = games_df[display_cols].copy().dropna(subset=[display_cols[0]])
+
+            f_table_html = "<div class='mobile-table-container'>"
+            f_table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 550px;'>"
+            f_table_html += "<tr style='background-color: #FFB81C; color: #111; font-weight: bold; font-size: 13px;'>"
+            for col in fixtures_df.columns:
+                f_table_html += f"<th style='padding: 10px; border-bottom: 2px solid #333; text-align: center;'>{col}</th>"
+            f_table_html += "</tr>"
+
+            for idx, row in fixtures_df.reset_index(drop=True).iterrows():
+                bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
+                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 13px;'>"
+                for col in fixtures_df.columns:
+                    val = row[col]
+                    formatted_val = "-" if pd.isnull(val) or str(val).strip().lower() in ["nan", "none", ""] else str(val).strip()
+                    f_table_html += f"<td style='padding: 8px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
+                f_table_html += "</tr>"
+            f_table_html += "</table></div>"
+
+            st.markdown(f_table_html, unsafe_allow_html=True)
+
+        except Exception as e:
+            st.error("Error loading results data.")
+            st.exception(e)
+
+    # --- SOCIALS MATCH CENTER TAB ---
+    with tab_matches:
+        st.markdown("<h2 style='text-align: center;'>Socials Match Center & Lineups</h2>", unsafe_allow_html=True)
+        try:
+            games_df = load_sheet("Socials_Games")
+
+            def create_game_label(row):
+                opponent = str(row.get("Opponent", "Unknown")).strip()
+                result = str(row.get("Result", "")).strip()
+                date = str(row.get("Date", "")).strip()
+                venue_val = ""
+                for col in row.index:
+                    col_lower = str(col).strip().lower()
+                    if "home" in col_lower or "away" in col_lower or col_lower == "venue":
+                        venue_val = str(row[col]).strip().lower()
+                        break
+                is_away = venue_val.startswith("a")
+
+                if result and result.lower() != "nan":
+                    if is_away:
+                        scores = [s.strip() for s in result.split("-")]
+                        match_title = f"{opponent} {scores[1]}-{scores[0]} Socials" if len(scores) == 2 else f"{opponent} {result} Socials"
+                    else:
+                        match_title = f"Socials {result} {opponent}"
+                else:
+                    match_title = f"{opponent} vs Socials" if is_away else f"Socials vs {opponent}"
+                return f"{match_title} ({date})" if date and date.lower() != "nan" else match_title
+
+            game_options = {create_game_label(row): row["GameID"] for _, row in games_df.iterrows()}
+            options_list = list(game_options.keys())
+            default_idx = len(options_list) - 1 if options_list else 0
+
+            selected_label = st.selectbox("Select Game:", options=options_list, index=default_idx)
+            selected_game_id = game_options[selected_label]
+            game_data = games_df[games_df["GameID"] == selected_game_id].iloc[0]
+
+            raw_motm = str(game_data.get("MOTM", "")).strip()
+            motm_val = raw_motm if raw_motm and raw_motm.lower() not in ["nan", "none", "-"] else "-"
+
+            m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+            m_col1.metric("🗓️ Date", str(game_data.get("Date", "-")))
+            m_col2.metric("🛡️ Opponent", str(game_data.get("Opponent", "-")))
+            m_col3.metric("⚽ Score", str(game_data.get("Result", "-")))
+            m_col4.metric("🏆 MOTM", motm_val)
+
+            st.divider()
+
+            pitch_col, details_col = st.columns([2, 1])
+
+            with pitch_col:
+                formation = str(game_data.get("Formation", "4-3-3")).strip()
+                st.subheader(f"Starting 11 ({formation})")
+
+                goal_counts, assist_counts = {}, {}
+                try:
+                    goals_df = load_sheet("Socials_Goals")
+                    match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
+                    match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
+
+                    if not match_goals.empty:
+                        for _, row in match_goals.iterrows():
+                            scorer = str(row.get("Goalscorer", row.get("Scorer", ""))).strip()
+                            assist = str(row.get("Assist", "")).strip()
+                            if scorer and scorer.lower() not in ["unknown", "none", "-", "nan", ""]:
+                                goal_counts[scorer] = goal_counts.get(scorer, 0) + 1
+                            if assist and assist.lower() not in ["none", "-", "unassisted", "nan", ""]:
+                                assist_counts[assist] = assist_counts.get(assist, 0) + 1
+                except Exception:
+                    pass
+
+                def_order = ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RWB", "RB"]
+                cdm_order = ["CDM", "CDM1", "CDM2"]
+                mid_order = ["LM", "CM", "CM1", "CM2", "CM3", "RM"]
+                cam_order = ["CAM", "CAM1", "CAM2"]
+                att_order = ["LW", "ST", "ST1", "ST2", "ST3", "RW"]
+
+                lineup = {}
+                for col_name in game_data.index:
+                    col_clean = str(col_name).strip()
+                    val = game_data.get(col_name)
+                    if pd.notnull(val) and str(val).strip().lower() not in ["", "-", "nan", "none"]:
+                        lineup[col_clean] = str(val).strip()
+
+                def make_player_card(pos_key, name):
+                    c_pos = clean_pos_label(pos_key)
+                    g_count = goal_counts.get(name, 0)
+                    a_count = assist_counts.get(name, 0)
+                    icons = []
+                    if g_count > 0:
+                        icons.append("⚽" * g_count)
+                    if a_count > 0:
+                        icons.append("🅰️" * a_count)
+                    badge_html = f'<div style="font-size: 9px; margin-top: auto; padding-top: 2px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
+
+                    return f"""
+                    <div style="background: #111; color: white; border: 1px solid #333; border-radius: 5px; padding: 4px 5px; margin: 2px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); min-width: 55px; max-width: 90px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+                        <div>
+                            <div style="font-size: 9px; color: #FFB81C; font-weight: bold;">{c_pos}</div>
+                            <div style="font-size: 10px; font-weight: 800; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{name}</div>
+                        </div>
+                        {badge_html}
+                    </div>
+                    """
+
+                gk_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k == "GK"])
+                def_html = "".join([make_player_card(k, lineup[k]) for k in def_order if k in lineup])
+                cdm_html = "".join([make_player_card(k, lineup[k]) for k in cdm_order if k in lineup])
+                mid_html = "".join([make_player_card(k, lineup[k]) for k in mid_order if k in lineup])
+                cam_html = "".join([make_player_card(k, lineup[k]) for k in cam_order if k in lineup])
+                att_html = "".join([make_player_card(k, lineup[k]) for k in att_order if k in lineup])
+
+                pitch_component = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                <style>
+                body {{ margin: 0; font-family: sans-serif; }}
+                .pitch {{
+                    background: #181a20;
+                    border: 2px solid #FFB81C;
+                    border-radius: 10px;
+                    padding: 10px 5px;
+                    position: relative;
+                    box-sizing: border-box;
+                    min-height: 480px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    overflow: hidden;
+                }}
+                .halfway-line {{
+                    position: absolute; top: 50%; left: 0; right: 0;
+                    border-top: 1px dashed rgba(255, 184, 28, 0.3);
+                }}
+                .center-circle {{
+                    position: absolute; top: calc(50% - 35px); left: calc(50% - 35px);
+                    width: 70px; height: 70px;
+                    border: 1px dashed rgba(255, 184, 28, 0.3);
+                    border-radius: 50%;
+                }}
+                .row {{
+                    display: flex;
+                    justify-content: space-around;
+                    align-items: stretch;
+                    position: relative;
+                    z-index: 2;
+                    width: 100%;
+                }}
+                </style>
+                </head>
+                <body>
+                <div class="pitch">
+                    <div class="halfway-line"></div>
+                    <div class="center-circle"></div>
+                    {"<div class='row'>" + gk_html + "</div>" if gk_html else ""}
+                    {"<div class='row'>" + def_html + "</div>" if def_html else ""}
+                    {"<div class='row'>" + cdm_html + "</div>" if cdm_html else ""}
+                    {"<div class='row'>" + mid_html + "</div>" if mid_html else ""}
+                    {"<div class='row'>" + cam_html + "</div>" if cam_html else ""}
+                    {"<div class='row'>" + att_html + "</div>" if att_html else ""}
+                </div>
+                </body>
+                </html>
+                """
+                components.html(pitch_component, height=500)
+
+            with details_col:
+                st.markdown("<h3 style='text-align: center;'>⚽ Goals & Assists</h3>", unsafe_allow_html=True)
+                try:
+                    goals_df = load_sheet("Socials_Goals")
+                    match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
+                    match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
+
+                    if not match_goals.empty:
+                        for _, row in match_goals.iterrows():
+                            scorer = row.get("Goalscorer", row.get("Scorer", "Unknown"))
+                            assist = row.get("Assist", "")
+                            if pd.notnull(assist) and str(assist).strip().lower() not in ["", "none", "-", "unassisted", "nan"]:
+                                st.markdown(f"<div style='text-align: center;'>• <b>{scorer}</b> ⚽ ( {str(assist).strip()} 🅰️ )</div>", unsafe_allow_html=True)
+                            else:
+                                st.markdown(f"<div style='text-align: center;'>• <b>{scorer}</b> ⚽</div>", unsafe_allow_html=True)
+                    else:
+                        st.markdown("<div style='text-align: center; color: #aaa;'>No goals recorded.</div>", unsafe_allow_html=True)
+                except Exception:
+                    st.markdown("<div style='text-align: center;'>Goal log loading...</div>", unsafe_allow_html=True)
+
+                st.divider()
+
+                st.markdown("<h3 style='text-align: center;'>👥 Substitutes</h3>", unsafe_allow_html=True)
+                subs = [game_data.get(f"SUB{i}") for i in range(1, 7)]
+                active_subs = [str(s).strip() for s in subs if pd.notnull(s) and str(s).strip().lower() not in ["", "-", "nan", "none"]]
+                
+                if active_subs:
+                    for sub in active_subs:
+                        st.markdown(f"<div style='text-align: center;'>• {sub}</div>", unsafe_allow_html=True)
+                else:
+                    st.markdown("<div style='text-align: center; color: #aaa;'>No substitutes listed.</div>", unsafe_allow_html=True)
+
+        except Exception as e:
+            st.error("Error loading match data.")
+            st.exception(e)
+
+    # --- SOCIALS NEWS TAB ---
+    with tab_news:
+        st.markdown("<h2 style='text-align: center;'>📰 Socials Announcements</h2>", unsafe_allow_html=True)
+        st.info("📢 Training details, match locations, and team announcements go here.")
 
 
 # ==========================================
-# --- NEWS TAB ---
+# --- 3. COMMUNITY SUB-HOMEPAGE ---
 # ==========================================
-with tab_news:
-    st.markdown("<h2 style='text-align: center;'>📰 Club Announcements</h2>", unsafe_allow_html=True)
-    st.info("📢 Training details, match locations, and announcements go here.")
+elif selected_team == "🤝 Community":
+    st.markdown("## 🤝 Community Team")
+    tab_c_home, tab_c_stats, tab_c_results, tab_c_matches, tab_c_news = st.tabs([
+        "🏠 Home", "📊 Player Stats", "📅 Results", "⚽ Match Center", "📰 News"
+    ])
+
+    with tab_c_home:
+        st.markdown("### Welcome to Community Section")
+        st.info("Community team overview and project updates will be hosted here.")
+
+    with tab_c_stats:
+        st.markdown("### 📊 Community Stats")
+        st.info("Community player stats sheet integration coming soon.")
+
+    with tab_c_results:
+        st.markdown("### 📅 Community Results")
+        st.info("Community fixtures and results coming soon.")
+
+    with tab_c_matches:
+        st.markdown("### ⚽ Community Match Center")
+        st.info("Community match center coming soon.")
+
+    with tab_c_news:
+        st.markdown("### 📰 Community News")
+        st.info("Community announcements coming soon.")
+
+
+# ==========================================
+# --- 4. TOTAL CLUB SUB-HOMEPAGE ---
+# ==========================================
+elif selected_team == "📊 Total Club":
+    st.markdown("## 📊 Total Club Overview")
+    tab_tc_home, tab_tc_stats, tab_tc_results, tab_tc_news = st.tabs([
+        "🏠 Overview", "📊 Combined Stats", "📅 Club Schedule", "📰 Club News"
+    ])
+
+    with tab_tc_home:
+        st.markdown("### Total Club Metrics")
+        st.info("Combined stats across all Penguins teams (First Team, Socials, Community) will be aggregated here.")
+
+    with tab_tc_stats:
+        st.markdown("### 📊 Club-Wide Leaderboards")
+        st.info("Top goalscorers and appearance makers across all teams.")
+
+    with tab_tc_results:
+        st.markdown("### 📅 Club Master Schedule")
+        st.info("Master fixture list across all squads.")
+
+    with tab_tc_news:
+        st.markdown("### 📰 Overall Club News")
+        st.info("General club announcements.")
