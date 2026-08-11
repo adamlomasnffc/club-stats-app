@@ -71,48 +71,44 @@ st.markdown(f"""
             display: block !important;
         }}
 
-        /* Desktop Column Behavior */
-        div[data-testid="stHorizontalBlock"] {{
+        /* TARGET NAVIGATION COLUMNS ONLY: Super compact single row */
+        div[data-testid="stHorizontalBlock"]:has(div.stButton) {{
             display: flex !important;
             flex-direction: row !important;
-            justify-content: center !important;
-            gap: 4px !important;
+            flex-wrap: nowrap !important; /* Force single line */
+            justify-content: space-between !important;
+            gap: 2px !important; /* Tiny spaces between buttons */
             width: 100% !important;
+            padding-bottom: 4px !important;
         }}
 
-        /* FORCE HORIZONTAL LAYOUT ON MOBILE */
-        @media (max-width: 768px) {{
-            div[data-testid="stHorizontalBlock"] {{
-                flex-wrap: nowrap !important;
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch !important;
-                justify-content: flex-start !important;
-                padding-bottom: 5px !important; /* Space for scrollbar */
-            }}
-            
-            div[data-testid="column"] {{
-                flex: 0 0 auto !important; 
-                min-width: max-content !important; 
-                width: auto !important;
-                padding: 0 !important;
-            }}
+        div[data-testid="stHorizontalBlock"]:has(div.stButton) > div[data-testid="column"] {{
+            flex: 1 1 0 !important; /* Squeeze equally to fit the screen */
+            min-width: 0 !important; /* Allow shrinking below text size if necessary */
+            width: auto !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }}
 
-        /* Button Styling */
+        /* BUTTON STYLING: Ultra compact */
         div.stButton > button {{
             width: 100% !important;
             background-color: #1a1c23 !important;
             color: #ffffff !important;
             border: 1px solid #333333 !important;
-            border-radius: 6px !important;
-            padding: 6px 8px !important;
+            border-radius: 4px !important;
+            padding: 4px 1px !important; /* Minimal padding */
             font-weight: 600 !important;
-            font-size: 0.75rem !important; 
+            font-size: 0.65rem !important; /* Very small text to fit */
             box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
             transition: all 0.2s ease-in-out !important;
-            line-height: 1.2 !important;
+            line-height: 1.1 !important;
             min-height: 0 !important;
-            white-space: nowrap !important; /* Prevents text from wrapping inside buttons */
+            white-space: nowrap !important; /* Prevent text wrapping inside button */
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            text-overflow: clip !important;
         }}
         
         div.stButton > button:hover {{
@@ -146,7 +142,7 @@ st.markdown(f"""
             padding: 10px !important;
             border: 1px solid #333 !important;
             text-align: center !important;
-            min-width: 130px !important; /* Ensures metrics don't get too squished on mobile row */
+            min-width: 130px !important;
         }}
         [data-testid="stMetricValue"] {{
             color: #FFB81C !important;
@@ -211,7 +207,6 @@ def render_subtab_cards(team_key, has_match_center=True):
     cols = st.columns(len(tabs))
     for idx, tab_name in enumerate(tabs):
         with cols[idx]:
-            # Replaced "⚽ Lineups" with "⚽ Match Centre"
             btn_label = f"📊 Stats" if "Stats" in tab_name else f"📅 Results" if "Results" in tab_name else f"📅 Schedule" if "Schedule" in tab_name else f"⚽ Match Centre" if "Match" in tab_name else f"📰 News"
             if st.button(btn_label, key=f"sub_btn_{team_key}_{idx}"):
                 st.session_state[f"{team_key}_subtab"] = tab_name
