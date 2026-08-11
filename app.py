@@ -19,17 +19,17 @@ st.markdown(f"""
         <link rel="icon" type="image/png" sizes="192x192" href="{LOGO_URL}">
     </head>
     <style>
-        /* Add breathing room at top to prevent top clipping */
+        /* Top padding and overall centering adjustments */
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
             padding-top: 2rem !important;
         }}
 
-        /* Center align main app title */
-        h1 {{
+        /* Center all headers */
+        h1, h2, h3, h4 {{
             text-align: center !important;
         }}
 
-        /* Logo invert styling to pop on dark mode */
+        /* Logo invert styling */
         .header-logo {{
             filter: invert(1);
             max-height: 95px;
@@ -39,7 +39,12 @@ st.markdown(f"""
             padding-bottom: 5px;
         }}
 
-        /* Center align all metric components */
+        /* Center align st.markdown paragraphs */
+        .stMarkdown p {{
+            text-align: center !important;
+        }}
+
+        /* Center align metrics */
         [data-testid="stMetric"] {{
             text-align: center !important;
             justify-content: center !important;
@@ -74,7 +79,7 @@ st.markdown(f"""
             display: flex !important;
             justify-content: center !important;
             text-align: center !important;
-            color: #FFB81C !important; /* Penguin Yellow */
+            color: #FFB81C !important;
             width: 100% !important;
         }}
         [data-testid="stMetricValue"] > div {{
@@ -105,14 +110,12 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # 2. MAIN HEADER (Centered Header with Inverted Logo)
-head_col1, head_col2, head_col3 = st.columns([1, 2, 1])
-with head_col2:
-    st.markdown(f"""
-        <div style="text-align: center;">
-            <img src="{LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
-            <h1 style="margin-top: 5px;">Derby Penguins App</h1>
-        </div>
-    """, unsafe_allow_html=True)
+st.markdown(f"""
+    <div style="text-align: center;">
+        <img src="{LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
+        <h1 style="margin-top: 5px;">Derby Penguins App</h1>
+    </div>
+""", unsafe_allow_html=True)
 
 # 3. SPREADSHEET DATA LOADER
 SPREADSHEET_ID = "19wTGruEyetdVNhfjkyVqLDueyV9joVtRsI51RAqurjA"
@@ -141,7 +144,7 @@ tab_home, tab_stats, tab_results, tab_matches, tab_news = st.tabs([
 # ==========================================
 with tab_home:
     # --- Quick Links ---
-    st.markdown("<h3 style='text-align: center;'>Quick Links</h3>", unsafe_allow_html=True)
+    st.markdown("### Quick Links")
     link_col1, link_col2, link_col3, link_col4 = st.columns(4)
 
     with link_col1:
@@ -156,47 +159,47 @@ with tab_home:
     st.divider()
 
     # --- About Us / Ethos / Lore ---
-    st.markdown("<h3 style='text-align: center;'>About Us</h3>", unsafe_allow_html=True)
-    with st.expander("📖 Read Club Ethos & Lore", expanded=True):
-        st.markdown("""
-        **Our Ethos:**  
-        At Derby Penguins, we are dedicated to grassroots football, sportsmanship, and building a supportive team community on and off the pitch.
-
-        **Club Lore:**  
-        Founded to bring together passionate players, Derby Penguins provides a competitive, welcoming environment to train, play, and win together.
-        """)
+    st.markdown("### About Us")
+    
+    # Centered Custom Container for About Us
+    st.markdown("""
+        <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 700px; margin: 0 auto; text-align: center;">
+            <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">Our Ethos</p>
+            <p style="margin-bottom: 15px;">At Derby Penguins, we are dedicated to grassroots football, sportsmanship, and building a supportive team community on and off the pitch.</p>
+            <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">Club Lore</p>
+            <p style="margin-bottom: 0;">Founded to bring together passionate players, Derby Penguins provides a competitive, welcoming environment to train, play, and win together.</p>
+        </div>
+    """, unsafe_allow_html=True)
 
     st.divider()
 
-    # --- Club Video (Facebook Embed) ---
-    st.markdown("<h3 style='text-align: center;'>🎥 Club Feature Video</h3>", unsafe_allow_html=True)
+    # --- Club Video Card (Fixes Embed Issue & Fully Centered) ---
+    st.markdown("### 🎥 Club Feature Video")
     
     fb_video_url = "https://www.facebook.com/watch/?v=2096417224641905"
-    fb_video_iframe = f"""
-    <div style="display: flex; justify-content: center; width: 100%;">
-        <iframe 
-            src="https://www.facebook.com/plugins/video.php?href={fb_video_url}&show_text=false&width=500" 
-            width="500" 
-            height="280" 
-            style="border:none;overflow:hidden;border-radius:10px;" 
-            scrolling="no" 
-            frameborder="0" 
-            allowfullscreen="true" 
-            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
-        </iframe>
-    </div>
-    """
-    components.html(fb_video_iframe, height=290)
+    
+    st.markdown(f"""
+        <div style="display: flex; justify-content: center; width: 100%;">
+            <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 12px; padding: 25px; max-width: 450px; width: 100%; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                <div style="font-size: 50px; margin-bottom: 10px;">🎬</div>
+                <h4 style="color: #ffffff; margin-bottom: 10px;">Derby Penguins FC Video</h4>
+                <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">Watch our club feature directly on Facebook.</p>
+                <a href="{fb_video_url}" target="_blank" style="background-color: #FFB81C; color: #111; padding: 12px 24px; font-weight: bold; border-radius: 8px; text-decoration: none; display: inline-block; transition: 0.2s;">
+                    ▶ Watch Video on Facebook
+                </a>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
     st.divider()
 
     # --- Facebook Feed ---
-    st.markdown("<h3 style='text-align: center;'>📲 Latest Club Updates</h3>", unsafe_allow_html=True)
+    st.markdown("### 📲 Latest Club Updates")
     
     fb_page_url = "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/" 
 
     fb_iframe = f"""
-    <div style="display: flex; justify-content: center;">
+    <div style="display: flex; justify-content: center; width: 100%;">
         <iframe 
             src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
             width="500" 
