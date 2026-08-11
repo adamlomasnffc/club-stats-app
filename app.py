@@ -5,6 +5,7 @@ import re
 
 # 1. PAGE CONFIGURATION & MOBILE APP ICON
 LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/unnamed.png"
+VIDEO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/a6e86bfe-69d7-4146-add8-2ba2d49c942b.MP4"
 
 st.set_page_config(
     page_title="Derby Penguins App",
@@ -21,7 +22,7 @@ st.markdown(f"""
     <style>
         /* Top padding and overall centering adjustments */
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
-            padding-top: 2rem !important;
+            padding-top: 3rem !important;
         }}
 
         /* Center all headers */
@@ -29,14 +30,14 @@ st.markdown(f"""
             text-align: center !important;
         }}
 
-        /* Logo invert styling */
+        /* Logo invert styling & clipping fix */
         .header-logo {{
             filter: invert(1);
-            max-height: 95px;
+            max-height: 90px;
             object-fit: contain;
             display: block;
-            margin: 0 auto;
-            padding-bottom: 5px;
+            margin: 25px auto 5px auto !important;
+            padding-top: 10px;
         }}
 
         /* Center align st.markdown paragraphs */
@@ -160,8 +161,6 @@ with tab_home:
 
     # --- About Us / Ethos / Lore ---
     st.markdown("### About Us")
-    
-    # Centered Custom Container for About Us
     st.markdown("""
         <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 700px; margin: 0 auto; text-align: center;">
             <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">Our Ethos</p>
@@ -173,23 +172,12 @@ with tab_home:
 
     st.divider()
 
-    # --- Club Video Card (Fixes Embed Issue & Fully Centered) ---
+    # --- Native GitHub Video Integration ---
     st.markdown("### 🎥 Club Feature Video")
     
-    fb_video_url = "https://www.facebook.com/watch/?v=2096417224641905"
-    
-    st.markdown(f"""
-        <div style="display: flex; justify-content: center; width: 100%;">
-            <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 12px; padding: 25px; max-width: 450px; width: 100%; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
-                <div style="font-size: 50px; margin-bottom: 10px;">🎬</div>
-                <h4 style="color: #ffffff; margin-bottom: 10px;">Derby Penguins FC Video</h4>
-                <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px;">Watch our club feature directly on Facebook.</p>
-                <a href="{fb_video_url}" target="_blank" style="background-color: #FFB81C; color: #111; padding: 12px 24px; font-weight: bold; border-radius: 8px; text-decoration: none; display: inline-block; transition: 0.2s;">
-                    ▶ Watch Video on Facebook
-                </a>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    v_col1, v_col2, v_col3 = st.columns([1, 2, 1])
+    with v_col2:
+        st.video(VIDEO_URL)
 
     st.divider()
 
