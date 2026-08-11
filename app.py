@@ -38,53 +38,60 @@ st.markdown(f"""
     </head>
     <style>
         /* Global Reset & Base Alignments */
-        html, body, [class*="css"], .stApp, .block-container {{
+        html, body, [class*="css"], .stApp {{
             text-align: center !important;
         }}
         
+        /* FIX FOR LOGO CUTOFF: Prevent sticky top bounce and clear top margin */
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
-            padding-top: 1rem !important;
-            padding-left: 0.25rem !important;
-            padding-right: 0.25rem !important;
+            padding-top: 2rem !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
             max-width: 1000px !important;
             margin: 0 auto !important;
+            overflow: visible !important;
         }}
 
         h1, h2, h3, h4, h5, h6, p, label, div {{
             text-align: center !important;
         }}
 
-        /* Header Logo Fix */
+        /* Header Logo Container Fix */
         .header-logo-container {{
-            padding-top: 5px;
-            margin-bottom: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding-top: 10px !important;
+            margin-top: 0px !important;
+            margin-bottom: 5px !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
         }}
         .header-logo {{
             filter: invert(1);
-            max-height: 70px;
+            max-height: 65px !important;
+            width: auto !important;
             object-fit: contain;
-            display: block;
+            display: block !important;
             margin: 0 auto !important;
         }}
 
-        /* OVERRIDE STREAMLIT COLUMN STACKING: Force horizontal flexbox */
+        /* FIX FOR MISSING MOBILE LINKS: Force horizontal scroll for all button elements */
         div[data-testid="stHorizontalBlock"] {{
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: nowrap !important;
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch !important;
-            gap: 4px !important;
-            padding-bottom: 8px !important;
-            justify-content: center !important;
+            gap: 6px !important;
+            padding-bottom: 10px !important;
+            justify-content: flex-start !important;
+            width: 100% !important;
         }}
 
-        div[data-testid="column"] {{
-            flex: 1 1 0px !important;
-            min-width: 0 !important;
+        /* Allow inner button wrappers to maintain min-width on mobile */
+        div[data-testid="column"], div[data-testid="stElementContainer"] {{
+            flex: 0 0 auto !important;
+            min-width: 95px !important;
             padding: 0 !important;
         }}
 
@@ -94,14 +101,12 @@ st.markdown(f"""
             color: #ffffff !important;
             border: 1px solid #333333 !important;
             border-radius: 6px !important;
-            padding: 6px 1px !important;
+            padding: 8px 4px !important;
             font-weight: 600 !important;
-            font-size: 0.72rem !important;
+            font-size: 0.75rem !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
             transition: all 0.2s ease-in-out !important;
             white-space: nowrap !important;
-            text-overflow: ellipsis !important;
-            overflow: hidden !important;
         }}
         
         div.stButton > button:hover {{
@@ -195,7 +200,7 @@ st.markdown(f"""
     <div class="header-logo-container">
         <img src="{LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
     </div>
-    <h1 style="margin-top: 2px; margin-bottom: 10px; font-size: 1.4rem;">Derby Penguins App</h1>
+    <h1 style="margin-top: 4px; margin-bottom: 12px; font-size: 1.3rem;">Derby Penguins App</h1>
 """, unsafe_allow_html=True)
 
 # 4. SPREADSHEET DATA LOADER
@@ -211,7 +216,7 @@ def load_sheet(sheet_name):
 def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
-# 5. TOP INTERACTIVE NAVIGATION (Forced Horizontal Single Row)
+# 5. TOP INTERACTIVE NAVIGATION (Forced Scrollable Row)
 nav_cols = st.columns(6)
 pages_config = [
     ("🏠 Home", "Homepage"),
@@ -310,7 +315,6 @@ elif current_page == "Socials":
     st.markdown("## 📱 Derby Penguins Socials")
     subtab = render_subtab_cards("Socials")
 
-    # --- SOCIALS STATS TAB ---
     if subtab == "Player Stats":
         try:
             df = load_sheet("Socials_Player_Stats").iloc[:, :8]
@@ -370,7 +374,6 @@ elif current_page == "Socials":
             st.error("Error loading stats.")
             st.exception(e)
 
-    # --- SOCIALS RESULTS TAB ---
     elif subtab == "Results":
         st.markdown("## 📅 Socials Results")
         try:
@@ -405,7 +408,6 @@ elif current_page == "Socials":
             st.error("Error loading results data.")
             st.exception(e)
 
-    # --- SOCIALS MATCH CENTER TAB ---
     elif subtab == "Match Center":
         st.markdown("## Socials Match Center & Lineups")
         try:
@@ -607,7 +609,6 @@ elif current_page == "Socials":
             st.error("Error loading match data.")
             st.exception(e)
 
-    # --- SOCIALS NEWS TAB ---
     elif subtab == "News":
         st.markdown("## 📰 Socials Announcements")
         st.info("📢 Training details, match locations, and team announcements go here.")
