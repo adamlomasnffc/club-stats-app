@@ -33,7 +33,7 @@ st.markdown(f"""
         <link rel="apple-touch-icon-precomposed" href="{LOGO_URL}">
         <link rel="icon" type="image/png" sizes="192x192" href="{LOGO_URL}">
         <link rel="shortcut icon" href="{LOGO_URL}">
-        <meta name="apple-mobile-web-app-title" content="Derby Penguins">
+        <meta name="apple-mobile-web-app-title" content="Derby Penguins App">
         <meta name="apple-mobile-web-app-capable" content="yes">
     </head>
     <style>
