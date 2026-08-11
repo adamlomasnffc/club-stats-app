@@ -26,7 +26,7 @@ query_params = st.query_params
 if "nav" in query_params:
     st.session_state["active_page"] = query_params["nav"]
 
-# 2. GLOBAL STYLING & RESPONSIVE GRID CSS
+# 2. GLOBAL STYLING & HORIZONTAL SCROLLING CSS
 st.markdown(f"""
     <head>
         <link rel="apple-touch-icon" sizes="180x180" href="{LOGO_URL}">
@@ -37,15 +37,17 @@ st.markdown(f"""
         <meta name="apple-mobile-web-app-capable" content="yes">
     </head>
     <style>
-        /* Global Center Alignment */
+        /* Global Reset & Base Alignments */
         html, body, [class*="css"], .stApp, .block-container {{
             text-align: center !important;
         }}
         
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
-            padding-top: 1.5rem !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            padding-top: 1rem !important;
+            padding-left: 0.25rem !important;
+            padding-right: 0.25rem !important;
+            max-width: 1000px !important;
+            margin: 0 auto !important;
         }}
 
         h1, h2, h3, h4, h5, h6, p, label, div {{
@@ -54,7 +56,7 @@ st.markdown(f"""
 
         /* Header Logo Fix */
         .header-logo-container {{
-            padding-top: 10px;
+            padding-top: 5px;
             margin-bottom: 5px;
             display: flex;
             justify-content: center;
@@ -62,15 +64,28 @@ st.markdown(f"""
         }}
         .header-logo {{
             filter: invert(1);
-            max-height: 80px;
+            max-height: 70px;
             object-fit: contain;
             display: block;
             margin: 0 auto !important;
         }}
 
-        /* Responsive Custom Button Grids */
+        /* OVERRIDE STREAMLIT COLUMN STACKING: Force horizontal flexbox */
+        div[data-testid="stHorizontalBlock"] {{
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            gap: 4px !important;
+            padding-bottom: 8px !important;
+            justify-content: center !important;
+        }}
+
         div[data-testid="column"] {{
-            padding: 0 2px !important;
+            flex: 1 1 0px !important;
+            min-width: 0 !important;
+            padding: 0 !important;
         }}
 
         div.stButton > button {{
@@ -78,15 +93,15 @@ st.markdown(f"""
             background-color: #1a1c23 !important;
             color: #ffffff !important;
             border: 1px solid #333333 !important;
-            border-radius: 8px !important;
-            padding: 8px 2px !important;
+            border-radius: 6px !important;
+            padding: 6px 1px !important;
             font-weight: 600 !important;
-            font-size: 0.82rem !important;
+            font-size: 0.72rem !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
             transition: all 0.2s ease-in-out !important;
             white-space: nowrap !important;
-            overflow: hidden !important;
             text-overflow: ellipsis !important;
+            overflow: hidden !important;
         }}
         
         div.stButton > button:hover {{
@@ -100,16 +115,7 @@ st.markdown(f"""
             color: #111111 !important;
         }}
 
-        /* Media queries for narrow mobile screens */
-        @media (max-width: 640px) {{
-            div.stButton > button {{
-                font-size: 0.72rem !important;
-                padding: 6px 1px !important;
-                border-radius: 6px !important;
-            }}
-        }}
-
-        /* Video Wrapper */
+        /* Responsive Video Container */
         .video-container {{
             max-width: 480px;
             margin: 0 auto;
@@ -117,12 +123,12 @@ st.markdown(f"""
         }}
         .video-container video {{
             width: 100% !important;
-            max-height: 500px;
-            border-radius: 10px;
+            max-height: 480px;
+            border-radius: 8px;
             object-fit: contain;
         }}
 
-        /* Facebook Centered Responsive Wrapper */
+        /* Centered Responsive Facebook Embed Wrapper */
         .fb-center-wrapper {{
             display: flex;
             justify-content: center;
@@ -132,25 +138,22 @@ st.markdown(f"""
         }}
         .fb-container {{
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
             margin: 0 auto;
             overflow: hidden;
-            border-radius: 10px;
+            border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }}
-        .fb-container iframe {{
-            width: 100% !important;
-            max-width: 100% !important;
+            background: #111;
         }}
 
-        /* Center metrics styling */
+        /* Metrics Styling */
         [data-testid="stMetric"] {{
             text-align: center !important;
             justify-content: center !important;
             align-items: center !important;
             background-color: #1a1c23;
             border-radius: 8px;
-            padding: 8px !important;
+            padding: 6px !important;
             border: 1px solid #333;
         }}
         [data-testid="stMetric"] > div {{
@@ -161,14 +164,14 @@ st.markdown(f"""
             width: 100% !important;
         }}
         [data-testid="stMetricLabel"] {{
-            font-size: 0.8rem !important;
+            font-size: 0.75rem !important;
             display: flex !important;
             justify-content: center !important;
             text-align: center !important;
             width: 100% !important;
         }}
         [data-testid="stMetricValue"] {{
-            font-size: 1.1rem !important;
+            font-size: 1rem !important;
             display: flex !important;
             justify-content: center !important;
             text-align: center !important;
@@ -176,7 +179,7 @@ st.markdown(f"""
             width: 100% !important;
         }}
 
-        /* Mobile table container */
+        /* Mobile Scrollable Table Wrapper */
         .mobile-table-container {{
             width: 100%;
             overflow-x: auto;
@@ -192,7 +195,7 @@ st.markdown(f"""
     <div class="header-logo-container">
         <img src="{LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
     </div>
-    <h1 style="margin-top: 5px; margin-bottom: 15px; font-size: 1.6rem;">Derby Penguins App</h1>
+    <h1 style="margin-top: 2px; margin-bottom: 10px; font-size: 1.4rem;">Derby Penguins App</h1>
 """, unsafe_allow_html=True)
 
 # 4. SPREADSHEET DATA LOADER
@@ -208,7 +211,7 @@ def load_sheet(sheet_name):
 def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
-# 5. TOP INTERACTIVE NAVIGATION CARDS (6 Uniform Columns)
+# 5. TOP INTERACTIVE NAVIGATION (Forced Horizontal Single Row)
 nav_cols = st.columns(6)
 pages_config = [
     ("🏠 Home", "Homepage"),
@@ -229,7 +232,7 @@ st.divider()
 
 current_page = st.session_state["active_page"]
 
-# Helper function for rendering sub-tab interactive cards in horizontal single-row grids
+# Sub-tab Navigation Helper Function
 def render_subtab_cards(team_key, has_match_center=True):
     tabs = ["Player Stats", "Results", "Match Center", "News"] if has_match_center else ["Combined Stats", "Club Schedule", "Club News"]
     cols = st.columns(len(tabs))
@@ -239,7 +242,7 @@ def render_subtab_cards(team_key, has_match_center=True):
             if st.button(btn_label, key=f"sub_btn_{team_key}_{idx}"):
                 st.session_state[f"{team_key}_subtab"] = tab_name
                 st.rerun()
-    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
     return st.session_state.get(f"{team_key}_subtab", tabs[0])
 
 
@@ -261,9 +264,10 @@ if current_page == "Homepage":
     <div class="fb-center-wrapper">
         <div class="fb-container">
             <iframe 
-                src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
+                src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=380&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
+                width="100%" 
                 height="600" 
-                style="border:none;overflow:hidden;width:100%;" 
+                style="border:none;overflow:hidden;width:100%;max-width:100%;" 
                 scrolling="no" 
                 frameborder="0" 
                 allowfullscreen="true" 
@@ -344,19 +348,19 @@ elif current_page == "Socials":
             filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
 
             table_html = "<div class='mobile-table-container'>"
-            table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 600px;'>"
+            table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 550px;'>"
             table_html += "<tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
             for col in filtered_df.columns:
-                table_html += f"<th style='padding: 10px; border-bottom: 2px solid #333; text-align: center; font-size: 13px;'>{col}</th>"
+                table_html += f"<th style='padding: 8px; border-bottom: 2px solid #333; text-align: center; font-size: 12px;'>{col}</th>"
             table_html += "</tr>"
 
             for idx, row in filtered_df.iterrows():
                 bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
-                table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 13px;'>"
+                table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
                 for col in filtered_df.columns:
                     val = row[col]
                     formatted_val = f"{int(val)}" if pd.notnull(val) and isinstance(val, (int, float)) and float(val).is_integer() else (f"{val:.1f}" if isinstance(val, float) else str(val))
-                    table_html += f"<td style='padding: 8px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
+                    table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
                 table_html += "</tr>"
             table_html += "</table></div>"
 
@@ -379,19 +383,19 @@ elif current_page == "Socials":
             fixtures_df = games_df[display_cols].copy().dropna(subset=[display_cols[0]])
 
             f_table_html = "<div class='mobile-table-container'>"
-            f_table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 550px;'>"
-            f_table_html += "<tr style='background-color: #FFB81C; color: #111; font-weight: bold; font-size: 13px;'>"
+            f_table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 500px;'>"
+            f_table_html += "<tr style='background-color: #FFB81C; color: #111; font-weight: bold; font-size: 12px;'>"
             for col in fixtures_df.columns:
-                f_table_html += f"<th style='padding: 10px; border-bottom: 2px solid #333; text-align: center;'>{col}</th>"
+                f_table_html += f"<th style='padding: 8px; border-bottom: 2px solid #333; text-align: center;'>{col}</th>"
             f_table_html += "</tr>"
 
             for idx, row in fixtures_df.reset_index(drop=True).iterrows():
                 bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
-                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 13px;'>"
+                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
                 for col in fixtures_df.columns:
                     val = row[col]
                     formatted_val = "-" if pd.isnull(val) or str(val).strip().lower() in ["nan", "none", ""] else str(val).strip()
-                    f_table_html += f"<td style='padding: 8px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
+                    f_table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
                 f_table_html += "</tr>"
             f_table_html += "</table></div>"
 
@@ -493,13 +497,13 @@ elif current_page == "Socials":
                         icons.append("⚽" * g_count)
                     if a_count > 0:
                         icons.append("🅰️" * a_count)
-                    badge_html = f'<div style="font-size: 9px; margin-top: auto; padding-top: 2px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
+                    badge_html = f'<div style="font-size: 8px; margin-top: auto; padding-top: 1px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
 
                     return f"""
-                    <div style="background: #111; color: white; border: 1px solid #333; border-radius: 5px; padding: 4px 5px; margin: 2px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); min-width: 55px; max-width: 90px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+                    <div style="background: #111; color: white; border: 1px solid #333; border-radius: 5px; padding: 3px 4px; margin: 2px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); min-width: 48px; max-width: 85px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
                         <div>
-                            <div style="font-size: 9px; color: #FFB81C; font-weight: bold;">{c_pos}</div>
-                            <div style="font-size: 10px; font-weight: 800; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{name}</div>
+                            <div style="font-size: 8px; color: #FFB81C; font-weight: bold;">{c_pos}</div>
+                            <div style="font-size: 9px; font-weight: 800; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{name}</div>
                         </div>
                         {badge_html}
                     </div>
@@ -522,10 +526,10 @@ elif current_page == "Socials":
                     background: #181a20;
                     border: 2px solid #FFB81C;
                     border-radius: 10px;
-                    padding: 10px 5px;
+                    padding: 8px 4px;
                     position: relative;
                     box-sizing: border-box;
-                    min-height: 480px;
+                    min-height: 450px;
                     display: flex;
                     flex-direction: column;
                     justify-content: space-between;
@@ -536,8 +540,8 @@ elif current_page == "Socials":
                     border-top: 1px dashed rgba(255, 184, 28, 0.3);
                 }}
                 .center-circle {{
-                    position: absolute; top: calc(50% - 35px); left: calc(50% - 35px);
-                    width: 70px; height: 70px;
+                    position: absolute; top: calc(50% - 30px); left: calc(50% - 30px);
+                    width: 60px; height: 60px;
                     border: 1px dashed rgba(255, 184, 28, 0.3);
                     border-radius: 50%;
                 }}
@@ -565,7 +569,7 @@ elif current_page == "Socials":
                 </body>
                 </html>
                 """
-                components.html(pitch_component, height=500)
+                components.html(pitch_component, height=470)
 
             with details_col:
                 st.markdown("### ⚽ Goals & Assists")
@@ -659,10 +663,10 @@ elif current_page == "Club":
 elif current_page == "About Us":
     st.markdown("## ℹ️ About Derby Penguins")
     st.markdown("""
-        <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 25px; max-width: 750px; margin: 0 auto; text-align: center;">
-            <p style="color: #FFB81C; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px;">Our Ethos</p>
-            <p style="margin-bottom: 20px;">At Derby Penguins, we are dedicated to grassroots football, sportsmanship, and building a supportive team community on and off the pitch.</p>
-            <p style="color: #FFB81C; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px;">Club Lore</p>
-            <p style="margin-bottom: 0;">Founded to bring together passionate players, Derby Penguins provides a competitive, welcoming environment to train, play, and win together across all our squad levels.</p>
+        <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 600px; margin: 0 auto; text-align: center;">
+            <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Our Ethos</p>
+            <p style="margin-bottom: 15px; font-size: 0.9rem;">At Derby Penguins, we are dedicated to grassroots football, sportsmanship, and building a supportive team community on and off the pitch.</p>
+            <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Club Lore</p>
+            <p style="margin-bottom: 0; font-size: 0.9rem;">Founded to bring together passionate players, Derby Penguins provides a competitive, welcoming environment to train, play, and win together across all our squad levels.</p>
         </div>
     """, unsafe_allow_html=True)
