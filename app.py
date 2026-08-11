@@ -16,7 +16,6 @@ st.set_page_config(
 # Mobile Home Screen Icon Injection CSS & Custom Styles
 st.markdown(f"""
     <head>
-        <!-- Apple & Android Mobile Web App Home Screen Icons -->
         <link rel="apple-touch-icon" sizes="180x180" href="{LOGO_URL}">
         <link rel="apple-touch-icon-precomposed" href="{LOGO_URL}">
         <link rel="icon" type="image/png" sizes="192x192" href="{LOGO_URL}">
@@ -25,33 +24,30 @@ st.markdown(f"""
         <meta name="apple-mobile-web-app-capable" content="yes">
     </head>
     <style>
-        /* Top padding and overall centering adjustments */
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
-            padding-top: 2rem !important;
+            padding-top: 1.5rem !important;
         }}
 
-        /* Center all headers */
         h1, h2, h3, h4 {{
             text-align: center !important;
         }}
 
-        /* Logo invert styling & clipping fix */
         .header-logo {{
             filter: invert(1);
-            max-height: 90px;
+            max-height: 85px;
             object-fit: contain;
             display: block;
-            margin: 20px auto 5px auto !important;
-            padding-top: 5px;
+            margin: 10px auto 5px auto !important;
         }}
 
-        /* Team Navigation Radio Bar Styling */
+        /* Team Navigation Pills / Cards */
         div[data-testid="stRadio"] > div {{
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }}
 
-        /* Responsive Video Container */
+        /* Video wrapper */
         .video-wrapper {{
             max-width: 480px;
             margin: 0 auto;
@@ -59,11 +55,11 @@ st.markdown(f"""
         }}
         .video-wrapper video {{
             border-radius: 10px;
-            max-height: 550px;
+            max-height: 520px;
             object-fit: contain;
         }}
 
-        /* Responsive Facebook Feed Wrapper */
+        /* Facebook feed wrapper */
         .fb-container {{
             width: 100%;
             max-width: 500px;
@@ -76,7 +72,7 @@ st.markdown(f"""
             max-width: 100% !important;
         }}
 
-        /* Center align metrics */
+        /* Center metrics */
         [data-testid="stMetric"] {{
             text-align: center !important;
             justify-content: center !important;
@@ -129,11 +125,11 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 2. MAIN HEADER (Centered Header with Inverted Logo)
+# 2. MAIN HEADER (Inverted Logo)
 st.markdown(f"""
     <div style="text-align: center;">
         <img src="{LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
-        <h1 style="margin-top: 5px; margin-bottom: 5px;">Derby Penguins App</h1>
+        <h1 style="margin-top: 0px; margin-bottom: 10px;">Derby Penguins App</h1>
     </div>
 """, unsafe_allow_html=True)
 
@@ -150,10 +146,17 @@ def load_sheet(sheet_name):
 def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
-# 4. PRIMARY TEAM NAVIGATION (Replaces Top Tabs)
-selected_team = st.radio(
-    "Select Team Section:",
-    options=["🐧 Penguins", "📱 Socials", "🤝 Community", "📊 Total Club"],
+# 4. INTERACTIVE TOP NAVIGATION CARDS
+selected_page = st.radio(
+    "Navigate Section:",
+    options=[
+        "🏠 Main Home", 
+        "🐧 Derby Penguins", 
+        "📱 Derby Penguins Socials", 
+        "🤝 Derby Penguins Community", 
+        "📊 Derby Penguins Total Club",
+        "ℹ️ About Derby Penguins"
+    ],
     horizontal=True,
     label_visibility="collapsed"
 )
@@ -161,80 +164,72 @@ selected_team = st.radio(
 st.divider()
 
 # ==========================================
-# --- 1. PENGUINS SUB-HOMEPAGE ---
+# --- 1. MAIN LANDING PAGE ---
 # ==========================================
-if selected_team == "🐧 Penguins":
-    st.markdown("## 🐧 Derby Penguins First Team")
-    tab_p_home, tab_p_stats, tab_p_results, tab_p_matches, tab_p_news = st.tabs([
-        "🏠 Home", "📊 Player Stats", "📅 Results", "⚽ Match Center", "📰 News"
-    ])
+if selected_page == "🏠 Main Home":
+    
+    # --- Feature Video ---
+    st.markdown("### 🎥 Feature Video")
+    st.markdown("<div class='video-wrapper'>", unsafe_allow_html=True)
+    st.video(VIDEO_URL)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    with tab_p_home:
-        st.markdown("### Welcome to Penguins First Team")
-        st.info("First team stats, updates, and rosters will be populated here soon.")
+    st.divider()
+
+    # --- Facebook Feed ---
+    st.markdown("### 📲 Latest Club Updates")
+    fb_page_url = "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/" 
+    fb_iframe = f"""
+    <div class="fb-container">
+        <iframe 
+            src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
+            height="600" 
+            style="border:none;overflow:hidden;width:100%;" 
+            scrolling="no" 
+            frameborder="0" 
+            allowfullscreen="true" 
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+        </iframe>
+    </div>
+    """
+    components.html(fb_iframe, height=620, scrolling=True)
+
+
+# ==========================================
+# --- 2. DERBY PENGUINS (FIRST TEAM) ---
+# ==========================================
+elif selected_page == "🐧 Derby Penguins":
+    st.markdown("## 🐧 Derby Penguins First Team")
+    tab_p_stats, tab_p_results, tab_p_matches, tab_p_news = st.tabs([
+        "📊 Player Stats", "📅 Results", "⚽ Match Center", "📰 News"
+    ])
 
     with tab_p_stats:
-        st.markdown("### 📊 Penguins Player Stats")
-        st.info("Penguins stats sheet integration coming soon.")
+        st.markdown("### 📊 Player Stats")
+        st.info("First team player stats will be populated here.")
 
     with tab_p_results:
-        st.markdown("### 📅 Penguins Results")
-        st.info("Penguins match results coming soon.")
+        st.markdown("### 📅 Results")
+        st.info("First team results and fixtures coming soon.")
 
     with tab_p_matches:
-        st.markdown("### ⚽ Penguins Match Center")
-        st.info("Penguins match lineup pitch coming soon.")
+        st.markdown("### ⚽ Match Center")
+        st.info("First team lineup pitch and goal logs coming soon.")
 
     with tab_p_news:
-        st.markdown("### 📰 Penguins News")
-        st.info("Penguins team announcements and updates.")
+        st.markdown("### 📰 News")
+        st.info("First team announcements.")
 
 
 # ==========================================
-# --- 2. SOCIALS SUB-HOMEPAGE (CURRENT DATA) ---
+# --- 3. DERBY PENGUINS SOCIALS (POPULATED DATA) ---
 # ==========================================
-elif selected_team == "📱 Socials":
+elif selected_page == "📱 Derby Penguins Socials":
     st.markdown("## 📱 Derby Penguins Socials")
     
-    tab_home, tab_stats, tab_results, tab_matches, tab_news = st.tabs([
-        "🏠 Home", "📊 Player Stats", "📅 Results", "⚽ Match Center", "📰 News"
+    tab_stats, tab_results, tab_matches, tab_news = st.tabs([
+        "📊 Player Stats", "📅 Results", "⚽ Match Center", "📰 News"
     ])
-
-    # --- SOCIALS HOME TAB ---
-    with tab_home:
-        st.markdown("### About Socials Team")
-        st.markdown("""
-            <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 700px; margin: 0 auto; text-align: center;">
-                <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">Our Ethos</p>
-                <p style="margin-bottom: 15px;">Dedicated to competitive grassroots football, team camaraderie, and community performance.</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-        st.divider()
-
-        st.markdown("### 🎥 Socials Feature Video")
-        st.markdown("<div class='video-wrapper'>", unsafe_allow_html=True)
-        st.video(VIDEO_URL)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        st.divider()
-
-        st.markdown("### 📲 Latest Club Updates")
-        fb_page_url = "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/" 
-        fb_iframe = f"""
-        <div class="fb-container">
-            <iframe 
-                src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
-                height="600" 
-                style="border:none;overflow:hidden;width:100%;" 
-                scrolling="no" 
-                frameborder="0" 
-                allowfullscreen="true" 
-                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
-            </iframe>
-        </div>
-        """
-        components.html(fb_iframe, height=620, scrolling=True)
 
     # --- SOCIALS STATS TAB ---
     with tab_stats:
@@ -540,56 +535,63 @@ elif selected_team == "📱 Socials":
 
 
 # ==========================================
-# --- 3. COMMUNITY SUB-HOMEPAGE ---
+# --- 4. DERBY PENGUINS COMMUNITY ---
 # ==========================================
-elif selected_team == "🤝 Community":
-    st.markdown("## 🤝 Community Team")
-    tab_c_home, tab_c_stats, tab_c_results, tab_c_matches, tab_c_news = st.tabs([
-        "🏠 Home", "📊 Player Stats", "📅 Results", "⚽ Match Center", "📰 News"
+elif selected_page == "🤝 Derby Penguins Community":
+    st.markdown("## 🤝 Derby Penguins Community")
+    tab_c_stats, tab_c_results, tab_c_matches, tab_c_news = st.tabs([
+        "📊 Player Stats", "📅 Results", "⚽ Match Center", "📰 News"
     ])
 
-    with tab_c_home:
-        st.markdown("### Welcome to Community Section")
-        st.info("Community team overview and project updates will be hosted here.")
-
     with tab_c_stats:
-        st.markdown("### 📊 Community Stats")
-        st.info("Community player stats sheet integration coming soon.")
+        st.markdown("### 📊 Player Stats")
+        st.info("Community stats coming soon.")
 
     with tab_c_results:
-        st.markdown("### 📅 Community Results")
-        st.info("Community fixtures and results coming soon.")
+        st.markdown("### 📅 Results")
+        st.info("Community results coming soon.")
 
     with tab_c_matches:
-        st.markdown("### ⚽ Community Match Center")
+        st.markdown("### ⚽ Match Center")
         st.info("Community match center coming soon.")
 
     with tab_c_news:
-        st.markdown("### 📰 Community News")
-        st.info("Community announcements coming soon.")
+        st.markdown("### 📰 News")
+        st.info("Community announcements.")
 
 
 # ==========================================
-# --- 4. TOTAL CLUB SUB-HOMEPAGE ---
+# --- 5. DERBY PENGUINS TOTAL CLUB ---
 # ==========================================
-elif selected_team == "📊 Total Club":
-    st.markdown("## 📊 Total Club Overview")
-    tab_tc_home, tab_tc_stats, tab_tc_results, tab_tc_news = st.tabs([
-        "🏠 Overview", "📊 Combined Stats", "📅 Club Schedule", "📰 Club News"
+elif selected_page == "📊 Derby Penguins Total Club":
+    st.markdown("## 📊 Derby Penguins Total Club Overview")
+    tab_tc_stats, tab_tc_results, tab_tc_news = st.tabs([
+        "📊 Combined Stats", "📅 Club Schedule", "📰 Club News"
     ])
 
-    with tab_tc_home:
-        st.markdown("### Total Club Metrics")
-        st.info("Combined stats across all Penguins teams (First Team, Socials, Community) will be aggregated here.")
-
     with tab_tc_stats:
-        st.markdown("### 📊 Club-Wide Leaderboards")
-        st.info("Top goalscorers and appearance makers across all teams.")
+        st.markdown("### 📊 Club Leaderboards")
+        st.info("Combined stats across all squads will be displayed here.")
 
     with tab_tc_results:
-        st.markdown("### 📅 Club Master Schedule")
-        st.info("Master fixture list across all squads.")
+        st.markdown("### 📅 Master Schedule")
+        st.info("Combined fixture list for all teams.")
 
     with tab_tc_news:
-        st.markdown("### 📰 Overall Club News")
-        st.info("General club announcements.")
+        st.markdown("### 📰 Club News")
+        st.info("Overall club announcements.")
+
+
+# ==========================================
+# --- 6. ABOUT DERBY PENGUINS ---
+# ==========================================
+elif selected_page == "ℹ️ About Derby Penguins":
+    st.markdown("## ℹ️ About Derby Penguins")
+    st.markdown("""
+        <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 25px; max-width: 750px; margin: 0 auto; text-align: center;">
+            <p style="color: #FFB81C; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px;">Our Ethos</p>
+            <p style="margin-bottom: 20px;">At Derby Penguins, we are dedicated to grassroots football, sportsmanship, and building a supportive team community on and off the pitch.</p>
+            <p style="color: #FFB81C; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px;">Club Lore</p>
+            <p style="margin-bottom: 0;">Founded to bring together passionate players, Derby Penguins provides a competitive, welcoming environment to train, play, and win together across all our squad levels.</p>
+        </div>
+    """, unsafe_allow_html=True)
