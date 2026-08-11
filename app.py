@@ -9,7 +9,7 @@ VIDEO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main
 
 st.set_page_config(
     page_title="Derby Penguins App",
-    page_icon=LOGO_URLv2,
+    page_icon=LOGO_URL,
     layout="wide"
 )
 
