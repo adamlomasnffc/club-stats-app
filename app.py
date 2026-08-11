@@ -13,23 +13,20 @@ st.set_page_config(
     layout="wide"
 )
 
-# Initialize Session State for Section & Sub-tab Navigation
+# Initialize Session State
 if "active_page" not in st.session_state:
-    st.session_state["active_page"] = "Main Home"
+    st.session_state["active_page"] = "Homepage"
 
-for team_key in ["Penguins", "Socials", "Community", "Total Club"]:
+for team_key in ["Penguins", "Socials", "Community", "Club"]:
     if f"{team_key}_subtab" not in st.session_state:
         st.session_state[f"{team_key}_subtab"] = "Player Stats"
 
-# Handle Query Params / Session state updates
+# Handle Query Params
 query_params = st.query_params
 if "nav" in query_params:
     st.session_state["active_page"] = query_params["nav"]
-if "sub" in query_params:
-    current_page = st.session_state["active_page"]
-    st.session_state[f"{current_page}_subtab"] = query_params["sub"]
 
-# 2. GLOBAL STYLING & CENTER ALIGNMENT
+# 2. GLOBAL STYLING & RESPONSIVE GRID CSS
 st.markdown(f"""
     <head>
         <link rel="apple-touch-icon" sizes="180x180" href="{LOGO_URL}">
@@ -40,22 +37,24 @@ st.markdown(f"""
         <meta name="apple-mobile-web-app-capable" content="yes">
     </head>
     <style>
-        /* Global Center Alignment Rule */
+        /* Global Center Alignment */
         html, body, [class*="css"], .stApp, .block-container {{
             text-align: center !important;
         }}
         
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
-            padding-top: 2rem !important;
+            padding-top: 1.5rem !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
         }}
 
         h1, h2, h3, h4, h5, h6, p, label, div {{
             text-align: center !important;
         }}
 
-        /* Logo fix */
+        /* Header Logo Fix */
         .header-logo-container {{
-            padding-top: 15px;
+            padding-top: 10px;
             margin-bottom: 5px;
             display: flex;
             justify-content: center;
@@ -63,31 +62,81 @@ st.markdown(f"""
         }}
         .header-logo {{
             filter: invert(1);
-            max-height: 85px;
+            max-height: 80px;
             object-fit: contain;
             display: block;
             margin: 0 auto !important;
         }}
 
-        /* Video wrapper */
-        .video-wrapper {{
+        /* Responsive Custom Button Grids */
+        div[data-testid="column"] {{
+            padding: 0 2px !important;
+        }}
+
+        div.stButton > button {{
+            width: 100% !important;
+            background-color: #1a1c23 !important;
+            color: #ffffff !important;
+            border: 1px solid #333333 !important;
+            border-radius: 8px !important;
+            padding: 8px 2px !important;
+            font-weight: 600 !important;
+            font-size: 0.82rem !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+            transition: all 0.2s ease-in-out !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }}
+        
+        div.stButton > button:hover {{
+            border-color: #FFB81C !important;
+            color: #FFB81C !important;
+            background-color: #22252e !important;
+        }}
+        
+        div.stButton > button:active {{
+            background-color: #FFB81C !important;
+            color: #111111 !important;
+        }}
+
+        /* Media queries for narrow mobile screens */
+        @media (max-width: 640px) {{
+            div.stButton > button {{
+                font-size: 0.72rem !important;
+                padding: 6px 1px !important;
+                border-radius: 6px !important;
+            }}
+        }}
+
+        /* Video Wrapper */
+        .video-container {{
             max-width: 480px;
             margin: 0 auto;
             width: 100%;
         }}
-        .video-wrapper video {{
+        .video-container video {{
+            width: 100% !important;
+            max-height: 500px;
             border-radius: 10px;
-            max-height: 520px;
             object-fit: contain;
         }}
 
-        /* Facebook feed wrapper */
+        /* Facebook Centered Responsive Wrapper */
+        .fb-center-wrapper {{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin: 0 auto;
+        }}
         .fb-container {{
             width: 100%;
             max-width: 500px;
             margin: 0 auto;
             overflow: hidden;
             border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }}
         .fb-container iframe {{
             width: 100% !important;
@@ -101,7 +150,7 @@ st.markdown(f"""
             align-items: center !important;
             background-color: #1a1c23;
             border-radius: 8px;
-            padding: 10px !important;
+            padding: 8px !important;
             border: 1px solid #333;
         }}
         [data-testid="stMetric"] > div {{
@@ -112,43 +161,19 @@ st.markdown(f"""
             width: 100% !important;
         }}
         [data-testid="stMetricLabel"] {{
-            font-size: 0.85rem !important;
+            font-size: 0.8rem !important;
             display: flex !important;
             justify-content: center !important;
             text-align: center !important;
             width: 100% !important;
         }}
         [data-testid="stMetricValue"] {{
-            font-size: 1.2rem !important;
+            font-size: 1.1rem !important;
             display: flex !important;
             justify-content: center !important;
             text-align: center !important;
             color: #FFB81C !important;
             width: 100% !important;
-        }}
-
-        /* Custom Button Card Styling */
-        div.stButton > button {{
-            width: 100% !important;
-            background-color: #1a1c23 !important;
-            color: #ffffff !important;
-            border: 1px solid #333333 !important;
-            border-radius: 8px !important;
-            padding: 12px 10px !important;
-            font-weight: 600 !important;
-            font-size: 14px !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
-            transition: all 0.2s ease-in-out !important;
-        }}
-        div.stButton > button:hover {{
-            border-color: #FFB81C !important;
-            color: #FFB81C !important;
-            background-color: #22252e !important;
-            transform: translateY(-2px);
-        }}
-        div.stButton > button:active {{
-            background-color: #FFB81C !important;
-            color: #111111 !important;
         }}
 
         /* Mobile table container */
@@ -162,12 +187,12 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. HEADER (Uncropped Logo & Title)
+# 3. HEADER
 st.markdown(f"""
     <div class="header-logo-container">
         <img src="{LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
     </div>
-    <h1 style="margin-top: 5px; margin-bottom: 15px;">Derby Penguins App</h1>
+    <h1 style="margin-top: 5px; margin-bottom: 15px; font-size: 1.6rem;">Derby Penguins App</h1>
 """, unsafe_allow_html=True)
 
 # 4. SPREADSHEET DATA LOADER
@@ -183,15 +208,15 @@ def load_sheet(sheet_name):
 def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
-# 5. TOP INTERACTIVE NAVIGATION CARDS
+# 5. TOP INTERACTIVE NAVIGATION CARDS (6 Uniform Columns)
 nav_cols = st.columns(6)
 pages_config = [
-    ("🏠 Main Home", "Main Home"),
-    ("🐧 Derby Penguins", "Penguins"),
+    ("🏠 Home", "Homepage"),
+    ("🐧 Penguins", "Penguins"),
     ("📱 Socials", "Socials"),
     ("🤝 Community", "Community"),
-    ("📊 Total Club", "Total Club"),
-    ("ℹ️ About Us", "About Us")
+    ("📊 Club", "Club"),
+    ("ℹ️ About", "About Us")
 ]
 
 for idx, (label, key) in enumerate(pages_config):
@@ -204,13 +229,13 @@ st.divider()
 
 current_page = st.session_state["active_page"]
 
-# Helper function to render sub-tab interactive cards
+# Helper function for rendering sub-tab interactive cards in horizontal single-row grids
 def render_subtab_cards(team_key, has_match_center=True):
     tabs = ["Player Stats", "Results", "Match Center", "News"] if has_match_center else ["Combined Stats", "Club Schedule", "Club News"]
     cols = st.columns(len(tabs))
     for idx, tab_name in enumerate(tabs):
         with cols[idx]:
-            btn_label = f"📊 {tab_name}" if "Stats" in tab_name else f"📅 {tab_name}" if "Results" in tab_name or "Schedule" in tab_name else f"⚽ {tab_name}" if "Match" in tab_name else f"📰 {tab_name}"
+            btn_label = f"📊 Stats" if "Stats" in tab_name else f"📅 Results" if "Results" in tab_name else f"📅 Schedule" if "Schedule" in tab_name else f"⚽ Lineups" if "Match" in tab_name else f"📰 News"
             if st.button(btn_label, key=f"sub_btn_{team_key}_{idx}"):
                 st.session_state[f"{team_key}_subtab"] = tab_name
                 st.rerun()
@@ -219,12 +244,12 @@ def render_subtab_cards(team_key, has_match_center=True):
 
 
 # ==========================================
-# --- 1. MAIN LANDING PAGE ---
+# --- 1. HOMEPAGE ---
 # ==========================================
-if current_page == "Main Home":
+if current_page == "Homepage":
     
     st.markdown("### 🎥 Feature Video")
-    st.markdown("<div class='video-wrapper'>", unsafe_allow_html=True)
+    st.markdown("<div class='video-container'>", unsafe_allow_html=True)
     st.video(VIDEO_URL)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -233,16 +258,18 @@ if current_page == "Main Home":
     st.markdown("### 📲 Latest Club Updates")
     fb_page_url = "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/" 
     fb_iframe = f"""
-    <div class="fb-container">
-        <iframe 
-            src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
-            height="600" 
-            style="border:none;overflow:hidden;width:100%;" 
-            scrolling="no" 
-            frameborder="0" 
-            allowfullscreen="true" 
-            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
-        </iframe>
+    <div class="fb-center-wrapper">
+        <div class="fb-container">
+            <iframe 
+                src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
+                height="600" 
+                style="border:none;overflow:hidden;width:100%;" 
+                scrolling="no" 
+                frameborder="0" 
+                allowfullscreen="true" 
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+            </iframe>
+        </div>
     </div>
     """
     components.html(fb_iframe, height=620, scrolling=True)
@@ -607,11 +634,11 @@ elif current_page == "Community":
 
 
 # ==========================================
-# --- 5. DERBY PENGUINS TOTAL CLUB ---
+# --- 5. DERBY PENGUINS CLUB ---
 # ==========================================
-elif current_page == "Total Club":
-    st.markdown("## 📊 Derby Penguins Total Club Overview")
-    subtab = render_subtab_cards("Total Club", has_match_center=False)
+elif current_page == "Club":
+    st.markdown("## 📊 Derby Penguins Club Overview")
+    subtab = render_subtab_cards("Club", has_match_center=False)
 
     if subtab == "Combined Stats":
         st.markdown("### 📊 Club Leaderboards")
