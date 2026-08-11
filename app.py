@@ -3,8 +3,8 @@ import pandas as pd
 import streamlit.components.v1 as components
 import re
 
-# 1. PAGE CONFIGURATION & MOBILE APP ICON
-LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/unnamed.png"
+# 1. PAGE CONFIGURATION & MOBILE APP ICON (Cache-busted with ?v=2)
+LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/unnamed.png?v=2"
 VIDEO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/a6e86bfe-69d7-4146-add8-2ba2d49c942b.MP4"
 
 st.set_page_config(
@@ -42,7 +42,6 @@ st.markdown(f"""
             text-align: center !important;
         }}
         
-        /* Push content down so Streamlit header doesn't hide the logo */
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
             padding-top: 3rem !important; 
             padding-left: 0.5rem !important;
@@ -71,60 +70,44 @@ st.markdown(f"""
             display: block !important;
         }}
 
-        /* CORE FIX: Prevent the scrollable horizontal ribbon and kill huge gaps */
+        /* ==========================================
+           CORE FIX: Smooth Scrollable Ribbon 
+           Compatible with ALL older phones
+           ========================================== */
+        
         div[data-testid="stHorizontalBlock"] {{
             flex-wrap: nowrap !important;
-            overflow-x: hidden !important; 
-            gap: 2px !important; 
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important; /* Smooth momentum scrolling */
+            gap: 6px !important; /* Tiny 6px gap instead of huge defaults */
+            padding-bottom: 5px !important; /* Prevent scrollbar from clipping */
         }}
 
-        /* Allow all columns to shrink infinitely so they all fit on one screen */
+        /* Force columns to exactly hug the button width */
         div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {{
-            min-width: 0 !important;
-            padding: 0 !important;
+            flex: 0 0 auto !important; 
+            min-width: max-content !important; 
+            width: auto !important;
         }}
 
-        /* BUTTON STYLING: Scale text dynamically to screen width so it cannot scroll */
-        div.stButton {{
-            width: 100% !important;
-            min-width: 0 !important;
-        }}
-        
+        /* Button standardisation */
         div.stButton > button {{
-            width: 100% !important;
-            min-width: 0 !important;
             background-color: #1a1c23 !important;
             color: #ffffff !important;
             border: 1px solid #333333 !important;
             border-radius: 4px !important;
-            padding: 4px 1px !important;
+            padding: 6px 14px !important; /* Readable padding */
             box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
             transition: all 0.2s ease-in-out !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            line-height: 1.1 !important;
+            white-space: nowrap !important; /* Keeps text on one line */
         }}
         
         div.stButton > button p {{
-            margin: 0 !important;
-            font-size: 2.7vw !important; /* THE FIX: Text scales exactly with screen width */
+            font-size: 14px !important; 
             font-weight: 600 !important;
-            white-space: nowrap !important; 
-            overflow: hidden !important;
-            text-overflow: clip !important;
+            margin: 0 !important;
         }}
 
-        /* Cap the sizes for Desktop so the buttons don't get massive */
-        @media (min-width: 600px) {{
-            div[data-testid="stHorizontalBlock"] {{
-                gap: 10px !important;
-            }}
-            div.stButton > button p {{
-                font-size: 14px !important;
-            }}
-        }}
-        
         div.stButton > button:hover {{
             border-color: #FFB81C !important;
             color: #FFB81C !important;
@@ -134,6 +117,12 @@ st.markdown(f"""
         div.stButton > button:active {{
             background-color: #FFB81C !important;
             color: #111111 !important;
+        }}
+
+        /* Keep metrics looking like a grid despite the ribbon layout */
+        div[data-testid="metric-container"] {{
+            min-width: 150px !important; 
+            width: 100% !important;
         }}
 
         /* Responsive Video Container */
@@ -156,7 +145,6 @@ st.markdown(f"""
             padding: 10px !important;
             border: 1px solid #333 !important;
             text-align: center !important;
-            min-width: 0 !important;
         }}
         [data-testid="stMetricValue"] {{
             color: #FFB81C !important;
