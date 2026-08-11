@@ -13,7 +13,23 @@ st.set_page_config(
     layout="wide"
 )
 
-# Mobile Home Screen Icon Injection CSS & Custom Styles
+# Initialize Session State for Section & Sub-tab Navigation
+if "active_page" not in st.session_state:
+    st.session_state["active_page"] = "Main Home"
+
+for team_key in ["Penguins", "Socials", "Community", "Total Club"]:
+    if f"{team_key}_subtab" not in st.session_state:
+        st.session_state[f"{team_key}_subtab"] = "Player Stats"
+
+# Handle Query Params / Session state updates
+query_params = st.query_params
+if "nav" in query_params:
+    st.session_state["active_page"] = query_params["nav"]
+if "sub" in query_params:
+    current_page = st.session_state["active_page"]
+    st.session_state[f"{current_page}_subtab"] = query_params["sub"]
+
+# 2. GLOBAL STYLING & CENTER ALIGNMENT
 st.markdown(f"""
     <head>
         <link rel="apple-touch-icon" sizes="180x180" href="{LOGO_URL}">
@@ -24,27 +40,33 @@ st.markdown(f"""
         <meta name="apple-mobile-web-app-capable" content="yes">
     </head>
     <style>
+        /* Global Center Alignment Rule */
+        html, body, [class*="css"], .stApp, .block-container {{
+            text-align: center !important;
+        }}
+        
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
-            padding-top: 1.5rem !important;
+            padding-top: 2rem !important;
         }}
 
-        h1, h2, h3, h4 {{
+        h1, h2, h3, h4, h5, h6, p, label, div {{
             text-align: center !important;
         }}
 
+        /* Logo fix */
+        .header-logo-container {{
+            padding-top: 15px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }}
         .header-logo {{
             filter: invert(1);
             max-height: 85px;
             object-fit: contain;
             display: block;
-            margin: 10px auto 5px auto !important;
-        }}
-
-        /* Team Navigation Pills / Cards */
-        div[data-testid="stRadio"] > div {{
-            justify-content: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            margin: 0 auto !important;
         }}
 
         /* Video wrapper */
@@ -72,7 +94,7 @@ st.markdown(f"""
             max-width: 100% !important;
         }}
 
-        /* Center metrics */
+        /* Center metrics styling */
         [data-testid="stMetric"] {{
             text-align: center !important;
             justify-content: center !important;
@@ -105,6 +127,30 @@ st.markdown(f"""
             width: 100% !important;
         }}
 
+        /* Custom Button Card Styling */
+        div.stButton > button {{
+            width: 100% !important;
+            background-color: #1a1c23 !important;
+            color: #ffffff !important;
+            border: 1px solid #333333 !important;
+            border-radius: 8px !important;
+            padding: 12px 10px !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+            transition: all 0.2s ease-in-out !important;
+        }}
+        div.stButton > button:hover {{
+            border-color: #FFB81C !important;
+            color: #FFB81C !important;
+            background-color: #22252e !important;
+            transform: translateY(-2px);
+        }}
+        div.stButton > button:active {{
+            background-color: #FFB81C !important;
+            color: #111111 !important;
+        }}
+
         /* Mobile table container */
         .mobile-table-container {{
             width: 100%;
@@ -113,27 +159,18 @@ st.markdown(f"""
             margin-top: 10px;
             margin-bottom: 20px;
         }}
-        
-        /* Tab styling */
-        button[data-baseweb="tab"] {{
-            padding: 8px 12px !important;
-            font-size: 14px !important;
-        }}
-        button[aria-selected="true"] {{
-            color: #FFB81C !important;
-        }}
     </style>
 """, unsafe_allow_html=True)
 
-# 2. MAIN HEADER (Inverted Logo)
+# 3. HEADER (Uncropped Logo & Title)
 st.markdown(f"""
-    <div style="text-align: center;">
+    <div class="header-logo-container">
         <img src="{LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
-        <h1 style="margin-top: 0px; margin-bottom: 10px;">Derby Penguins App</h1>
     </div>
+    <h1 style="margin-top: 5px; margin-bottom: 15px;">Derby Penguins App</h1>
 """, unsafe_allow_html=True)
 
-# 3. SPREADSHEET DATA LOADER
+# 4. SPREADSHEET DATA LOADER
 SPREADSHEET_ID = "19wTGruEyetdVNhfjkyVqLDueyV9joVtRsI51RAqurjA"
 
 @st.cache_data(ttl=60)
@@ -146,29 +183,46 @@ def load_sheet(sheet_name):
 def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
-# 4. INTERACTIVE TOP NAVIGATION CARDS
-selected_page = st.radio(
-    "Navigate Section:",
-    options=[
-        "🏠 Main Home", 
-        "🐧 Derby Penguins", 
-        "📱 Derby Penguins Socials", 
-        "🤝 Derby Penguins Community", 
-        "📊 Derby Penguins Total Club",
-        "ℹ️ About Derby Penguins"
-    ],
-    horizontal=True,
-    label_visibility="collapsed"
-)
+# 5. TOP INTERACTIVE NAVIGATION CARDS
+nav_cols = st.columns(6)
+pages_config = [
+    ("🏠 Main Home", "Main Home"),
+    ("🐧 Derby Penguins", "Penguins"),
+    ("📱 Socials", "Socials"),
+    ("🤝 Community", "Community"),
+    ("📊 Total Club", "Total Club"),
+    ("ℹ️ About Us", "About Us")
+]
+
+for idx, (label, key) in enumerate(pages_config):
+    with nav_cols[idx]:
+        if st.button(label, key=f"nav_btn_{key}"):
+            st.session_state["active_page"] = key
+            st.rerun()
 
 st.divider()
+
+current_page = st.session_state["active_page"]
+
+# Helper function to render sub-tab interactive cards
+def render_subtab_cards(team_key, has_match_center=True):
+    tabs = ["Player Stats", "Results", "Match Center", "News"] if has_match_center else ["Combined Stats", "Club Schedule", "Club News"]
+    cols = st.columns(len(tabs))
+    for idx, tab_name in enumerate(tabs):
+        with cols[idx]:
+            btn_label = f"📊 {tab_name}" if "Stats" in tab_name else f"📅 {tab_name}" if "Results" in tab_name or "Schedule" in tab_name else f"⚽ {tab_name}" if "Match" in tab_name else f"📰 {tab_name}"
+            if st.button(btn_label, key=f"sub_btn_{team_key}_{idx}"):
+                st.session_state[f"{team_key}_subtab"] = tab_name
+                st.rerun()
+    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+    return st.session_state.get(f"{team_key}_subtab", tabs[0])
+
 
 # ==========================================
 # --- 1. MAIN LANDING PAGE ---
 # ==========================================
-if selected_page == "🏠 Main Home":
+if current_page == "Main Home":
     
-    # --- Feature Video ---
     st.markdown("### 🎥 Feature Video")
     st.markdown("<div class='video-wrapper'>", unsafe_allow_html=True)
     st.video(VIDEO_URL)
@@ -176,7 +230,6 @@ if selected_page == "🏠 Main Home":
 
     st.divider()
 
-    # --- Facebook Feed ---
     st.markdown("### 📲 Latest Club Updates")
     fb_page_url = "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/" 
     fb_iframe = f"""
@@ -196,27 +249,25 @@ if selected_page == "🏠 Main Home":
 
 
 # ==========================================
-# --- 2. DERBY PENGUINS (FIRST TEAM) ---
+# --- 2. DERBY PENGUINS ---
 # ==========================================
-elif selected_page == "🐧 Derby Penguins":
-    st.markdown("## 🐧 Derby Penguins First Team")
-    tab_p_stats, tab_p_results, tab_p_matches, tab_p_news = st.tabs([
-        "📊 Player Stats", "📅 Results", "⚽ Match Center", "📰 News"
-    ])
+elif current_page == "Penguins":
+    st.markdown("## 🐧 Derby Penguins")
+    subtab = render_subtab_cards("Penguins")
 
-    with tab_p_stats:
+    if subtab == "Player Stats":
         st.markdown("### 📊 Player Stats")
         st.info("First team player stats will be populated here.")
 
-    with tab_p_results:
+    elif subtab == "Results":
         st.markdown("### 📅 Results")
         st.info("First team results and fixtures coming soon.")
 
-    with tab_p_matches:
+    elif subtab == "Match Center":
         st.markdown("### ⚽ Match Center")
         st.info("First team lineup pitch and goal logs coming soon.")
 
-    with tab_p_news:
+    elif subtab == "News":
         st.markdown("### 📰 News")
         st.info("First team announcements.")
 
@@ -224,15 +275,12 @@ elif selected_page == "🐧 Derby Penguins":
 # ==========================================
 # --- 3. DERBY PENGUINS SOCIALS (POPULATED DATA) ---
 # ==========================================
-elif selected_page == "📱 Derby Penguins Socials":
+elif current_page == "Socials":
     st.markdown("## 📱 Derby Penguins Socials")
-    
-    tab_stats, tab_results, tab_matches, tab_news = st.tabs([
-        "📊 Player Stats", "📅 Results", "⚽ Match Center", "📰 News"
-    ])
+    subtab = render_subtab_cards("Socials")
 
     # --- SOCIALS STATS TAB ---
-    with tab_stats:
+    if subtab == "Player Stats":
         try:
             df = load_sheet("Socials_Player_Stats").iloc[:, :8]
             if "Player" in df.columns:
@@ -251,7 +299,7 @@ elif selected_page == "📱 Derby Penguins Socials":
 
             st.divider()
 
-            st.markdown("<h3 style='text-align: center;'>Socials Player Stats</h3>", unsafe_allow_html=True)
+            st.markdown("### Socials Player Stats")
 
             f_col1, f_col2, f_col3 = st.columns([2, 2, 1])
             with f_col1:
@@ -292,8 +340,8 @@ elif selected_page == "📱 Derby Penguins Socials":
             st.exception(e)
 
     # --- SOCIALS RESULTS TAB ---
-    with tab_results:
-        st.markdown("<h2 style='text-align: center;'>📅 Socials Results</h2>", unsafe_allow_html=True)
+    elif subtab == "Results":
+        st.markdown("## 📅 Socials Results")
         try:
             games_df = load_sheet("Socials_Games")
             target_cols = ["GameID", "Date", "Location", "Opponent", "KO Time", "Result", "Outcome"]
@@ -327,8 +375,8 @@ elif selected_page == "📱 Derby Penguins Socials":
             st.exception(e)
 
     # --- SOCIALS MATCH CENTER TAB ---
-    with tab_matches:
-        st.markdown("<h2 style='text-align: center;'>Socials Match Center & Lineups</h2>", unsafe_allow_html=True)
+    elif subtab == "Match Center":
+        st.markdown("## Socials Match Center & Lineups")
         try:
             games_df = load_sheet("Socials_Games")
 
@@ -493,7 +541,7 @@ elif selected_page == "📱 Derby Penguins Socials":
                 components.html(pitch_component, height=500)
 
             with details_col:
-                st.markdown("<h3 style='text-align: center;'>⚽ Goals & Assists</h3>", unsafe_allow_html=True)
+                st.markdown("### ⚽ Goals & Assists")
                 try:
                     goals_df = load_sheet("Socials_Goals")
                     match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
@@ -504,58 +552,56 @@ elif selected_page == "📱 Derby Penguins Socials":
                             scorer = row.get("Goalscorer", row.get("Scorer", "Unknown"))
                             assist = row.get("Assist", "")
                             if pd.notnull(assist) and str(assist).strip().lower() not in ["", "none", "-", "unassisted", "nan"]:
-                                st.markdown(f"<div style='text-align: center;'>• <b>{scorer}</b> ⚽ ( {str(assist).strip()} 🅰️ )</div>", unsafe_allow_html=True)
+                                st.markdown(f"• <b>{scorer}</b> ⚽ ( {str(assist).strip()} 🅰️ )", unsafe_allow_html=True)
                             else:
-                                st.markdown(f"<div style='text-align: center;'>• <b>{scorer}</b> ⚽</div>", unsafe_allow_html=True)
+                                st.markdown(f"• <b>{scorer}</b> ⚽", unsafe_allow_html=True)
                     else:
-                        st.markdown("<div style='text-align: center; color: #aaa;'>No goals recorded.</div>", unsafe_allow_html=True)
+                        st.markdown("<p style='color: #aaa;'>No goals recorded.</p>", unsafe_allow_html=True)
                 except Exception:
-                    st.markdown("<div style='text-align: center;'>Goal log loading...</div>", unsafe_allow_html=True)
+                    st.markdown("Goal log loading...")
 
                 st.divider()
 
-                st.markdown("<h3 style='text-align: center;'>👥 Substitutes</h3>", unsafe_allow_html=True)
+                st.markdown("### 👥 Substitutes")
                 subs = [game_data.get(f"SUB{i}") for i in range(1, 7)]
                 active_subs = [str(s).strip() for s in subs if pd.notnull(s) and str(s).strip().lower() not in ["", "-", "nan", "none"]]
                 
                 if active_subs:
                     for sub in active_subs:
-                        st.markdown(f"<div style='text-align: center;'>• {sub}</div>", unsafe_allow_html=True)
+                        st.markdown(f"• {sub}")
                 else:
-                    st.markdown("<div style='text-align: center; color: #aaa;'>No substitutes listed.</div>", unsafe_allow_html=True)
+                    st.markdown("<p style='color: #aaa;'>No substitutes listed.</p>", unsafe_allow_html=True)
 
         except Exception as e:
             st.error("Error loading match data.")
             st.exception(e)
 
     # --- SOCIALS NEWS TAB ---
-    with tab_news:
-        st.markdown("<h2 style='text-align: center;'>📰 Socials Announcements</h2>", unsafe_allow_html=True)
+    elif subtab == "News":
+        st.markdown("## 📰 Socials Announcements")
         st.info("📢 Training details, match locations, and team announcements go here.")
 
 
 # ==========================================
 # --- 4. DERBY PENGUINS COMMUNITY ---
 # ==========================================
-elif selected_page == "🤝 Derby Penguins Community":
+elif current_page == "Community":
     st.markdown("## 🤝 Derby Penguins Community")
-    tab_c_stats, tab_c_results, tab_c_matches, tab_c_news = st.tabs([
-        "📊 Player Stats", "📅 Results", "⚽ Match Center", "📰 News"
-    ])
+    subtab = render_subtab_cards("Community")
 
-    with tab_c_stats:
+    if subtab == "Player Stats":
         st.markdown("### 📊 Player Stats")
         st.info("Community stats coming soon.")
 
-    with tab_c_results:
+    elif subtab == "Results":
         st.markdown("### 📅 Results")
         st.info("Community results coming soon.")
 
-    with tab_c_matches:
+    elif subtab == "Match Center":
         st.markdown("### ⚽ Match Center")
         st.info("Community match center coming soon.")
 
-    with tab_c_news:
+    elif subtab == "News":
         st.markdown("### 📰 News")
         st.info("Community announcements.")
 
@@ -563,21 +609,19 @@ elif selected_page == "🤝 Derby Penguins Community":
 # ==========================================
 # --- 5. DERBY PENGUINS TOTAL CLUB ---
 # ==========================================
-elif selected_page == "📊 Derby Penguins Total Club":
+elif current_page == "Total Club":
     st.markdown("## 📊 Derby Penguins Total Club Overview")
-    tab_tc_stats, tab_tc_results, tab_tc_news = st.tabs([
-        "📊 Combined Stats", "📅 Club Schedule", "📰 Club News"
-    ])
+    subtab = render_subtab_cards("Total Club", has_match_center=False)
 
-    with tab_tc_stats:
+    if subtab == "Combined Stats":
         st.markdown("### 📊 Club Leaderboards")
         st.info("Combined stats across all squads will be displayed here.")
 
-    with tab_tc_results:
+    elif subtab == "Club Schedule":
         st.markdown("### 📅 Master Schedule")
         st.info("Combined fixture list for all teams.")
 
-    with tab_tc_news:
+    elif subtab == "Club News":
         st.markdown("### 📰 Club News")
         st.info("Overall club announcements.")
 
@@ -585,7 +629,7 @@ elif selected_page == "📊 Derby Penguins Total Club":
 # ==========================================
 # --- 6. ABOUT DERBY PENGUINS ---
 # ==========================================
-elif selected_page == "ℹ️ About Derby Penguins":
+elif current_page == "About Us":
     st.markdown("## ℹ️ About Derby Penguins")
     st.markdown("""
         <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 25px; max-width: 750px; margin: 0 auto; text-align: center;">
