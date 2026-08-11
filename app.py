@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 import re
 
 # 1. PAGE CONFIGURATION & MOBILE APP ICON
-LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/unnamed.png"
+LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/PenguinsLogo.png"
 VIDEO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/a6e86bfe-69d7-4146-add8-2ba2d49c942b.MP4"
 
 st.set_page_config(
