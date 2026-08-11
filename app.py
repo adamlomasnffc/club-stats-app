@@ -44,7 +44,7 @@ st.markdown(f"""
         
         /* FIX FOR LOGO CUTOFF: Prevent sticky top bounce and clear top margin */
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
-            padding-top: 2rem !important;
+            padding-top: 1.5rem !important;
             padding-left: 0.5rem !important;
             padding-right: 0.5rem !important;
             max-width: 1000px !important;
@@ -58,7 +58,7 @@ st.markdown(f"""
 
         /* Header Logo Container Fix */
         .header-logo-container {{
-            padding-top: 10px !important;
+            padding-top: 5px !important;
             margin-top: 0px !important;
             margin-bottom: 5px !important;
             display: flex !important;
@@ -68,14 +68,14 @@ st.markdown(f"""
         }}
         .header-logo {{
             filter: invert(1);
-            max-height: 65px !important;
+            max-height: 60px !important;
             width: auto !important;
             object-fit: contain;
             display: block !important;
             margin: 0 auto !important;
         }}
 
-        /* FIX FOR MISSING MOBILE LINKS: Force horizontal scroll for all button elements */
+        /* NAVIGATION BUTTON ROW: Force scrollable row */
         div[data-testid="stHorizontalBlock"] {{
             display: flex !important;
             flex-direction: row !important;
@@ -83,7 +83,7 @@ st.markdown(f"""
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch !important;
             gap: 6px !important;
-            padding-bottom: 10px !important;
+            padding-bottom: 8px !important;
             justify-content: flex-start !important;
             width: 100% !important;
         }}
@@ -91,7 +91,7 @@ st.markdown(f"""
         /* Allow inner button wrappers to maintain min-width on mobile */
         div[data-testid="column"], div[data-testid="stElementContainer"] {{
             flex: 0 0 auto !important;
-            min-width: 95px !important;
+            min-width: 90px !important;
             padding: 0 !important;
         }}
 
@@ -101,7 +101,7 @@ st.markdown(f"""
             color: #ffffff !important;
             border: 1px solid #333333 !important;
             border-radius: 6px !important;
-            padding: 8px 4px !important;
+            padding: 6px 4px !important;
             font-weight: 600 !important;
             font-size: 0.75rem !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
@@ -143,7 +143,7 @@ st.markdown(f"""
         }}
         .fb-container {{
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
             margin: 0 auto;
             overflow: hidden;
             border-radius: 8px;
@@ -151,15 +151,18 @@ st.markdown(f"""
             background: #111;
         }}
 
-        /* Metrics Styling */
+        /* Metrics Styling - Enforce Vertical Stacking */
         [data-testid="stMetric"] {{
             text-align: center !important;
             justify-content: center !important;
             align-items: center !important;
-            background-color: #1a1c23;
-            border-radius: 8px;
-            padding: 6px !important;
-            border: 1px solid #333;
+            background-color: #1a1c23 !important;
+            border-radius: 8px !important;
+            padding: 8px 4px !important;
+            border: 1px solid #333 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
         }}
         [data-testid="stMetric"] > div {{
             display: flex !important;
@@ -169,19 +172,22 @@ st.markdown(f"""
             width: 100% !important;
         }}
         [data-testid="stMetricLabel"] {{
-            font-size: 0.75rem !important;
+            font-size: 0.72rem !important;
             display: flex !important;
             justify-content: center !important;
             text-align: center !important;
             width: 100% !important;
+            color: #aaa !important;
         }}
         [data-testid="stMetricValue"] {{
-            font-size: 1rem !important;
+            font-size: 0.95rem !important;
             display: flex !important;
             justify-content: center !important;
             text-align: center !important;
             color: #FFB81C !important;
             width: 100% !important;
+            font-weight: bold !important;
+            margin-top: 2px !important;
         }}
 
         /* Mobile Scrollable Table Wrapper */
@@ -200,7 +206,7 @@ st.markdown(f"""
     <div class="header-logo-container">
         <img src="{LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
     </div>
-    <h1 style="margin-top: 4px; margin-bottom: 12px; font-size: 1.3rem;">Derby Penguins App</h1>
+    <h1 style="margin-top: 2px; margin-bottom: 10px; font-size: 1.25rem;">Derby Penguins FC</h1>
 """, unsafe_allow_html=True)
 
 # 4. SPREADSHEET DATA LOADER
@@ -247,7 +253,7 @@ def render_subtab_cards(team_key, has_match_center=True):
             if st.button(btn_label, key=f"sub_btn_{team_key}_{idx}"):
                 st.session_state[f"{team_key}_subtab"] = tab_name
                 st.rerun()
-    st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
     return st.session_state.get(f"{team_key}_subtab", tabs[0])
 
 
@@ -269,9 +275,9 @@ if current_page == "Homepage":
     <div class="fb-center-wrapper">
         <div class="fb-container">
             <iframe 
-                src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=380&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
+                src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=500&height=650&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
                 width="100%" 
-                height="600" 
+                height="650" 
                 style="border:none;overflow:hidden;width:100%;max-width:100%;" 
                 scrolling="no" 
                 frameborder="0" 
@@ -281,7 +287,7 @@ if current_page == "Homepage":
         </div>
     </div>
     """
-    components.html(fb_iframe, height=620, scrolling=True)
+    components.html(fb_iframe, height=660, scrolling=True)
 
 
 # ==========================================
@@ -327,7 +333,7 @@ elif current_page == "Socials":
             top_involvements = df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
 
             col1, col2, col3, col4 = st.columns(4)
-            col1.metric("🏃 Most Apps", f"{top_apps['Player']}", f"{int(top_apps['Appearances'])} Apps")
+            col1.metric("🏃 Apps Leader", f"{top_apps['Player']}", f"{int(top_apps['Appearances'])} Apps")
             col2.metric("⚽ Top Scorer", f"{top_scorer['Player']}", f"{int(top_scorer['Goals'])} Goals")
             col3.metric("🅰️ Top Assister", f"{top_assister['Player']}", f"{int(top_assister['Assists'])} Assists")
             col4.metric("🔥 Top Contributor", f"{top_involvements['Player']}", f"{int(top_involvements['Goal Involvements'])} G+A")
@@ -336,12 +342,13 @@ elif current_page == "Socials":
 
             st.markdown("### Socials Player Stats")
 
-            f_col1, f_col2, f_col3 = st.columns([2, 2, 1])
-            with f_col1:
-                search_query = st.text_input("🔍 Search Player", "")
-            with f_col2:
+            # Responsive Control Layout (Search then Sort controls below)
+            search_query = st.text_input("🔍 Search Player", "")
+            
+            s_col1, s_col2 = st.columns(2)
+            with s_col1:
                 sort_by = st.selectbox("Sort By Column", options=df.columns, index=1)
-            with f_col3:
+            with s_col2:
                 sort_order = st.radio("Order", ["Descending", "Ascending"], horizontal=True)
 
             filtered_df = df.copy()
@@ -352,7 +359,7 @@ elif current_page == "Socials":
             filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
 
             table_html = "<div class='mobile-table-container'>"
-            table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 550px;'>"
+            table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 500px;'>"
             table_html += "<tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
             for col in filtered_df.columns:
                 table_html += f"<th style='padding: 8px; border-bottom: 2px solid #333; text-align: center; font-size: 12px;'>{col}</th>"
@@ -490,6 +497,7 @@ elif current_page == "Socials":
                     if pd.notnull(val) and str(val).strip().lower() not in ["", "-", "nan", "none"]:
                         lineup[col_clean] = str(val).strip()
 
+                # Optimized tight player card builder
                 def make_player_card(pos_key, name):
                     c_pos = clean_pos_label(pos_key)
                     g_count = goal_counts.get(name, 0)
@@ -499,14 +507,12 @@ elif current_page == "Socials":
                         icons.append("⚽" * g_count)
                     if a_count > 0:
                         icons.append("🅰️" * a_count)
-                    badge_html = f'<div style="font-size: 8px; margin-top: auto; padding-top: 1px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
+                    badge_html = f'<div style="font-size: 7px; margin-top: 1px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
 
                     return f"""
-                    <div style="background: #111; color: white; border: 1px solid #333; border-radius: 5px; padding: 3px 4px; margin: 2px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); min-width: 48px; max-width: 85px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
-                        <div>
-                            <div style="font-size: 8px; color: #FFB81C; font-weight: bold;">{c_pos}</div>
-                            <div style="font-size: 9px; font-weight: 800; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{name}</div>
-                        </div>
+                    <div style="background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 2px 2px; margin: 1px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden;">
+                        <div style="font-size: 7px; color: #FFB81C; font-weight: bold; line-height: 1;">{c_pos}</div>
+                        <div style="font-size: 8.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1;">{name}</div>
                         {badge_html}
                     </div>
                     """
@@ -527,33 +533,35 @@ elif current_page == "Socials":
                 .pitch {{
                     background: #181a20;
                     border: 2px solid #FFB81C;
-                    border-radius: 10px;
-                    padding: 8px 4px;
+                    border-radius: 8px;
+                    padding: 6px 2px;
                     position: relative;
                     box-sizing: border-box;
-                    min-height: 450px;
+                    min-height: 420px;
                     display: flex;
                     flex-direction: column;
                     justify-content: space-between;
                     overflow: hidden;
+                    width: 100%;
                 }}
                 .halfway-line {{
                     position: absolute; top: 50%; left: 0; right: 0;
                     border-top: 1px dashed rgba(255, 184, 28, 0.3);
                 }}
                 .center-circle {{
-                    position: absolute; top: calc(50% - 30px); left: calc(50% - 30px);
-                    width: 60px; height: 60px;
+                    position: absolute; top: calc(50% - 25px); left: calc(50% - 25px);
+                    width: 50px; height: 50px;
                     border: 1px dashed rgba(255, 184, 28, 0.3);
                     border-radius: 50%;
                 }}
                 .row {{
                     display: flex;
                     justify-content: space-around;
-                    align-items: stretch;
+                    align-items: center;
                     position: relative;
                     z-index: 2;
                     width: 100%;
+                    gap: 1px;
                 }}
                 </style>
                 </head>
@@ -571,7 +579,7 @@ elif current_page == "Socials":
                 </body>
                 </html>
                 """
-                components.html(pitch_component, height=470)
+                components.html(pitch_component, height=440)
 
             with details_col:
                 st.markdown("### ⚽ Goals & Assists")
