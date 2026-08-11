@@ -42,7 +42,7 @@ st.markdown(f"""
             text-align: center !important;
         }}
         
-        /* FIX FOR LOGO CUTOFF: Push content down so Streamlit header doesn't hide it */
+        /* Push content down so Streamlit header doesn't hide the logo */
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
             padding-top: 3rem !important; 
             padding-left: 0.5rem !important;
@@ -71,36 +71,48 @@ st.markdown(f"""
             display: block !important;
         }}
 
-        /* NAVIGATION BUTTON ROW: Compact and tight, wraps on very small screens */
+        /* Desktop Column Behavior */
         div[data-testid="stHorizontalBlock"] {{
             display: flex !important;
             flex-direction: row !important;
-            flex-wrap: wrap !important;
             justify-content: center !important;
             gap: 4px !important;
             width: 100% !important;
         }}
 
-        /* Allow columns to shrink and fit compactly */
-        div[data-testid="column"] {{
-            flex: 1 1 auto !important;
-            min-width: 0 !important;
-            padding: 0 !important;
+        /* FORCE HORIZONTAL LAYOUT ON MOBILE */
+        @media (max-width: 768px) {{
+            div[data-testid="stHorizontalBlock"] {{
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                justify-content: flex-start !important;
+                padding-bottom: 5px !important; /* Space for scrollbar */
+            }}
+            
+            div[data-testid="column"] {{
+                flex: 0 0 auto !important; 
+                min-width: max-content !important; 
+                width: auto !important;
+                padding: 0 !important;
+            }}
         }}
 
+        /* Button Styling */
         div.stButton > button {{
             width: 100% !important;
             background-color: #1a1c23 !important;
             color: #ffffff !important;
             border: 1px solid #333333 !important;
             border-radius: 6px !important;
-            padding: 6px 2px !important;
+            padding: 6px 8px !important;
             font-weight: 600 !important;
-            font-size: 0.65rem !important; /* Smaller text for compact fit */
+            font-size: 0.75rem !important; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
             transition: all 0.2s ease-in-out !important;
             line-height: 1.2 !important;
             min-height: 0 !important;
+            white-space: nowrap !important; /* Prevents text from wrapping inside buttons */
         }}
         
         div.stButton > button:hover {{
@@ -127,13 +139,14 @@ st.markdown(f"""
             object-fit: contain;
         }}
 
-        /* Metrics Styling - Simple Box, relying on Streamlit's native vertical stacking */
+        /* Metrics Styling */
         [data-testid="stMetric"] {{
             background-color: #1a1c23 !important;
             border-radius: 8px !important;
             padding: 10px !important;
             border: 1px solid #333 !important;
             text-align: center !important;
+            min-width: 130px !important; /* Ensures metrics don't get too squished on mobile row */
         }}
         [data-testid="stMetricValue"] {{
             color: #FFB81C !important;
@@ -198,7 +211,8 @@ def render_subtab_cards(team_key, has_match_center=True):
     cols = st.columns(len(tabs))
     for idx, tab_name in enumerate(tabs):
         with cols[idx]:
-            btn_label = f"📊 Stats" if "Stats" in tab_name else f"📅 Results" if "Results" in tab_name else f"📅 Schedule" if "Schedule" in tab_name else f"⚽ Lineups" if "Match" in tab_name else f"📰 News"
+            # Replaced "⚽ Lineups" with "⚽ Match Centre"
+            btn_label = f"📊 Stats" if "Stats" in tab_name else f"📅 Results" if "Results" in tab_name else f"📅 Schedule" if "Schedule" in tab_name else f"⚽ Match Centre" if "Match" in tab_name else f"📰 News"
             if st.button(btn_label, key=f"sub_btn_{team_key}_{idx}"):
                 st.session_state[f"{team_key}_subtab"] = tab_name
                 st.rerun()
@@ -279,7 +293,6 @@ elif current_page == "Socials":
             top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
             top_involvements = df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
 
-            # Split into 2x2 grid for mobile friendliness
             row1_col1, row1_col2 = st.columns(2)
             row1_col1.metric("🏃 Apps Leader", f"{top_apps['Player']}", f"{int(top_apps['Appearances'])} Apps")
             row1_col2.metric("⚽ Top Scorer", f"{top_scorer['Player']}", f"{int(top_scorer['Goals'])} Goals")
