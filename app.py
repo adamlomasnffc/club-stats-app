@@ -4,7 +4,6 @@ import streamlit.components.v1 as components
 import re
 
 # 1. PAGE CONFIGURATION & MOBILE APP ICON
-# Raw GitHub URL converted from blob link for direct image loading
 LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/unnamed.png"
 
 st.set_page_config(
@@ -20,14 +19,24 @@ st.markdown(f"""
         <link rel="icon" type="image/png" sizes="192x192" href="{LOGO_URL}">
     </head>
     <style>
-        /* Reduce top padding/space above main content */
+        /* Add breathing room at top to prevent top clipping */
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
-            padding-top: 1.5rem !important;
+            padding-top: 2rem !important;
         }}
 
         /* Center align main app title */
         h1 {{
             text-align: center !important;
+        }}
+
+        /* Logo invert styling to pop on dark mode */
+        .header-logo {{
+            filter: invert(1);
+            max-height: 95px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+            padding-bottom: 5px;
         }}
 
         /* Center align all metric components */
@@ -95,14 +104,15 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 2. MAIN HEADER (Centered Header with Logo)
+# 2. MAIN HEADER (Centered Header with Inverted Logo)
 head_col1, head_col2, head_col3 = st.columns([1, 2, 1])
 with head_col2:
-    try:
-        st.image(LOGO_URL, width=90)
-    except Exception:
-        pass
-    st.markdown("<h1 style='margin-top: -10px;'>Derby Penguins App</h1>", unsafe_allow_html=True)
+    st.markdown(f"""
+        <div style="text-align: center;">
+            <img src="{LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
+            <h1 style="margin-top: 5px;">Derby Penguins App</h1>
+        </div>
+    """, unsafe_allow_html=True)
 
 # 3. SPREADSHEET DATA LOADER
 SPREADSHEET_ID = "19wTGruEyetdVNhfjkyVqLDueyV9joVtRsI51RAqurjA"
@@ -158,10 +168,25 @@ with tab_home:
 
     st.divider()
 
-    # --- Club Video ---
+    # --- Club Video (Facebook Embed) ---
     st.markdown("<h3 style='text-align: center;'>🎥 Club Feature Video</h3>", unsafe_allow_html=True)
-    # Replace URL with your YouTube video link
-    st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    
+    fb_video_url = "https://www.facebook.com/watch/?v=2096417224641905"
+    fb_video_iframe = f"""
+    <div style="display: flex; justify-content: center; width: 100%;">
+        <iframe 
+            src="https://www.facebook.com/plugins/video.php?href={fb_video_url}&show_text=false&width=500" 
+            width="500" 
+            height="280" 
+            style="border:none;overflow:hidden;border-radius:10px;" 
+            scrolling="no" 
+            frameborder="0" 
+            allowfullscreen="true" 
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+        </iframe>
+    </div>
+    """
+    components.html(fb_video_iframe, height=290)
 
     st.divider()
 
