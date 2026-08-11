@@ -3,94 +3,108 @@ import pandas as pd
 import streamlit.components.v1 as components
 import re
 
-# Page Configuration for Mobile Optimization
+# 1. PAGE CONFIGURATION & MOBILE APP ICON
+# Raw GitHub URL converted from blob link for direct image loading
+LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/unnamed.png"
+
 st.set_page_config(
-    page_title="Penguins Master Stats",
-    page_icon="🐧",
+    page_title="Derby Penguins App",
+    page_icon=LOGO_URL,
     layout="wide"
 )
 
-# Custom Mobile CSS Injection (Centering, Padding & Penguin Yellow Theme)
-st.markdown("""
-<style>
-    /* Reduce top padding/space above main content */
-    .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {
-        padding-top: 1.5rem !important;
-    }
+# Mobile Home Screen Icon Injection CSS & Custom Styles
+st.markdown(f"""
+    <head>
+        <link rel="apple-touch-icon" href="{LOGO_URL}">
+        <link rel="icon" type="image/png" sizes="192x192" href="{LOGO_URL}">
+    </head>
+    <style>
+        /* Reduce top padding/space above main content */
+        .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
+            padding-top: 1.5rem !important;
+        }}
 
-    /* Center align main app title */
-    h1 {
-        text-align: center !important;
-    }
+        /* Center align main app title */
+        h1 {{
+            text-align: center !important;
+        }}
 
-    /* Center align all metric components (Label, Value, Subtext & Flex wrappers) */
-    [data-testid="stMetric"] {
-        text-align: center !important;
-        justify-content: center !important;
-        align-items: center !important;
-        background-color: #1a1c23;
-        border-radius: 8px;
-        padding: 10px !important;
-        border: 1px solid #333;
-    }
-    [data-testid="stMetric"] > div {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 100% !important;
-    }
-    [data-testid="stMetricLabel"] {
-        font-size: 0.85rem !important;
-        display: flex !important;
-        justify-content: center !important;
-        text-align: center !important;
-        width: 100% !important;
-    }
-    [data-testid="stMetricLabel"] > div {
-        justify-content: center !important;
-        text-align: center !important;
-        display: flex !important;
-        width: 100% !important;
-    }
-    [data-testid="stMetricValue"] {
-        font-size: 1.2rem !important;
-        display: flex !important;
-        justify-content: center !important;
-        text-align: center !important;
-        color: #FFB81C !important; /* Penguin Yellow */
-        width: 100% !important;
-    }
-    [data-testid="stMetricValue"] > div {
-        justify-content: center !important;
-        text-align: center !important;
-        display: flex !important;
-        width: 100% !important;
-    }
+        /* Center align all metric components */
+        [data-testid="stMetric"] {{
+            text-align: center !important;
+            justify-content: center !important;
+            align-items: center !important;
+            background-color: #1a1c23;
+            border-radius: 8px;
+            padding: 10px !important;
+            border: 1px solid #333;
+        }}
+        [data-testid="stMetric"] > div {{
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+        }}
+        [data-testid="stMetricLabel"] {{
+            font-size: 0.85rem !important;
+            display: flex !important;
+            justify-content: center !important;
+            text-align: center !important;
+            width: 100% !important;
+        }}
+        [data-testid="stMetricLabel"] > div {{
+            justify-content: center !important;
+            text-align: center !important;
+            display: flex !important;
+            width: 100% !important;
+        }}
+        [data-testid="stMetricValue"] {{
+            font-size: 1.2rem !important;
+            display: flex !important;
+            justify-content: center !important;
+            text-align: center !important;
+            color: #FFB81C !important; /* Penguin Yellow */
+            width: 100% !important;
+        }}
+        [data-testid="stMetricValue"] > div {{
+            justify-content: center !important;
+            text-align: center !important;
+            display: flex !important;
+            width: 100% !important;
+        }}
 
-    /* Make tables horizontally scrollable on small screens */
-    .mobile-table-container {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin-top: 10px;
-        margin-bottom: 20px;
-    }
-    
-    /* Tab label font adjustment & active tab highlight */
-    button[data-baseweb="tab"] {
-        padding: 8px 12px !important;
-        font-size: 14px !important;
-    }
-    button[aria-selected="true"] {
-        color: #FFB81C !important;
-    }
-</style>
+        /* Mobile table container */
+        .mobile-table-container {{
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }}
+        
+        /* Tab styling */
+        button[data-baseweb="tab"] {{
+            padding: 8px 12px !important;
+            font-size: 14px !important;
+        }}
+        button[aria-selected="true"] {{
+            color: #FFB81C !important;
+        }}
+    </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center;'>🐧 Penguins Club Stats</h1>", unsafe_allow_html=True)
+# 2. MAIN HEADER (Centered Header with Logo)
+head_col1, head_col2, head_col3 = st.columns([1, 2, 1])
+with head_col2:
+    try:
+        st.image(LOGO_URL, width=90)
+    except Exception:
+        pass
+    st.markdown("<h1 style='margin-top: -10px;'>Derby Penguins App</h1>", unsafe_allow_html=True)
 
-# --- SPREADSHEET CONFIGURATION ---
+# 3. SPREADSHEET DATA LOADER
 SPREADSHEET_ID = "19wTGruEyetdVNhfjkyVqLDueyV9joVtRsI51RAqurjA"
 
 @st.cache_data(ttl=60)
@@ -100,17 +114,78 @@ def load_sheet(sheet_name):
     df.columns = df.columns.str.strip()
     return df
 
-# Helper to clean position titles (e.g., 'CB1' -> 'CB', 'ST2' -> 'ST')
 def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
-# Navigation Tabs
-tab_stats, tab_results, tab_matches, tab_news = st.tabs([
+# 4. NAVIGATION TABS
+tab_home, tab_stats, tab_results, tab_matches, tab_news = st.tabs([
+    "🏠 Home",
     "📊 Player Stats", 
     "📅 Results", 
     "⚽ Match Center", 
     "📰 News"
 ])
+
+# ==========================================
+# --- HOMEPAGE TAB ---
+# ==========================================
+with tab_home:
+    # --- Quick Links ---
+    st.markdown("<h3 style='text-align: center;'>Quick Links</h3>", unsafe_allow_html=True)
+    link_col1, link_col2, link_col3, link_col4 = st.columns(4)
+
+    with link_col1:
+        st.link_button("🐧 Penguins", "https://your-external-link-here.com", use_container_width=True)
+    with link_col2:
+        st.link_button("📱 Socials", "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/", use_container_width=True)
+    with link_col3:
+        st.link_button("🤝 Community", "https://your-community-link.com", use_container_width=True)
+    with link_col4:
+        st.link_button("📊 Total Club Overview", "https://your-overview-link.com", use_container_width=True)
+
+    st.divider()
+
+    # --- About Us / Ethos / Lore ---
+    st.markdown("<h3 style='text-align: center;'>About Us</h3>", unsafe_allow_html=True)
+    with st.expander("📖 Read Club Ethos & Lore", expanded=True):
+        st.markdown("""
+        **Our Ethos:**  
+        At Derby Penguins, we are dedicated to grassroots football, sportsmanship, and building a supportive team community on and off the pitch.
+
+        **Club Lore:**  
+        Founded to bring together passionate players, Derby Penguins provides a competitive, welcoming environment to train, play, and win together.
+        """)
+
+    st.divider()
+
+    # --- Club Video ---
+    st.markdown("<h3 style='text-align: center;'>🎥 Club Feature Video</h3>", unsafe_allow_html=True)
+    # Replace URL with your YouTube video link
+    st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+
+    st.divider()
+
+    # --- Facebook Feed ---
+    st.markdown("<h3 style='text-align: center;'>📲 Latest Club Updates</h3>", unsafe_allow_html=True)
+    
+    fb_page_url = "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/" 
+
+    fb_iframe = f"""
+    <div style="display: flex; justify-content: center;">
+        <iframe 
+            src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
+            width="500" 
+            height="600" 
+            style="border:none;overflow:hidden;border-radius:10px;" 
+            scrolling="no" 
+            frameborder="0" 
+            allowfullscreen="true" 
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+        </iframe>
+    </div>
+    """
+    components.html(fb_iframe, height=620, scrolling=True)
+
 
 # ==========================================
 # --- PLAYER STATS TAB ---
@@ -121,7 +196,6 @@ with tab_stats:
         if "Player" in df.columns:
             df = df.dropna(subset=["Player"])
 
-        # Metric Cards
         top_apps = df.sort_values(by="Appearances", ascending=False).iloc[0]
         top_scorer = df.sort_values(by="Goals", ascending=False).iloc[0]
         top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
@@ -137,7 +211,6 @@ with tab_stats:
 
         st.markdown("<h3 style='text-align: center;'>Player Stats</h3>", unsafe_allow_html=True)
 
-        # Custom Interactive Controls
         f_col1, f_col2, f_col3 = st.columns([2, 2, 1])
         with f_col1:
             search_query = st.text_input("🔍 Search Player", "")
@@ -146,7 +219,6 @@ with tab_stats:
         with f_col3:
             sort_order = st.radio("Order", ["Descending", "Ascending"], horizontal=True)
 
-        # Apply Filtering & Sorting
         filtered_df = df.copy()
         if search_query:
             filtered_df = filtered_df[filtered_df["Player"].str.contains(search_query, case=False, na=False)]
@@ -154,7 +226,6 @@ with tab_stats:
         ascending = True if sort_order == "Ascending" else False
         filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
 
-        # Centered HTML Table Rendering wrapped in mobile scrolling container
         table_html = "<div class='mobile-table-container'>"
         table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 600px;'>"
         table_html += "<tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
@@ -178,6 +249,7 @@ with tab_stats:
         st.error("Error loading stats.")
         st.exception(e)
 
+
 # ==========================================
 # --- RESULTS TAB ---
 # ==========================================
@@ -194,7 +266,6 @@ with tab_results:
             
         fixtures_df = games_df[display_cols].copy().dropna(subset=[display_cols[0]])
 
-        # Responsive HTML Table Display
         f_table_html = "<div class='mobile-table-container'>"
         f_table_html += "<table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 550px;'>"
         f_table_html += "<tr style='background-color: #FFB81C; color: #111; font-weight: bold; font-size: 13px;'>"
@@ -217,6 +288,7 @@ with tab_results:
     except Exception as e:
         st.error("Error loading results data.")
         st.exception(e)
+
 
 # ==========================================
 # --- MATCH CENTER & PITCH TAB ---
@@ -254,7 +326,7 @@ with tab_matches:
         game_options = {create_game_label(row): row["GameID"] for _, row in games_df.iterrows()}
         options_list = list(game_options.keys())
 
-        # Default to the most recent game (the last entry in the sheet)
+        # Default to the most recent game
         default_idx = len(options_list) - 1 if options_list else 0
 
         selected_label = st.selectbox(
@@ -301,7 +373,6 @@ with tab_matches:
             except Exception:
                 pass
 
-            # Ordering maps (Left -> Center -> Right)
             def_order = ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RWB", "RB"]
             cdm_order = ["CDM", "CDM1", "CDM2"]
             mid_order = ["LM", "CM", "CM1", "CM2", "CM3", "RM"]
@@ -436,6 +507,7 @@ with tab_matches:
     except Exception as e:
         st.error("Error loading match data.")
         st.exception(e)
+
 
 # ==========================================
 # --- NEWS TAB ---
