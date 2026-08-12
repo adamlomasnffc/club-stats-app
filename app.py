@@ -4,12 +4,15 @@ import streamlit.components.v1 as components
 import re
 from urllib.parse import quote_plus
 
-LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/PenguinsLogo.png"
+# REPOSITORY LOGO URLS
+CLUB_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/ClubLogo.jpeg"
+SOCIALS_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/SocialsLogo.jpeg"
+WHITE_COMMUNITY_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/WhiteCommunityLogo.jpeg"
 VIDEO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/a6e86bfe-69d7-4146-add8-2ba2d49c942b.MP4"
 
 st.set_page_config(
     page_title="Derby Penguins App",
-    page_icon=PenguinsLogo.png,
+    page_icon=CLUB_LOGO_URL,
     layout="wide"
 )
 
@@ -22,14 +25,14 @@ icon_injector = f"""
         const existingIcons = docHead.querySelectorAll('link[rel*="icon"], link[rel*="apple-touch-icon"]');
         existingIcons.forEach(el => el.remove());
 
-        // Inject new Penguin icon elements
+        // Inject new ClubLogo elements
         const rels = ['apple-touch-icon', 'apple-touch-icon-precomposed', 'icon', 'shortcut icon'];
         rels.forEach(rel => {{
             let link = window.parent.document.createElement('link');
             link.rel = rel;
-            link.href = "{LOGO_URL}";
+            link.href = "{CLUB_LOGO_URL}";
             if(rel.includes('icon')) {{
-                link.type = 'image/png';
+                link.type = 'image/jpeg';
                 link.sizes = '192x192';
             }}
             docHead.appendChild(link);
@@ -130,10 +133,24 @@ st.markdown("""
             color: #111111 !important;
             border-color: #FFB81C;
         }
+        .dash-tile.active .dash-img-icon {
+            filter: invert(1);
+        }
         .dash-icon {
             font-size: 1.25rem;
             line-height: 1.1;
             margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 24px;
+        }
+        .dash-img-icon {
+            max-height: 22px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            filter: invert(1);
         }
         .dash-label {
             font-size: 0.68rem;
@@ -186,7 +203,7 @@ st.markdown("""
 # 3. HEADER
 st.markdown(f"""
     <div class="header-logo-container">
-        <img src="{LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
+        <img src="{CLUB_LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
     </div>
     <h1 style="margin-top: 2px; margin-bottom: 10px; font-size: 1.25rem;">Derby Penguins FC</h1>
 """, unsafe_allow_html=True)
@@ -204,20 +221,25 @@ def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
 pages_config = [
-    ("🏠", "Home", "Homepage"),
-    ("🐧", "Penguins", "Penguins"),
-    ("📱", "Socials", "Socials"),
-    ("🤝", "Community", "Community"),
-    ("📊", "Club", "Club"),
-    ("ℹ️", "About", "About Us"),
+    ("🏠", "Home", "Homepage", False),
+    (CLUB_LOGO_URL, "Penguins", "Penguins", True),
+    (SOCIALS_LOGO_URL, "Socials", "Socials", True),
+    (WHITE_COMMUNITY_URL, "Community", "Community", False),
+    ("📊", "Club", "Club", False),
+    ("ℹ️", "About", "About Us", False),
 ]
 
 def render_nav_dashboard(active_page):
     tiles = ""
-    for icon, label, key in pages_config:
+    for icon_item, label, key, is_img in pages_config:
         active_cls = " active" if active_page == key else ""
+        if is_img:
+            icon_html = f'<img src="{icon_item}" class="dash-img-icon" alt="{label}">'
+        else:
+            icon_html = icon_item
+        
         tiles += f"""<a href="?nav={quote_plus(key)}" class="dash-tile{active_cls}">
-            <div class="dash-icon">{icon}</div>
+            <div class="dash-icon">{icon_html}</div>
             <div class="dash-label">{label}</div>
         </a>"""
     st.markdown(f'<div class="dash-grid">{tiles}</div>', unsafe_allow_html=True)
