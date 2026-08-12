@@ -50,6 +50,7 @@ st.markdown(f"""
         /* Global Reset & Base Alignments */
         html, body, [class*="css"], .stApp {{
             text-align: center !important;
+            background-color: #0e1117 !important;
         }}
         
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
@@ -211,7 +212,7 @@ def render_page_header(title, img_url=None, invert=False):
     else:
         st.markdown(f"<h2 style='text-align: center; margin-bottom: 12px;'>{title}</h2>", unsafe_allow_html=True)
 
-# 5. TOP INTERACTIVE NAVIGATION (Using Parent-Targeted Links)
+# 5. TOP INTERACTIVE NAVIGATION (Native Streamlit Markdown - Direct DOM)
 pages_config = [
     ("🏠 Home", "Homepage", None, False),
     ("Penguins", "Penguins", HEADER_LOGO_URL, True),
@@ -228,17 +229,19 @@ for label, key, img_url, invert in pages_config:
     img_tag = f'<img src="{img_url}" class="{invert_class}">' if img_url else ''
     
     nav_html += f'''
-    <a href="?nav={key}" target="_parent" class="dashboard-btn" style="{active_style}">
+    <a href="?nav={key}" target="_self" class="dashboard-btn" style="{active_style}">
         {img_tag}
         <span>{label}</span>
     </a>
     '''
 nav_html += '</div>'
-components.html(nav_html, height=85)
+
+# Render directly into parent page DOM (No iframe)
+st.markdown(nav_html, unsafe_allow_html=True)
 
 st.divider()
 
-# Sub-tab Navigation Helper Function (Using Parent-Targeted Links)
+# Sub-tab Navigation Helper Function
 def render_subtab_cards(team_key, has_match_center=True):
     tabs = ["Player Stats", "Results", "Match Center", "News"] if has_match_center else ["Combined Stats", "Club Schedule", "Club News"]
     current_subtab = st.session_state.get(f"{team_key}_subtab", tabs[0])
@@ -249,13 +252,14 @@ def render_subtab_cards(team_key, has_match_center=True):
         active_style = "border-color: #FFB81C; color: #FFB81C; background-color: #22252e;" if current_subtab == tab_name else ""
         
         subtab_html += f'''
-        <a href="?nav={current_page}&sub_{team_key}={tab_name}" target="_parent" class="dashboard-btn" style="{active_style}">
+        <a href="?nav={current_page}&sub_{team_key}={tab_name}" target="_self" class="dashboard-btn" style="{active_style}">
             <span>{btn_label}</span>
         </a>
         '''
     subtab_html += '</div>'
 
-    components.html(subtab_html, height=55)
+    # Render directly into parent page DOM (No iframe)
+    st.markdown(subtab_html, unsafe_allow_html=True)
     st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
     return current_subtab
 
@@ -522,7 +526,7 @@ elif current_page == "Socials":
                 <html>
                 <head>
                 <style>
-                body {{ margin: 0; font-family: sans-serif; }}
+                body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
                 .pitch {{
                     background: #181a20;
                     border: 2px solid #FFB81C;
