@@ -16,16 +16,23 @@ st.set_page_config(
     layout="wide"
 )
 
-# TRUE HEAD INJECTOR FIX FOR IOS/SAFARI ICONS
+# TRUE HEAD INJECTOR FIX FOR IOS/SAFARI ICONS & ANTI-FLASH BACKGROUND LOCK
 icon_injector = f"""
 <script>
+    // Prevent white flash by forcing dark background immediately on parent document
+    try {{
+        const parentDoc = window.parent.document;
+        parentDoc.documentElement.style.backgroundColor = "#0e1117";
+        if (parentDoc.body) {{
+            parentDoc.body.style.backgroundColor = "#0e1117";
+        }}
+    }} catch(e) {{}}
+
     const docHead = window.parent.document.querySelector('head');
     if (docHead) {{
-        // Remove old default icons if present
         const existingIcons = docHead.querySelectorAll('link[rel*="icon"], link[rel*="apple-touch-icon"]');
         existingIcons.forEach(el => el.remove());
 
-        // Inject new ClubLogo elements
         const rels = ['apple-touch-icon', 'apple-touch-icon-precomposed', 'icon', 'shortcut icon'];
         rels.forEach(rel => {{
             let link = window.parent.document.createElement('link');
@@ -72,6 +79,7 @@ st.markdown("""
     <style>
         html, body, [class*="css"], .stApp {
             text-align: center !important;
+            background-color: #0e1117 !important;
         }
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {
             padding-top: 3rem !important;
@@ -133,7 +141,8 @@ st.markdown("""
             color: #111111 !important;
             border-color: #FFB81C;
         }
-        .dash-tile.active .dash-img-icon {
+        .dash-tile.active .dash-img-icon,
+        .dash-tile.active .dash-white-img-icon {
             filter: invert(1);
         }
         .dash-icon {
@@ -151,6 +160,12 @@ st.markdown("""
             object-fit: contain;
             display: block;
             filter: invert(1);
+        }
+        .dash-white-img-icon {
+            max-height: 22px;
+            width: auto;
+            object-fit: contain;
+            display: block;
         }
         .dash-label {
             font-size: 0.68rem;
@@ -221,20 +236,22 @@ def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
 pages_config = [
-    ("🏠", "Home", "Homepage", False),
-    (CLUB_LOGO_URL, "Penguins", "Penguins", True),
-    (SOCIALS_LOGO_URL, "Socials", "Socials", True),
-    (WHITE_COMMUNITY_URL, "Community", "Community", False),
-    ("📊", "Club", "Club", False),
-    ("ℹ️", "About", "About Us", False),
+    ("🏠", "Home", "Homepage", "emoji", False),
+    (CLUB_LOGO_URL, "Penguins", "Penguins", "invert_img", True),
+    (SOCIALS_LOGO_URL, "Socials", "Socials", "invert_img", True),
+    (WHITE_COMMUNITY_URL, "Community", "Community", "white_img", True),
+    ("📊", "Club", "Club", "emoji", False),
+    ("ℹ️", "About", "About Us", "emoji", False),
 ]
 
 def render_nav_dashboard(active_page):
     tiles = ""
-    for icon_item, label, key, is_img in pages_config:
+    for icon_item, label, key, icon_type, is_active in pages_config:
         active_cls = " active" if active_page == key else ""
-        if is_img:
+        if icon_type == "invert_img":
             icon_html = f'<img src="{icon_item}" class="dash-img-icon" alt="{label}">'
+        elif icon_type == "white_img":
+            icon_html = f'<img src="{icon_item}" class="dash-white-img-icon" alt="{label}">'
         else:
             icon_html = icon_item
         
