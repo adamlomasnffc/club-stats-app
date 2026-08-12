@@ -16,34 +16,46 @@ st.set_page_config(
     layout="wide"
 )
 
-# TRUE HEAD INJECTOR FIX FOR IOS/SAFARI ICONS & ANTI-FLASH BACKGROUND LOCK
-icon_injector = f"""
+# ULTRA-EARLY JAVASCRIPT BACKGROUND OVERRIDE TO STOP WHITE FLASH INSTANTLY
+anti_flash_script = f"""
 <script>
-    const docHead = window.parent.document.querySelector('head');
-    if (docHead) {{
-        const existingIcons = docHead.querySelectorAll('link[rel*="icon"], link[rel*="apple-touch-icon"]');
-        existingIcons.forEach(el => el.remove());
+    (function() {{
+        const applyDark = () => {{
+            document.body.style.backgroundColor = '#0e1117';
+            document.body.style.color = '#ffffff';
+            const docHead = window.parent.document.querySelector('head');
+            if (docHead) {{
+                const existingIcons = docHead.querySelectorAll('link[rel*="icon"], link[rel*="apple-touch-icon"]');
+                existingIcons.forEach(el => el.remove());
 
-        const rels = ['apple-touch-icon', 'apple-touch-icon-precomposed', 'icon', 'shortcut icon'];
-        rels.forEach(rel => {{
-            let link = window.parent.document.createElement('link');
-            link.rel = rel;
-            link.href = "{CLUB_LOGO_URL}";
-            if(rel.includes('icon')) {{
-                link.type = 'image/jpeg';
-                link.sizes = '192x192';
+                const rels = ['apple-touch-icon', 'apple-touch-icon-precomposed', 'icon', 'shortcut icon'];
+                rels.forEach(rel => {{
+                    let link = window.parent.document.createElement('link');
+                    link.rel = rel;
+                    link.href = "{CLUB_LOGO_URL}";
+                    if(rel.includes('icon')) {{
+                        link.type = 'image/jpeg';
+                        link.sizes = '192x192';
+                    }}
+                    docHead.appendChild(link);
+                }});
+                
+                let meta = window.parent.document.createElement('meta');
+                meta.name = "apple-mobile-web-app-capable";
+                meta.content = "yes";
+                docHead.appendChild(meta);
             }}
-            docHead.appendChild(link);
-        }});
-        
-        let meta = window.parent.document.createElement('meta');
-        meta.name = "apple-mobile-web-app-capable";
-        meta.content = "yes";
-        docHead.appendChild(meta);
-    }}
+            const parentDoc = window.parent.document;
+            if (parentDoc && parentDoc.body) {{
+                parentDoc.body.style.backgroundColor = '#0e1117';
+            }}
+        }};
+        applyDark();
+        window.addEventListener('DOMContentLoaded', applyDark);
+    }})();
 </script>
 """
-components.html(icon_injector, height=0, width=0)
+components.html(anti_flash_script, height=0, width=0)
 
 # Initialize Session State
 if "active_page" not in st.session_state:
@@ -63,13 +75,13 @@ query_params = st.query_params
 if "nav" in query_params:
     st.session_state["active_page"] = query_params["nav"]
 if "team" in query_params and "tab" in query_params:
-    st.session_state[f"{query_params['team']}_subtab"] = query_params["tab"]
+    st.session_state[f"{query_params['team']}_subtag"] = query_params["tab"]
 
 # GLOBAL STYLING (Forced dark background variables to prevent white flash)
 st.markdown("""
     <style>
         /* Force dark background instantly on Streamlit framework layers and root html/body */
-        html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"], .stApp {
+        html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stSidebar"], .stApp {
             background-color: #0e1117 !important;
             color: #ffffff !important;
             text-align: center !important;
