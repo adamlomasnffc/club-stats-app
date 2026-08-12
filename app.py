@@ -17,19 +17,23 @@ st.set_page_config(
     layout="wide"
 )
 
-# Handle Query Params safely
+# Handle Query Params safely for main navigation
 query_params = st.query_params
+
 if "nav" in query_params:
     st.session_state["active_page"] = query_params["nav"]
 
-# Initialize Session State
 if "active_page" not in st.session_state:
     st.session_state["active_page"] = "Homepage"
 
 current_page = st.session_state["active_page"]
 
+# Handle Query Params safely for team subtabs
 for team_key in ["Penguins", "Socials", "Community", "Club"]:
-    if f"{team_key}_subtab" not in st.session_state:
+    param_name = f"sub_{team_key}"
+    if param_name in query_params:
+        st.session_state[f"{team_key}_subtab"] = query_params[param_name]
+    elif f"{team_key}_subtab" not in st.session_state:
         st.session_state[f"{team_key}_subtab"] = "Player Stats"
 
 # 2. GLOBAL STYLING
@@ -109,6 +113,7 @@ st.markdown(f"""
             gap: 4px;
             transition: all 0.2s ease-in-out !important;
             width: 100%;
+            box-sizing: border-box;
         }}
         .dashboard-btn:hover {{
             border-color: #FFB81C !important;
@@ -206,7 +211,7 @@ def render_page_header(title, img_url=None, invert=False):
     else:
         st.markdown(f"<h2 style='text-align: center; margin-bottom: 12px;'>{title}</h2>", unsafe_allow_html=True)
 
-# 5. TOP INTERACTIVE NAVIGATION
+# 5. TOP INTERACTIVE NAVIGATION (Using Parent-Targeted Links)
 pages_config = [
     ("🏠 Home", "Homepage", None, False),
     ("Penguins", "Penguins", HEADER_LOGO_URL, True),
@@ -218,48 +223,39 @@ pages_config = [
 
 nav_html = '<div class="dashboard-grid">'
 for label, key, img_url, invert in pages_config:
-    active_style = "border-color: #FFB81C; color: #FFB81C;" if current_page == key else ""
+    active_style = "border-color: #FFB81C; color: #FFB81C; background-color: #22252e;" if current_page == key else ""
     invert_class = "inverted" if invert else ""
     img_tag = f'<img src="{img_url}" class="{invert_class}">' if img_url else ''
     
     nav_html += f'''
-    <form action="" method="get" style="margin:0; width:100%;">
-        <button type="submit" name="nav" value="{key}" class="dashboard-btn" style="{active_style}">
-            {img_tag}
-            <span>{label}</span>
-        </button>
-    </form>
+    <a href="?nav={key}" target="_parent" class="dashboard-btn" style="{active_style}">
+        {img_tag}
+        <span>{label}</span>
+    </a>
     '''
 nav_html += '</div>'
-components.html(nav_html, height=75)
+components.html(nav_html, height=85)
 
 st.divider()
 
-# Sub-tab Navigation Helper Function
+# Sub-tab Navigation Helper Function (Using Parent-Targeted Links)
 def render_subtab_cards(team_key, has_match_center=True):
     tabs = ["Player Stats", "Results", "Match Center", "News"] if has_match_center else ["Combined Stats", "Club Schedule", "Club News"]
     current_subtab = st.session_state.get(f"{team_key}_subtab", tabs[0])
-    
-    if f"sub_{team_key}" in query_params:
-        st.session_state[f"{team_key}_subtab"] = query_params[f"sub_{team_key}"]
-        current_subtab = query_params[f"sub_{team_key}"]
 
     subtab_html = '<div class="subtab-grid">'
     for idx, tab_name in enumerate(tabs):
         btn_label = f"📊 Stats" if "Stats" in tab_name else f"📅 Results" if "Results" in tab_name else f"📅 Schedule" if "Schedule" in tab_name else f"⚽ Lineups" if "Match" in tab_name else f"📰 News"
-        active_style = "border-color: #FFB81C; color: #FFB81C;" if current_subtab == tab_name else ""
+        active_style = "border-color: #FFB81C; color: #FFB81C; background-color: #22252e;" if current_subtab == tab_name else ""
         
         subtab_html += f'''
-        <form action="" method="get" style="margin:0; width:100%;">
-            <input type="hidden" name="nav" value="{current_page}">
-            <button type="submit" name="sub_{team_key}" value="{tab_name}" class="dashboard-btn" style="{active_style}">
-                <span>{btn_label}</span>
-            </button>
-        </form>
+        <a href="?nav={current_page}&sub_{team_key}={tab_name}" target="_parent" class="dashboard-btn" style="{active_style}">
+            <span>{btn_label}</span>
+        </a>
         '''
     subtab_html += '</div>'
 
-    components.html(subtab_html, height=50)
+    components.html(subtab_html, height=55)
     st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
     return current_subtab
 
