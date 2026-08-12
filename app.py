@@ -4,9 +4,7 @@ import streamlit.components.v1 as components
 import re
 
 # 1. PAGE CONFIGURATION & MOBILE APP ICON
-# PenguinsLogo.png provides the app icon for saving to phone
 APP_ICON_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/PenguinsLogo.png"
-# ClubLogo.jpeg inverted is used at the top of the app on all pages and replaces PenguinsLogo for branding
 HEADER_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/ClubLogo.jpeg"
 VIDEO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/a6e86bfe-69d7-4146-add8-2ba2d49c942b.MP4"
 
@@ -19,18 +17,20 @@ st.set_page_config(
     layout="wide"
 )
 
+# Handle Query Params safely before anything else
+query_params = st.query_params
+if "nav" in query_params:
+    st.session_state["active_page"] = query_params["nav"]
+
 # Initialize Session State
 if "active_page" not in st.session_state:
     st.session_state["active_page"] = "Homepage"
 
+current_page = st.session_state["active_page"]
+
 for team_key in ["Penguins", "Socials", "Community", "Club"]:
     if f"{team_key}_subtab" not in st.session_state:
         st.session_state[f"{team_key}_subtab"] = "Player Stats"
-
-# Handle Query Params
-query_params = st.query_params
-if "nav" in query_params:
-    st.session_state["active_page"] = query_params["nav"]
 
 # 2. GLOBAL STYLING
 st.markdown(f"""
@@ -225,13 +225,16 @@ components.html(nav_html, height=75)
 
 st.divider()
 
-current_page = st.session_state["active_page"]
-
 # Sub-tab Navigation Helper Function (Solid Dashboard Grid for sub-pages)
 def render_subtab_cards(team_key, has_match_center=True):
     tabs = ["Player Stats", "Results", "Match Center", "News"] if has_match_center else ["Combined Stats", "Club Schedule", "Club News"]
     current_subtab = st.session_state.get(f"{team_key}_subtab", tabs[0])
     
+    # Handle GET click for subtabs if present in query params
+    if f"sub_{team_key}" in query_params:
+        st.session_state[f"{team_key}_subtab"] = query_params[f"sub_{team_key}"]
+        current_subtab = query_params[f"sub_{team_key}"]
+
     subtab_html = '<div class="subtab-grid">'
     for idx, tab_name in enumerate(tabs):
         btn_label = f"📊 Stats" if "Stats" in tab_name else f"📅 Results" if "Results" in tab_name else f"📅 Schedule" if "Schedule" in tab_name else f"⚽ Lineups" if "Match" in tab_name else f"📰 News"
@@ -246,11 +249,6 @@ def render_subtab_cards(team_key, has_match_center=True):
         </form>
         '''
     subtab_html += '</div>'
-    
-    # Handle GET click for subtabs if present in query params
-    if f"sub_{team_key}" in query_params:
-        st.session_state[f"{team_key}_subtab"] = query_params[f"sub_{team_key}"]
-        current_subtab = query_params[f"sub_{team_key}"]
 
     components.html(subtab_html, height=50)
     st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
