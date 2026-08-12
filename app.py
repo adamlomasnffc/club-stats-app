@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit.components.v1 as components
 import re
 
-# 1. PAGE CONFIGURATION & MOBILE APP ICON
+# 1. PAGE CONFIGURATION & LOGO URLS
 APP_ICON_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/PenguinsLogo.png"
 HEADER_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/ClubLogo.jpeg"
 VIDEO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/a6e86bfe-69d7-4146-add8-2ba2d49c942b.MP4"
@@ -17,7 +17,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Handle Query Params safely before anything else
+# Handle Query Params safely
 query_params = st.query_params
 if "nav" in query_params:
     st.session_state["active_page"] = query_params["nav"]
@@ -48,9 +48,8 @@ st.markdown(f"""
             text-align: center !important;
         }}
         
-        /* FIX FOR LOGO CUTOFF: Push content down so Streamlit header doesn't hide it */
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
-            padding-top: 3rem !important; 
+            padding-top: 2.5rem !important; 
             padding-left: 0.5rem !important;
             padding-right: 0.5rem !important;
             max-width: 1000px !important;
@@ -139,17 +138,13 @@ st.markdown(f"""
             }}
         }}
 
-        /* Responsive Video Container */
-        .video-container {{
-            max-width: 480px;
-            margin: 0 auto;
-            width: 100%;
-        }}
-        .video-container video {{
+        /* Clean Streamlit Video Styling */
+        [data-testid="stVideo"] {{
+            max-width: 480px !important;
+            margin: 0 auto !important;
             width: 100% !important;
-            max-height: 480px;
-            border-radius: 8px;
-            object-fit: contain;
+            border-radius: 8px !important;
+            overflow: hidden !important;
         }}
 
         /* Metrics Styling */
@@ -175,7 +170,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. HEADER
+# 3. TOP HEADER LOGO
 st.markdown(f"""
     <div class="header-logo-container">
         <img src="{HEADER_LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
@@ -194,15 +189,30 @@ def load_sheet(sheet_name):
     return df
 
 def clean_pos_label(pos):
-    return re.sub(r'\d+$', '', pos)
+    if pd.isnull(pos):
+        return ""
+    return re.sub(r'\d+$', '', str(pos))
 
-# 5. TOP INTERACTIVE NAVIGATION (Solid Dashboard Grid)
+# Page Title Renderer replacing Emojis with Logos
+def render_page_header(title, img_url=None, invert=False):
+    if img_url:
+        invert_style = "filter: invert(1);" if invert else ""
+        st.markdown(f"""
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px; margin-top: 5px;">
+                <img src="{img_url}" style="height: 32px; width: auto; object-fit: contain; {invert_style}">
+                <h2 style="margin: 0; padding: 0; font-size: 1.4rem; font-weight: 700; color: #ffffff;">{title}</h2>
+            </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"<h2 style='text-align: center; margin-bottom: 12px;'>{title}</h2>", unsafe_allow_html=True)
+
+# 5. TOP INTERACTIVE NAVIGATION
 pages_config = [
     ("🏠 Home", "Homepage", None, False),
     ("Penguins", "Penguins", HEADER_LOGO_URL, True),
     ("Socials", "Socials", SOCIALS_LOGO_URL, True),
     ("Community", "Community", WHITE_COMMUNITY_LOGO_URL, False),
-    ("Club", "Club", None, False),
+    ("Club", "Club", HEADER_LOGO_URL, True),
     ("ℹ️ About", "About Us", None, False)
 ]
 
@@ -225,12 +235,11 @@ components.html(nav_html, height=75)
 
 st.divider()
 
-# Sub-tab Navigation Helper Function (Solid Dashboard Grid for sub-pages)
+# Sub-tab Navigation Helper Function
 def render_subtab_cards(team_key, has_match_center=True):
     tabs = ["Player Stats", "Results", "Match Center", "News"] if has_match_center else ["Combined Stats", "Club Schedule", "Club News"]
     current_subtab = st.session_state.get(f"{team_key}_subtab", tabs[0])
     
-    # Handle GET click for subtabs if present in query params
     if f"sub_{team_key}" in query_params:
         st.session_state[f"{team_key}_subtab"] = query_params[f"sub_{team_key}"]
         current_subtab = query_params[f"sub_{team_key}"]
@@ -261,9 +270,7 @@ def render_subtab_cards(team_key, has_match_center=True):
 if current_page == "Homepage":
     
     st.markdown("### 🎥 Feature Video")
-    st.markdown("<div class='video-container'>", unsafe_allow_html=True)
     st.video(VIDEO_URL)
-    st.markdown("</div>", unsafe_allow_html=True)
 
     st.divider()
 
@@ -293,7 +300,7 @@ if current_page == "Homepage":
 # --- 2. DERBY PENGUINS ---
 # ==========================================
 elif current_page == "Penguins":
-    st.markdown("## 🐧 Derby Penguins")
+    render_page_header("Derby Penguins", HEADER_LOGO_URL, invert=True)
     subtab = render_subtab_cards("Penguins")
 
     if subtab == "Player Stats":
@@ -310,7 +317,7 @@ elif current_page == "Penguins":
 # --- 3. DERBY PENGUINS SOCIALS ---
 # ==========================================
 elif current_page == "Socials":
-    st.markdown("## 📱 Derby Penguins Socials")
+    render_page_header("Derby Penguins Socials", SOCIALS_LOGO_URL, invert=True)
     subtab = render_subtab_cards("Socials")
 
     if subtab == "Player Stats":
@@ -324,13 +331,19 @@ elif current_page == "Socials":
             top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
             top_involvements = df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
 
+            def safe_val(val):
+                try:
+                    return str(int(float(val))) if pd.notnull(val) else "0"
+                except Exception:
+                    return str(val)
+
             row1_col1, row1_col2 = st.columns(2)
-            row1_col1.metric("🏃 Apps Leader", f"{top_apps['Player']}", f"{int(top_apps['Appearances'])} Apps")
-            row1_col2.metric("⚽ Top Scorer", f"{top_scorer['Player']}", f"{int(top_scorer['Goals'])} Goals")
+            row1_col1.metric("🏃 Apps Leader", f"{top_apps['Player']}", f"{safe_val(top_apps['Appearances'])} Apps")
+            row1_col2.metric("⚽ Top Scorer", f"{top_scorer['Player']}", f"{safe_val(top_scorer['Goals'])} Goals")
             
             row2_col1, row2_col2 = st.columns(2)
-            row2_col1.metric("🅰️ Top Assister", f"{top_assister['Player']}", f"{int(top_assister['Assists'])} Assists")
-            row2_col2.metric("🔥 Top Contributor", f"{top_involvements['Player']}", f"{int(top_involvements['Goal Involvements'])} G+A")
+            row2_col1.metric("🅰️ Top Assister", f"{top_assister['Player']}", f"{safe_val(top_assister['Assists'])} Assists")
+            row2_col2.metric("🔥 Top Contributor", f"{top_involvements['Player']}", f"{safe_val(top_involvements['Goal Involvements'])} G+A")
 
             st.divider()
 
@@ -368,7 +381,6 @@ elif current_page == "Socials":
 
         except Exception as e:
             st.error("Error loading stats.")
-            st.exception(e)
 
     elif subtab == "Results":
         try:
@@ -609,7 +621,7 @@ elif current_page == "Socials":
 # --- 4. DERBY PENGUINS COMMUNITY ---
 # ==========================================
 elif current_page == "Community":
-    st.markdown("## 🤝 Derby Penguins Community")
+    render_page_header("Derby Penguins Community", WHITE_COMMUNITY_LOGO_URL, invert=False)
     subtab = render_subtab_cards("Community")
 
     if subtab == "Player Stats":
@@ -626,7 +638,7 @@ elif current_page == "Community":
 # --- 5. DERBY PENGUINS CLUB ---
 # ==========================================
 elif current_page == "Club":
-    st.markdown("## 📊 Derby Penguins Club Overview")
+    render_page_header("Derby Penguins Club Overview", HEADER_LOGO_URL, invert=True)
     subtab = render_subtab_cards("Club", has_match_center=False)
 
     if subtab == "Combined Stats":
@@ -641,7 +653,7 @@ elif current_page == "Club":
 # --- 6. ABOUT DERBY PENGUINS ---
 # ==========================================
 elif current_page == "About Us":
-    st.markdown("## ℹ️ About Derby Penguins")
+    render_page_header("About Derby Penguins")
     st.markdown("""
         <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 600px; margin: 0 auto; text-align: center;">
             <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Our Ethos</p>
