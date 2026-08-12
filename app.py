@@ -2,6 +2,15 @@ import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
 import re
+import textwrap
+
+# Helper function to render HTML/CSS safely without Markdown parser interference
+def render_html(html_str):
+    clean_html = textwrap.dedent(str(html_str)).strip()
+    if hasattr(st, "html"):
+        st.html(clean_html)
+    else:
+        st.markdown(clean_html, unsafe_allow_html=True)
 
 # 1. PAGE CONFIGURATION & LOGO URLS
 APP_ICON_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/PenguinsLogo.png"
@@ -37,7 +46,7 @@ for team_key in ["Penguins", "Socials", "Community", "Club"]:
         st.session_state[f"{team_key}_subtab"] = "Player Stats"
 
 # 2. GLOBAL STYLING
-st.markdown(f"""
+style_html = f"""
 <head>
 <link rel="apple-touch-icon" sizes="180x180" href="{APP_ICON_URL}">
 <link rel="apple-touch-icon-precomposed" href="{APP_ICON_URL}">
@@ -158,10 +167,17 @@ h1, h2, h3, h4, h5, h6, p, label, div {{
     margin-bottom: 20px;
 }}
 </style>
-""", unsafe_allow_html=True)
+"""
+render_html(style_html)
 
 # 3. TOP HEADER LOGO
-st.markdown(f"""<div class="header-logo-container"><img src="{HEADER_LOGO_URL}" class="header-logo" alt="Derby Penguins Logo"></div><h1 style="margin-top: 2px; margin-bottom: 10px; font-size: 1.25rem;">Derby Penguins FC</h1>""", unsafe_allow_html=True)
+header_html = f"""
+<div class="header-logo-container">
+    <img src="{HEADER_LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
+</div>
+<h1 style="margin-top: 2px; margin-bottom: 10px; font-size: 1.25rem;">Derby Penguins FC</h1>
+"""
+render_html(header_html)
 
 # 4. SPREADSHEET DATA LOADER
 SPREADSHEET_ID = "19wTGruEyetdVNhfjkyVqLDueyV9joVtRsI51RAqurjA"
@@ -182,9 +198,14 @@ def clean_pos_label(pos):
 def render_page_header(title, img_url=None, invert=False):
     if img_url:
         invert_style = "filter: invert(1);" if invert else ""
-        st.markdown(f"""<div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px; margin-top: 5px;"><img src="{img_url}" style="height: 32px; width: auto; object-fit: contain; {invert_style}"><h2 style="margin: 0; padding: 0; font-size: 1.4rem; font-weight: 700; color: #ffffff;">{title}</h2></div>""", unsafe_allow_html=True)
+        render_html(f"""
+        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px; margin-top: 5px;">
+            <img src="{img_url}" style="height: 32px; width: auto; object-fit: contain; {invert_style}">
+            <h2 style="margin: 0; padding: 0; font-size: 1.4rem; font-weight: 700; color: #ffffff;">{title}</h2>
+        </div>
+        """)
     else:
-        st.markdown(f"<h2 style='text-align: center; margin-bottom: 12px;'>{title}</h2>", unsafe_allow_html=True)
+        render_html(f"<h2 style='text-align: center; margin-bottom: 12px;'>{title}</h2>")
 
 # 5. TOP INTERACTIVE NAVIGATION
 pages_config = [
@@ -204,8 +225,7 @@ for label, key, img_url, invert in pages_config:
     nav_html += f'<a href="?nav={key}" target="_self" class="dashboard-btn" style="{active_style}">{img_tag}<span>{label}</span></a>'
 nav_html += '</div>'
 
-st.markdown(nav_html, unsafe_allow_html=True)
-
+render_html(nav_html)
 st.divider()
 
 # Sub-tab Navigation Helper Function
@@ -220,8 +240,7 @@ def render_subtab_cards(team_key, has_match_center=True):
         subtab_html += f'<a href="?nav={current_page}&sub_{team_key}={tab_name}" target="_self" class="dashboard-btn" style="{active_style}"><span>{btn_label}</span></a>'
     subtab_html += '</div>'
 
-    st.markdown(subtab_html, unsafe_allow_html=True)
-    st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
+    render_html(subtab_html)
     return current_subtab
 
 
@@ -321,7 +340,7 @@ elif current_page == "Socials":
                 table_html += "</tr>"
             table_html += "</table></div>"
 
-            st.markdown(table_html, unsafe_allow_html=True)
+            render_html(table_html)
 
         except Exception as e:
             st.error("Error loading stats.")
@@ -351,7 +370,7 @@ elif current_page == "Socials":
                 f_table_html += "</tr>"
             f_table_html += "</table></div>"
 
-            st.markdown(f_table_html, unsafe_allow_html=True)
+            render_html(f_table_html)
 
         except Exception as e:
             st.error("Error loading results data.")
@@ -472,11 +491,11 @@ elif current_page == "Socials":
                             scorer = row.get("Goalscorer", row.get("Scorer", "Unknown"))
                             assist = row.get("Assist", "")
                             if pd.notnull(assist) and str(assist).strip().lower() not in ["", "none", "-", "unassisted", "nan"]:
-                                st.markdown(f"• <b>{scorer}</b> ⚽ ( {str(assist).strip()} 🅰️ )", unsafe_allow_html=True)
+                                render_html(f"• <b>{scorer}</b> ⚽ ( {str(assist).strip()} 🅰️ )")
                             else:
-                                st.markdown(f"• <b>{scorer}</b> ⚽", unsafe_allow_html=True)
+                                render_html(f"• <b>{scorer}</b> ⚽")
                     else:
-                        st.markdown("<p style='color: #aaa;'>No goals recorded.</p>", unsafe_allow_html=True)
+                        render_html("<p style='color: #aaa;'>No goals recorded.</p>")
                 except Exception:
                     st.markdown("Goal log loading...")
 
@@ -490,7 +509,7 @@ elif current_page == "Socials":
                     for sub in active_subs:
                         st.markdown(f"• {sub}")
                 else:
-                    st.markdown("<p style='color: #aaa;'>No substitutes listed.</p>", unsafe_allow_html=True)
+                    render_html("<p style='color: #aaa;'>No substitutes listed.</p>")
 
         except Exception as e:
             st.error("Error loading match data.")
@@ -536,4 +555,11 @@ elif current_page == "Club":
 # ==========================================
 elif current_page == "About Us":
     render_page_header("About Derby Penguins")
-    st.markdown("""<div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 600px; margin: 0 auto; text-align: center;"><p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Our Ethos</p><p style="margin-bottom: 15px; font-size: 0.9rem;">At Derby Penguins, we are dedicated to grassroots football, sportsmanship, and building a supportive team community on and off the pitch.</p><p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Club Lore</p><p style="margin-bottom: 0; font-size: 0.9rem;">Founded to bring together passionate players, Derby Penguins provides a competitive, welcoming environment to train, play, and win together across all our squad levels.</p></div>""", unsafe_allow_html=True)
+    render_html("""
+    <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 600px; margin: 0 auto; text-align: center;">
+        <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Our Ethos</p>
+        <p style="margin-bottom: 15px; font-size: 0.9rem;">At Derby Penguins, we are dedicated to grassroots football, sportsmanship, and building a supportive team community on and off the pitch.</p>
+        <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Club Lore</p>
+        <p style="margin-bottom: 0; font-size: 0.9rem;">Founded to bring together passionate players, Derby Penguins provides a competitive, welcoming environment to train, play, and win together across all our squad levels.</p>
+    </div>
+    """)
