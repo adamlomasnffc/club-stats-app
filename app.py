@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
 import re
+from urllib.parse import quote_plus
 
 # 1. PAGE CONFIGURATION & MOBILE APP ICON
 LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/PenguinsLogo.png"
@@ -17,14 +18,22 @@ st.set_page_config(
 if "active_page" not in st.session_state:
     st.session_state["active_page"] = "Homepage"
 
-for team_key in ["Penguins", "Socials", "Community", "Club"]:
+DEFAULT_SUBTABS = {
+    "Penguins": "Player Stats",
+    "Socials": "Player Stats",
+    "Community": "Player Stats",
+    "Club": "Combined Stats",
+}
+for team_key, default_tab in DEFAULT_SUBTABS.items():
     if f"{team_key}_subtab" not in st.session_state:
-        st.session_state[f"{team_key}_subtab"] = "Player Stats"
+        st.session_state[f"{team_key}_subtab"] = default_tab
 
-# Handle Query Params
+# Handle Query Params (drives navigation via plain <a href="?..."> links)
 query_params = st.query_params
 if "nav" in query_params:
     st.session_state["active_page"] = query_params["nav"]
+if "team" in query_params and "tab" in query_params:
+    st.session_state[f"{query_params['team']}_subtab"] = query_params["tab"]
 
 # 2. GLOBAL STYLING
 st.markdown(f"""
@@ -41,10 +50,10 @@ st.markdown(f"""
         html, body, [class*="css"], .stApp {{
             text-align: center !important;
         }}
-        
+
         /* FIX FOR LOGO CUTOFF: Push content down so Streamlit header doesn't hide it */
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {{
-            padding-top: 3rem !important; 
+            padding-top: 3rem !important;
             padding-left: 0.5rem !important;
             padding-right: 0.5rem !important;
             max-width: 1000px !important;
@@ -71,47 +80,64 @@ st.markdown(f"""
             display: block !important;
         }}
 
-        /* NAVIGATION BUTTON ROW: Compact and tight, wraps on very small screens */
-        div[data-testid="stHorizontalBlock"] {{
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;
-            justify-content: center !important;
-            gap: 4px !important;
-            width: 100% !important;
+        /* DASHBOARD NAV GRID: always fills screen width, never stacks vertically */
+        .dash-grid {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            width: 100%;
+            margin: 6px auto 14px auto;
         }}
-
-        /* Allow columns to shrink and fit compactly */
-        div[data-testid="column"] {{
-            flex: 1 1 auto !important;
-            min-width: 0 !important;
-            padding: 0 !important;
+        .dash-grid.sub-grid {{
+            grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
         }}
-
-        div.stButton > button {{
-            width: 100% !important;
+        .dash-tile {{
             background-color: #1a1c23 !important;
             color: #ffffff !important;
-            border: 1px solid #333333 !important;
-            border-radius: 6px !important;
-            padding: 6px 2px !important;
-            font-weight: 600 !important;
-            font-size: 0.65rem !important; /* Smaller text for compact fit */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
-            transition: all 0.2s ease-in-out !important;
-            line-height: 1.2 !important;
-            min-height: 0 !important;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            padding: 10px 2px;
+            text-decoration: none !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.15s ease-in-out;
+            min-width: 0;
         }}
-        
-        div.stButton > button:hover {{
-            border-color: #FFB81C !important;
+        .dash-tile:hover {{
+            border-color: #FFB81C;
             color: #FFB81C !important;
             background-color: #22252e !important;
         }}
-        
-        div.stButton > button:active {{
+        .dash-tile.active {{
             background-color: #FFB81C !important;
             color: #111111 !important;
+            border-color: #FFB81C;
+        }}
+        .dash-icon {{
+            font-size: 1.25rem;
+            line-height: 1.1;
+            margin-bottom: 2px;
+        }}
+        .dash-label {{
+            font-size: 0.68rem;
+            line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }}
+        .sub-grid .dash-tile {{
+            padding: 8px 2px;
+        }}
+        .sub-grid .dash-icon {{
+            font-size: 1.05rem;
+        }}
+        .sub-grid .dash-label {{
+            font-size: 0.6rem;
         }}
 
         /* Responsive Video Container */
@@ -171,46 +197,59 @@ def load_sheet(sheet_name):
 def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
-# 5. TOP INTERACTIVE NAVIGATION
-nav_cols = st.columns(6)
+# 5. TOP INTERACTIVE NAVIGATION (dashboard grid of links, not stacked buttons)
 pages_config = [
-    ("🏠 Home", "Homepage"),
-    ("🐧 Penguins", "Penguins"),
-    ("📱 Socials", "Socials"),
-    ("🤝 Community", "Community"),
-    ("📊 Club", "Club"),
-    ("ℹ️ About", "About Us")
+    ("🏠", "Home", "Homepage"),
+    ("🐧", "Penguins", "Penguins"),
+    ("📱", "Socials", "Socials"),
+    ("🤝", "Community", "Community"),
+    ("📊", "Club", "Club"),
+    ("ℹ️", "About", "About Us"),
 ]
 
-for idx, (label, key) in enumerate(pages_config):
-    with nav_cols[idx]:
-        if st.button(label, key=f"nav_btn_{key}"):
-            st.session_state["active_page"] = key
-            st.rerun()
+def render_nav_dashboard(active_page):
+    tiles = ""
+    for icon, label, key in pages_config:
+        active_cls = " active" if active_page == key else ""
+        tiles += f"""<a href="?nav={quote_plus(key)}" class="dash-tile{active_cls}">
+            <div class="dash-icon">{icon}</div>
+            <div class="dash-label">{label}</div>
+        </a>"""
+    st.markdown(f'<div class="dash-grid">{tiles}</div>', unsafe_allow_html=True)
+
+render_nav_dashboard(st.session_state["active_page"])
 
 st.divider()
 
 current_page = st.session_state["active_page"]
 
-# Sub-tab Navigation Helper Function
-def render_subtab_cards(team_key, has_match_center=True):
-    tabs = ["Player Stats", "Results", "Match Center", "News"] if has_match_center else ["Combined Stats", "Club Schedule", "Club News"]
-    cols = st.columns(len(tabs))
-    for idx, tab_name in enumerate(tabs):
-        with cols[idx]:
-            btn_label = f"📊 Stats" if "Stats" in tab_name else f"📅 Results" if "Results" in tab_name else f"📅 Schedule" if "Schedule" in tab_name else f"⚽ Lineups" if "Match" in tab_name else f"📰 News"
-            if st.button(btn_label, key=f"sub_btn_{team_key}_{idx}"):
-                st.session_state[f"{team_key}_subtab"] = tab_name
-                st.rerun()
+# Sub-tab Navigation (dashboard grid, same approach as top nav)
+def render_subtab_dashboard(team_key, has_match_center=True):
+    if has_match_center:
+        tabs = [("📊", "Player Stats"), ("📅", "Results"), ("⚽", "Match Center"), ("📰", "News")]
+    else:
+        tabs = [("📊", "Combined Stats"), ("📅", "Club Schedule"), ("📰", "Club News")]
+
+    current_subtab = st.session_state.get(f"{team_key}_subtab", tabs[0][1])
+
+    tiles = ""
+    for icon, tab_name in tabs:
+        active_cls = " active" if current_subtab == tab_name else ""
+        href = f"?nav={quote_plus(team_key)}&team={quote_plus(team_key)}&tab={quote_plus(tab_name)}"
+        tiles += f"""<a href="{href}" class="dash-tile{active_cls}">
+            <div class="dash-icon">{icon}</div>
+            <div class="dash-label">{tab_name}</div>
+        </a>"""
+    st.markdown(f'<div class="dash-grid sub-grid">{tiles}</div>', unsafe_allow_html=True)
     st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
-    return st.session_state.get(f"{team_key}_subtab", tabs[0])
+    return current_subtab
 
 
 # ==========================================
 # --- 1. HOMEPAGE ---
 # ==========================================
 if current_page == "Homepage":
-    
+
     st.markdown("### 🎥 Feature Video")
     st.markdown("<div class='video-container'>", unsafe_allow_html=True)
     st.video(VIDEO_URL)
@@ -219,20 +258,19 @@ if current_page == "Homepage":
     st.divider()
 
     st.markdown("### 📲 Latest Club Updates")
-    fb_page_url = "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/" 
-    
-    # Facebook embed with strict width constraints to prevent mobile cutoff
+    fb_page_url = "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/"
+
     fb_iframe = f"""
     <div style="display: flex; justify-content: center; width: 100%; overflow: hidden;">
         <div style="width: 100%; max-width: 500px; overflow: hidden; border-radius: 8px; background: #111;">
-            <iframe 
-                src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=340&height=650&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" 
-                width="100%" 
-                height="650" 
-                style="border:none; overflow:hidden; max-width: 100vw;" 
-                scrolling="no" 
-                frameborder="0" 
-                allowfullscreen="true" 
+            <iframe
+                src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=340&height=650&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true"
+                width="100%"
+                height="650"
+                style="border:none; overflow:hidden; max-width: 100vw;"
+                scrolling="no"
+                frameborder="0"
+                allowfullscreen="true"
                 allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
             </iframe>
         </div>
@@ -246,7 +284,7 @@ if current_page == "Homepage":
 # ==========================================
 elif current_page == "Penguins":
     st.markdown("## 🐧 Derby Penguins")
-    subtab = render_subtab_cards("Penguins")
+    subtab = render_subtab_dashboard("Penguins")
 
     if subtab == "Player Stats":
         st.info("First team player stats will be populated here.")
@@ -266,7 +304,7 @@ elif current_page == "Penguins":
 # ==========================================
 elif current_page == "Socials":
     st.markdown("## 📱 Derby Penguins Socials")
-    subtab = render_subtab_cards("Socials")
+    subtab = render_subtab_dashboard("Socials")
 
     if subtab == "Player Stats":
         try:
@@ -279,11 +317,10 @@ elif current_page == "Socials":
             top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
             top_involvements = df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
 
-            # Split into 2x2 grid for mobile friendliness
             row1_col1, row1_col2 = st.columns(2)
             row1_col1.metric("🏃 Apps Leader", f"{top_apps['Player']}", f"{int(top_apps['Appearances'])} Apps")
             row1_col2.metric("⚽ Top Scorer", f"{top_scorer['Player']}", f"{int(top_scorer['Goals'])} Goals")
-            
+
             row2_col1, row2_col2 = st.columns(2)
             row2_col1.metric("🅰️ Top Assister", f"{top_assister['Player']}", f"{int(top_assister['Assists'])} Assists")
             row2_col2.metric("🔥 Top Contributor", f"{top_involvements['Player']}", f"{int(top_involvements['Goal Involvements'])} G+A")
@@ -292,7 +329,6 @@ elif current_page == "Socials":
 
             st.markdown("### Socials Player Stats")
 
-            # Stacked Filters - No columns, simple vertical list for mobile
             search_query = st.text_input("🔍 Search Player", "")
             sort_by = st.selectbox("Sort By Column", options=df.columns, index=1)
             sort_order = st.radio("Order", ["Descending", "Ascending"], horizontal=True)
@@ -334,7 +370,7 @@ elif current_page == "Socials":
             display_cols = [c for c in target_cols if c in games_df.columns]
             if not display_cols:
                 display_cols = list(games_df.columns[:7])
-                
+
             fixtures_df = games_df[display_cols].copy().dropna(subset=[display_cols[0]])
 
             f_table_html = "<div class='mobile-table-container'>"
@@ -399,7 +435,7 @@ elif current_page == "Socials":
             m_col1, m_col2 = st.columns(2)
             m_col1.metric("🗓️ Date", str(game_data.get("Date", "-")))
             m_col2.metric("🛡️ Opponent", str(game_data.get("Opponent", "-")))
-            
+
             m_col3, m_col4 = st.columns(2)
             m_col3.metric("⚽ Score", str(game_data.get("Result", "-")))
             m_col4.metric("🏆 MOTM", motm_val)
@@ -548,7 +584,7 @@ elif current_page == "Socials":
                 st.markdown("### 👥 Substitutes")
                 subs = [game_data.get(f"SUB{i}") for i in range(1, 7)]
                 active_subs = [str(s).strip() for s in subs if pd.notnull(s) and str(s).strip().lower() not in ["", "-", "nan", "none"]]
-                
+
                 if active_subs:
                     for sub in active_subs:
                         st.markdown(f"• {sub}")
@@ -567,7 +603,7 @@ elif current_page == "Socials":
 # ==========================================
 elif current_page == "Community":
     st.markdown("## 🤝 Derby Penguins Community")
-    subtab = render_subtab_cards("Community")
+    subtab = render_subtab_dashboard("Community")
 
     if subtab == "Player Stats":
         st.info("Community stats coming soon.")
@@ -587,7 +623,7 @@ elif current_page == "Community":
 # ==========================================
 elif current_page == "Club":
     st.markdown("## 📊 Derby Penguins Club Overview")
-    subtab = render_subtab_cards("Club", has_match_center=False)
+    subtab = render_subtab_dashboard("Club", has_match_center=False)
 
     if subtab == "Combined Stats":
         st.info("Combined stats across all squads will be displayed here.")
