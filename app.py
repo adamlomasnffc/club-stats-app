@@ -7,7 +7,7 @@ from urllib.parse import quote_plus
 # REPOSITORY LOGO URLS
 CLUB_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/ClubLogo.jpeg"
 SOCIALS_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/SocialsLogo.jpeg"
-WHITE_COMMUNITY_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/WhiteCommunityLogo.jpeg"
+COMMUNITY_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/BlackCommunityLogo.jpeg"
 VIDEO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/a6e86bfe-69d7-4146-add8-2ba2d49c942b.MP4"
 
 st.set_page_config(
@@ -19,15 +19,6 @@ st.set_page_config(
 # TRUE HEAD INJECTOR FIX FOR IOS/SAFARI ICONS & ANTI-FLASH BACKGROUND LOCK
 icon_injector = f"""
 <script>
-    // Prevent white flash by forcing dark background immediately on parent document
-    try {{
-        const parentDoc = window.parent.document;
-        parentDoc.documentElement.style.backgroundColor = "#0e1117";
-        if (parentDoc.body) {{
-            parentDoc.body.style.backgroundColor = "#0e1117";
-        }}
-    }} catch(e) {{}}
-
     const docHead = window.parent.document.querySelector('head');
     if (docHead) {{
         const existingIcons = docHead.querySelectorAll('link[rel*="icon"], link[rel*="apple-touch-icon"]');
@@ -65,8 +56,8 @@ DEFAULT_SUBTABS = {
     "Club": "Combined Stats",
 }
 for team_key, default_tab in DEFAULT_SUBTABS.items():
-    if f"{team_key}_subtab" not in st.session_state:
-        st.session_state[f"{team_key}_subtab"] = default_tab
+    if f"{team_key}_subtag" not in st.session_state:
+        st.session_state[f"{team_key}_subtag"] = default_tab
 
 query_params = st.query_params
 if "nav" in query_params:
@@ -74,12 +65,17 @@ if "nav" in query_params:
 if "team" in query_params and "tab" in query_params:
     st.session_state[f"{query_params['team']}_subtab"] = query_params["tab"]
 
-# 2. GLOBAL STYLING
+# 2. GLOBAL STYLING (Forced dark background variables to prevent white flash)
 st.markdown("""
     <style>
-        html, body, [class*="css"], .stApp {
+        /* Force dark background instantly on Streamlit framework layers */
+        [data-testid="stAppViewContainer"], [data-testid="stHeader"], .stApp {
+            background-color: #0e1117 !important;
+        }
+        html, body, [class*="css"] {
             text-align: center !important;
             background-color: #0e1117 !important;
+            color: #ffffff !important;
         }
         .block-container, div[class*="stMainBlockContainer"], .stAppViewBlockContainer {
             padding-top: 3rem !important;
@@ -141,8 +137,7 @@ st.markdown("""
             color: #111111 !important;
             border-color: #FFB81C;
         }
-        .dash-tile.active .dash-img-icon,
-        .dash-tile.active .dash-white-img-icon {
+        .dash-tile.active .dash-img-icon {
             filter: invert(1);
         }
         .dash-icon {
@@ -161,11 +156,13 @@ st.markdown("""
             display: block;
             filter: invert(1);
         }
-        .dash-white-img-icon {
-            max-height: 22px;
+        .page-heading-icon {
+            max-height: 32px;
             width: auto;
             object-fit: contain;
-            display: block;
+            vertical-align: middle;
+            margin-right: 8px;
+            filter: invert(1);
         }
         .dash-label {
             font-size: 0.68rem;
@@ -236,22 +233,20 @@ def clean_pos_label(pos):
     return re.sub(r'\d+$', '', pos)
 
 pages_config = [
-    ("🏠", "Home", "Homepage", "emoji", False),
-    (CLUB_LOGO_URL, "Penguins", "Penguins", "invert_img", True),
-    (SOCIALS_LOGO_URL, "Socials", "Socials", "invert_img", True),
-    (WHITE_COMMUNITY_URL, "Community", "Community", "white_img", True),
-    ("📊", "Club", "Club", "emoji", False),
-    ("ℹ️", "About", "About Us", "emoji", False),
+    ("🏠", "Home", "Homepage", False),
+    (CLUB_LOGO_URL, "Penguins", "Penguins", True),
+    (SOCIALS_LOGO_URL, "Socials", "Socials", True),
+    (COMMUNITY_LOGO_URL, "Community", "Community", True),
+    ("📊", "Club", "Club", False),
+    ("ℹ️", "About", "About Us", False),
 ]
 
 def render_nav_dashboard(active_page):
     tiles = ""
-    for icon_item, label, key, icon_type, is_active in pages_config:
+    for icon_item, label, key, is_img in pages_config:
         active_cls = " active" if active_page == key else ""
-        if icon_type == "invert_img":
+        if is_img:
             icon_html = f'<img src="{icon_item}" class="dash-img-icon" alt="{label}">'
-        elif icon_type == "white_img":
-            icon_html = f'<img src="{icon_item}" class="dash-white-img-icon" alt="{label}">'
         else:
             icon_html = icon_item
         
@@ -312,7 +307,7 @@ if current_page == "Homepage":
     components.html(fb_iframe, height=660, scrolling=False)
 
 elif current_page == "Penguins":
-    st.markdown("## 🐧 Derby Penguins")
+    st.markdown(f"## <img src='{CLUB_LOGO_URL}' class='page-heading-icon'> Derby Penguins", unsafe_allow_html=True)
     subtab = render_subtab_dashboard("Penguins")
     if subtab == "Player Stats": st.info("First team player stats will be populated here.")
     elif subtab == "Results": st.info("First team results and fixtures coming soon.")
@@ -320,7 +315,7 @@ elif current_page == "Penguins":
     elif subtab == "News": st.info("First team announcements.")
 
 elif current_page == "Socials":
-    st.markdown("## 📱 Derby Penguins Socials")
+    st.markdown(f"## <img src='{SOCIALS_LOGO_URL}' class='page-heading-icon'> Derby Penguins Socials", unsafe_allow_html=True)
     subtab = render_subtab_dashboard("Socials")
     if subtab == "Player Stats":
         try:
@@ -371,7 +366,7 @@ elif current_page == "Socials":
             st.exception(e)
 
 elif current_page == "Community":
-    st.markdown("## 🤝 Derby Penguins Community")
+    st.markdown(f"## <img src='{COMMUNITY_LOGO_URL}' class='page-heading-icon'> Derby Penguins Community", unsafe_allow_html=True)
     subtab = render_subtab_dashboard("Community")
     st.info("Community stats coming soon.")
 
