@@ -36,7 +36,7 @@ for team_key in ["Penguins", "Socials", "Community", "Club"]:
 
 current_page = st.session_state["active_page"]
 
-# 4. GLOBAL STYLING (Including Uncropped Logo Fix & Native Button Overrides)
+# 4. GLOBAL STYLING (Including 3x2 Grid Lock & Header Logo Fix)
 style_html = f"""
 <head>
 <link rel="apple-touch-icon" sizes="180x180" href="{APP_ICON_URL}">
@@ -63,6 +63,19 @@ h1, h2, h3, h4, h5, h6, p, label, div {{
     text-align: center !important;
 }}
 
+/* FORCE 3x2 BUTTON GRID ON ALL SCREENS (PREVENTS 6x1 MOBILE STACKING) */
+div[data-testid="stHorizontalBlock"] {{
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+}}
+div[data-testid="stHorizontalBlock"] > div {{
+    width: 33.33% !important;
+    flex: 1 1 0px !important;
+    min-width: 0 !important;
+}}
+
 /* HEADER LOGO UNCLIPPING FIX */
 .header-logo-container {{
     display: flex !important;
@@ -86,7 +99,7 @@ h1, h2, h3, h4, h5, h6, p, label, div {{
 /* Custom Styling for Native Streamlit Buttons (Nav Grid) */
 div.stButton > button {{
     width: 100% !important;
-    padding: 10px 4px !important;
+    padding: 8px 2px !important;
     font-weight: 600 !important;
     font-size: 0.8rem !important;
     border-radius: 8px !important;
@@ -179,7 +192,7 @@ def render_page_header(title, img_url=None, invert=False):
     else:
         render_html(f"<h2 style='text-align: center; margin-bottom: 12px;'>{title}</h2>")
 
-# 7. TOP INTERACTIVE NAVIGATION (NATIVE STREAMLIT BUTTON GRID)
+# 7. TOP INTERACTIVE NAVIGATION (FORCED 3x2 GRID)
 pages_config = [
     ("🏠 Home", "Homepage"),
     ("🐧 Penguins", "Penguins"),
@@ -189,7 +202,7 @@ pages_config = [
     ("ℹ️ About", "About Us")
 ]
 
-# Grid 1: First 3 Pages
+# Row 1: 3 Buttons
 row1_cols = st.columns(3)
 for idx, (label, key) in enumerate(pages_config[:3]):
     is_active = (current_page == key)
@@ -198,7 +211,7 @@ for idx, (label, key) in enumerate(pages_config[:3]):
         st.session_state["active_page"] = key
         st.rerun()
 
-# Grid 2: Next 3 Pages
+# Row 2: 3 Buttons
 row2_cols = st.columns(3)
 for idx, (label, key) in enumerate(pages_config[3:]):
     is_active = (current_page == key)
