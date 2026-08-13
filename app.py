@@ -36,7 +36,7 @@ for team_key in ["Penguins", "Socials", "Community", "Club"]:
 
 current_page = st.session_state["active_page"]
 
-# 4. GLOBAL STYLING (Including 3x2 Grid Lock & Header Logo Fix)
+# 4. GLOBAL STYLING (Including Metric Font Fix & Uncropped Header Logo)
 style_html = f"""
 <head>
 <link rel="apple-touch-icon" sizes="180x180" href="{APP_ICON_URL}">
@@ -63,7 +63,7 @@ h1, h2, h3, h4, h5, h6, p, label, div {{
     text-align: center !important;
 }}
 
-/* FORCE 3x2 BUTTON GRID ON ALL SCREENS (PREVENTS 6x1 MOBILE STACKING) */
+/* FORCE 3x2 BUTTON GRID & SIDE-BY-SIDE KPI CARDS ON ALL SCREENS */
 div[data-testid="stHorizontalBlock"] {{
     display: flex !important;
     flex-direction: row !important;
@@ -71,7 +71,6 @@ div[data-testid="stHorizontalBlock"] {{
     gap: 6px !important;
 }}
 div[data-testid="stHorizontalBlock"] > div {{
-    width: 33.33% !important;
     flex: 1 1 0px !important;
     min-width: 0 !important;
 }}
@@ -127,6 +126,38 @@ div.stButton > button[kind="secondary"]:hover {{
     background-color: #22252e !important;
 }}
 
+/* METRIC CARDS / KPI STYLING */
+[data-testid="stMetric"] {{
+    background-color: #1a1c23 !important;
+    border-radius: 8px !important;
+    padding: 8px 4px !important;
+    border: 1px solid #333 !important;
+    text-align: center !important;
+}}
+
+/* Metric Card Label (e.g. "Apps Leader", "Top Scorer") */
+[data-testid="stMetricLabel"] {{
+    font-size: 0.75rem !important;
+    color: #d1d5db !important;
+    justify-content: center !important;
+}}
+
+/* Metric Card Value (Player Name) - Scaled down & kept in Yellow */
+[data-testid="stMetricValue"] {{
+    color: #FFB81C !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+}}
+
+/* Metric Card Sub-label (e.g. "12 Apps", "8 Goals") */
+[data-testid="stMetricDelta"] {{
+    font-size: 0.75rem !important;
+    justify-content: center !important;
+}}
+
 [data-testid="stVideo"] {{
     max-width: 480px !important;
     margin: 0 auto !important;
@@ -134,16 +165,7 @@ div.stButton > button[kind="secondary"]:hover {{
     border-radius: 8px !important;
     overflow: hidden !important;
 }}
-[data-testid="stMetric"] {{
-    background-color: #1a1c23 !important;
-    border-radius: 8px !important;
-    padding: 10px !important;
-    border: 1px solid #333 !important;
-    text-align: center !important;
-}}
-[data-testid="stMetricValue"] {{
-    color: #FFB81C !important;
-}}
+
 .mobile-table-container {{
     width: 100%;
     overflow-x: auto;
