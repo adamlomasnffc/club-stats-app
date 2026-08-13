@@ -581,4 +581,4 @@ elif current_page == "About Us":
         <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Club Lore</p>
         <p style="margin-bottom: 0; font-size: 0.9rem;">Founded to bring together fat lads who want to run about on a Sunday as well as a Thursday, Derby Penguins provides a competitive, welcoming environment to play football across all our squad levels.</p>
     </div>
-    """)   
+    """)
