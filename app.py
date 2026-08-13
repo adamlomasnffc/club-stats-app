@@ -36,7 +36,7 @@ for team_key in ["Penguins", "Socials", "Community", "Club"]:
 
 current_page = st.session_state["active_page"]
 
-# 4. GLOBAL STYLING (Including Metric Font Fix & Uncropped Header Logo)
+# 4. GLOBAL STYLING
 style_html = f"""
 <head>
 <link rel="apple-touch-icon" sizes="180x180" href="{APP_ICON_URL}">
@@ -135,14 +135,14 @@ div.stButton > button[kind="secondary"]:hover {{
     text-align: center !important;
 }}
 
-/* Metric Card Label (e.g. "Apps Leader", "Top Scorer") */
+/* Metric Card Label */
 [data-testid="stMetricLabel"] {{
     font-size: 0.75rem !important;
     color: #d1d5db !important;
     justify-content: center !important;
 }}
 
-/* Metric Card Value (Player Name) - Scaled down & kept in Yellow */
+/* Metric Card Value (Player Name) */
 [data-testid="stMetricValue"] {{
     color: #FFB81C !important;
     font-size: 0.95rem !important;
@@ -152,7 +152,7 @@ div.stButton > button[kind="secondary"]:hover {{
     word-break: break-word !important;
 }}
 
-/* Metric Card Sub-label (e.g. "12 Apps", "8 Goals") */
+/* Metric Card Sub-label */
 [data-testid="stMetricDelta"] {{
     font-size: 0.75rem !important;
     justify-content: center !important;
@@ -440,94 +440,95 @@ elif current_page == "Socials":
 
             st.divider()
 
-            pitch_col, details_col = st.columns([2, 1])
+            # --- STARTING 11 PITCH VIEW (FULL WIDTH) ---
+            formation = str(game_data.get("Formation", "4-3-3")).strip()
+            st.subheader(f"Starting 11 ({formation})")
 
-            with pitch_col:
-                formation = str(game_data.get("Formation", "4-3-3")).strip()
-                st.subheader(f"Starting 11 ({formation})")
+            goal_counts, assist_counts = {}, {}
+            try:
+                goals_df = load_sheet("Socials_Goals")
+                match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
+                match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
 
-                goal_counts, assist_counts = {}, {}
-                try:
-                    goals_df = load_sheet("Socials_Goals")
-                    match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
-                    match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
+                if not match_goals.empty:
+                    for _, row in match_goals.iterrows():
+                        scorer = str(row.get("Goalscorer", row.get("Scorer", ""))).strip()
+                        assist = str(row.get("Assist", "")).strip()
+                        if scorer and scorer.lower() not in ["unknown", "none", "-", "nan", ""]:
+                            goal_counts[scorer] = goal_counts.get(scorer, 0) + 1
+                        if assist and assist.lower() not in ["none", "-", "unassisted", "nan", ""]:
+                            assist_counts[assist] = assist_counts.get(assist, 0) + 1
+            except Exception:
+                pass
 
-                    if not match_goals.empty:
-                        for _, row in match_goals.iterrows():
-                            scorer = str(row.get("Goalscorer", row.get("Scorer", ""))).strip()
-                            assist = str(row.get("Assist", "")).strip()
-                            if scorer and scorer.lower() not in ["unknown", "none", "-", "nan", ""]:
-                                goal_counts[scorer] = goal_counts.get(scorer, 0) + 1
-                            if assist and assist.lower() not in ["none", "-", "unassisted", "nan", ""]:
-                                assist_counts[assist] = assist_counts.get(assist, 0) + 1
-                except Exception:
-                    pass
+            def_order = ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RWB", "RB"]
+            cdm_order = ["CDM", "CDM1", "CDM2"]
+            mid_order = ["LM", "CM", "CM1", "CM2", "CM3", "RM"]
+            cam_order = ["CAM", "CAM1", "CAM2"]
+            att_order = ["LW", "ST", "ST1", "ST2", "ST3", "RW"]
 
-                def_order = ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RWB", "RB"]
-                cdm_order = ["CDM", "CDM1", "CDM2"]
-                mid_order = ["LM", "CM", "CM1", "CM2", "CM3", "RM"]
-                cam_order = ["CAM", "CAM1", "CAM2"]
-                att_order = ["LW", "ST", "ST1", "ST2", "ST3", "RW"]
+            lineup = {}
+            for col_name in game_data.index:
+                col_clean = str(col_name).strip()
+                val = game_data.get(col_name)
+                if pd.notnull(val) and str(val).strip().lower() not in ["", "-", "nan", "none"]:
+                    lineup[col_clean] = str(val).strip()
 
-                lineup = {}
-                for col_name in game_data.index:
-                    col_clean = str(col_name).strip()
-                    val = game_data.get(col_name)
-                    if pd.notnull(val) and str(val).strip().lower() not in ["", "-", "nan", "none"]:
-                        lineup[col_clean] = str(val).strip()
+            def make_player_card(pos_key, name):
+                c_pos = clean_pos_label(pos_key)
+                g_count = goal_counts.get(name, 0)
+                a_count = assist_counts.get(name, 0)
+                icons = []
+                if g_count > 0: icons.append("⚽" * g_count)
+                if a_count > 0: icons.append("🅰️" * a_count)
+                badge_html = f'<div style="font-size: 7px; margin-top: 1px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
 
-                def make_player_card(pos_key, name):
-                    c_pos = clean_pos_label(pos_key)
-                    g_count = goal_counts.get(name, 0)
-                    a_count = assist_counts.get(name, 0)
-                    icons = []
-                    if g_count > 0: icons.append("⚽" * g_count)
-                    if a_count > 0: icons.append("🅰️" * a_count)
-                    badge_html = f'<div style="font-size: 7px; margin-top: 1px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
+                return f"""<div style="background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 2px 2px; margin: 1px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden;"><div style="font-size: 7px; color: #FFB81C; font-weight: bold; line-height: 1;">{c_pos}</div><div style="font-size: 8.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1;">{name}</div>{badge_html}</div>"""
 
-                    return f"""<div style="background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 2px 2px; margin: 1px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden;"><div style="font-size: 7px; color: #FFB81C; font-weight: bold; line-height: 1;">{c_pos}</div><div style="font-size: 8.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1;">{name}</div>{badge_html}</div>"""
+            gk_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k == "GK"])
+            def_html = "".join([make_player_card(k, lineup[k]) for k in def_order if k in lineup])
+            cdm_html = "".join([make_player_card(k, lineup[k]) for k in cdm_order if k in lineup])
+            mid_html = "".join([make_player_card(k, lineup[k]) for k in mid_order if k in lineup])
+            cam_html = "".join([make_player_card(k, lineup[k]) for k in cam_order if k in lineup])
+            att_html = "".join([make_player_card(k, lineup[k]) for k in att_order if k in lineup])
 
-                gk_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k == "GK"])
-                def_html = "".join([make_player_card(k, lineup[k]) for k in def_order if k in lineup])
-                cdm_html = "".join([make_player_card(k, lineup[k]) for k in cdm_order if k in lineup])
-                mid_html = "".join([make_player_card(k, lineup[k]) for k in mid_order if k in lineup])
-                cam_html = "".join([make_player_card(k, lineup[k]) for k in cam_order if k in lineup])
-                att_html = "".join([make_player_card(k, lineup[k]) for k in att_order if k in lineup])
+            pitch_component = f"""<!DOCTYPE html><html><head><style>body {{ margin: 0; font-family: sans-serif; background-color: transparent; }} .pitch {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; padding: 6px 2px; position: relative; box-sizing: border-box; min-height: 420px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; width: 100%; }} .halfway-line {{ position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed rgba(255, 184, 28, 0.3); }} .center-circle {{ position: absolute; top: calc(50% - 25px); left: calc(50% - 25px); width: 50px; height: 50px; border: 1px dashed rgba(255, 184, 28, 0.3); border-radius: 50%; }} .row {{ display: flex; justify-content: space-around; align-items: center; position: relative; z-index: 2; width: 100%; gap: 1px; }}</style></head><body><div class="pitch"><div class="halfway-line"></div><div class="center-circle"></div>{"<div class='row'>" + gk_html + "</div>" if gk_html else ""}{"<div class='row'>" + def_html + "</div>" if def_html else ""}{"<div class='row'>" + cdm_html + "</div>" if cdm_html else ""}{"<div class='row'>" + mid_html + "</div>" if mid_html else ""}{"<div class='row'>" + cam_html + "</div>" if cam_html else ""}{"<div class='row'>" + att_html + "</div>" if att_html else ""}</div></body></html>"""
+            components.html(pitch_component, height=440)
 
-                pitch_component = f"""<!DOCTYPE html><html><head><style>body {{ margin: 0; font-family: sans-serif; background-color: transparent; }} .pitch {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; padding: 6px 2px; position: relative; box-sizing: border-box; min-height: 420px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; width: 100%; }} .halfway-line {{ position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed rgba(255, 184, 28, 0.3); }} .center-circle {{ position: absolute; top: calc(50% - 25px); left: calc(50% - 25px); width: 50px; height: 50px; border: 1px dashed rgba(255, 184, 28, 0.3); border-radius: 50%; }} .row {{ display: flex; justify-content: space-around; align-items: center; position: relative; z-index: 2; width: 100%; gap: 1px; }}</style></head><body><div class="pitch"><div class="halfway-line"></div><div class="center-circle"></div>{"<div class='row'>" + gk_html + "</div>" if gk_html else ""}{"<div class='row'>" + def_html + "</div>" if def_html else ""}{"<div class='row'>" + cdm_html + "</div>" if cdm_html else ""}{"<div class='row'>" + mid_html + "</div>" if mid_html else ""}{"<div class='row'>" + cam_html + "</div>" if cam_html else ""}{"<div class='row'>" + att_html + "</div>" if att_html else ""}</div></body></html>"""
-                components.html(pitch_component, height=440)
+            st.divider()
 
-            with details_col:
-                st.markdown("### ⚽ Goals & Assists")
-                try:
-                    goals_df = load_sheet("Socials_Goals")
-                    match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
-                    match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
+            # --- GOALS & ASSISTS (FULL WIDTH) ---
+            st.markdown("### ⚽ Goals & Assists")
+            try:
+                goals_df = load_sheet("Socials_Goals")
+                match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
+                match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
 
-                    if not match_goals.empty:
-                        for _, row in match_goals.iterrows():
-                            scorer = row.get("Goalscorer", row.get("Scorer", "Unknown"))
-                            assist = row.get("Assist", "")
-                            if pd.notnull(assist) and str(assist).strip().lower() not in ["", "none", "-", "unassisted", "nan"]:
-                                render_html(f"• <b>{scorer}</b> ⚽ ( {str(assist).strip()} 🅰️ )")
-                            else:
-                                render_html(f"• <b>{scorer}</b> ⚽")
-                    else:
-                        render_html("<p style='color: #aaa;'>No goals recorded.</p>")
-                except Exception:
-                    st.markdown("Goal log loading...")
-
-                st.divider()
-
-                st.markdown("### 👥 Substitutes")
-                subs = [game_data.get(f"SUB{i}") for i in range(1, 7)]
-                active_subs = [str(s).strip() for s in subs if pd.notnull(s) and str(s).strip().lower() not in ["", "-", "nan", "none"]]
-                
-                if active_subs:
-                    for sub in active_subs:
-                        st.markdown(f"• {sub}")
+                if not match_goals.empty:
+                    for _, row in match_goals.iterrows():
+                        scorer = row.get("Goalscorer", row.get("Scorer", "Unknown"))
+                        assist = row.get("Assist", "")
+                        if pd.notnull(assist) and str(assist).strip().lower() not in ["", "none", "-", "unassisted", "nan"]:
+                            render_html(f"• <b>{scorer}</b> ⚽ ( {str(assist).strip()} 🅰️ )")
+                        else:
+                            render_html(f"• <b>{scorer}</b> ⚽")
                 else:
-                    render_html("<p style='color: #aaa;'>No substitutes listed.</p>")
+                    render_html("<p style='color: #aaa;'>No goals recorded.</p>")
+            except Exception:
+                st.markdown("Goal log loading...")
+
+            st.divider()
+
+            # --- SUBSTITUTES (FULL WIDTH) ---
+            st.markdown("### 👥 Substitutes")
+            subs = [game_data.get(f"SUB{i}") for i in range(1, 7)]
+            active_subs = [str(s).strip() for s in subs if pd.notnull(s) and str(s).strip().lower() not in ["", "-", "nan", "none"]]
+            
+            if active_subs:
+                for sub in active_subs:
+                    st.markdown(f"• {sub}")
+            else:
+                render_html("<p style='color: #aaa;'>No substitutes listed.</p>")
 
         except Exception as e:
             st.error("Error loading match data.")
@@ -576,8 +577,8 @@ elif current_page == "About Us":
     render_html("""
     <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 600px; margin: 0 auto; text-align: center;">
         <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Our Ethos</p>
-        <p style="margin-bottom: 15px; font-size: 0.9rem;">At Derby Penguins, we are dedicated to grassroots football, sportsmanship, and building a supportive team community on and off the pitch.</p>
+        <p style="margin-bottom: 15px; font-size: 0.9rem;">At Derby Penguins, we are dedicated to grassroots football, sportsmanship, Chris Eley buying fat jabs off men in pub toilets, and building a supportive team community on and off the pitch.</p>
         <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Club Lore</p>
-        <p style="margin-bottom: 0; font-size: 0.9rem;">Founded to bring together passionate players, Derby Penguins provides a competitive, welcoming environment to train, play, and win together across all our squad levels.</p>
+        <p style="margin-bottom: 0; font-size: 0.9rem;">Founded to bring together fat lads who want to run about on a Sunday as well as a Thursday, Derby Penguins provides a competitive, welcoming environment to play football across all our squad levels.</p>
     </div>
-    """)
+    """)   
