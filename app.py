@@ -440,9 +440,9 @@ elif current_page == "Socials":
 
             st.divider()
 
-            # --- STARTING 11 PITCH VIEW (FULL WIDTH) ---
+            # --- STARTING 11 & INTEGRATED BENCH PITCH VIEW ---
             formation = str(game_data.get("Formation", "4-3-3")).strip()
-            st.subheader(f"Starting 11 ({formation})")
+            st.subheader(f"Match Lineup ({formation})")
 
             goal_counts, assist_counts = {}, {}
             try:
@@ -492,8 +492,40 @@ elif current_page == "Socials":
             cam_html = "".join([make_player_card(k, lineup[k]) for k in cam_order if k in lineup])
             att_html = "".join([make_player_card(k, lineup[k]) for k in att_order if k in lineup])
 
-            pitch_component = f"""<!DOCTYPE html><html><head><style>body {{ margin: 0; font-family: sans-serif; background-color: transparent; }} .pitch {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; padding: 6px 2px; position: relative; box-sizing: border-box; min-height: 420px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; width: 100%; }} .halfway-line {{ position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed rgba(255, 184, 28, 0.3); }} .center-circle {{ position: absolute; top: calc(50% - 25px); left: calc(50% - 25px); width: 50px; height: 50px; border: 1px dashed rgba(255, 184, 28, 0.3); border-radius: 50%; }} .row {{ display: flex; justify-content: space-around; align-items: center; position: relative; z-index: 2; width: 100%; gap: 1px; }}</style></head><body><div class="pitch"><div class="halfway-line"></div><div class="center-circle"></div>{"<div class='row'>" + gk_html + "</div>" if gk_html else ""}{"<div class='row'>" + def_html + "</div>" if def_html else ""}{"<div class='row'>" + cdm_html + "</div>" if cdm_html else ""}{"<div class='row'>" + mid_html + "</div>" if mid_html else ""}{"<div class='row'>" + cam_html + "</div>" if cam_html else ""}{"<div class='row'>" + att_html + "</div>" if att_html else ""}</div></body></html>"""
-            components.html(pitch_component, height=440)
+            # Substitutes list formatted into cards
+            subs_raw = [game_data.get(f"SUB{i}") for i in range(1, 10)]
+            active_subs = [str(s).strip() for s in subs_raw if pd.notnull(s) and str(s).strip().lower() not in ["", "-", "nan", "none"]]
+            subs_html = "".join([make_player_card("SUB", sub_name) for sub_name in active_subs]) if active_subs else "<div style='font-size: 8px; color: #666;'>No substitutes listed</div>"
+
+            pitch_component = f"""<!DOCTYPE html><html><head><style>
+            body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
+            .pitch-frame {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; box-sizing: border-box; width: 100%; overflow: hidden; }}
+            .pitch {{ padding: 8px 2px 10px 2px; position: relative; box-sizing: border-box; min-height: 400px; display: flex; flex-direction: column; justify-content: space-between; }}
+            .halfway-line {{ position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed rgba(255, 184, 28, 0.3); }}
+            .center-circle {{ position: absolute; top: calc(50% - 25px); left: calc(50% - 25px); width: 50px; height: 50px; border: 1px dashed rgba(255, 184, 28, 0.3); border-radius: 50%; }}
+            .row {{ display: flex; justify-content: space-around; align-items: center; position: relative; z-index: 2; width: 100%; gap: 1px; }}
+            .bench-area {{ background: #0f1116; border-top: 2px dashed #FFB81C; padding: 6px 4px 6px 4px; box-sizing: border-box; }}
+            .bench-title {{ font-size: 8px; font-weight: 800; color: #FFB81C; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; text-align: center; }}
+            </style></head><body>
+            <div class="pitch-frame">
+                <div class="pitch">
+                    <div class="halfway-line"></div>
+                    <div class="center-circle"></div>
+                    {"<div class='row'>" + gk_html + "</div>" if gk_html else ""}
+                    {"<div class='row'>" + def_html + "</div>" if def_html else ""}
+                    {"<div class='row'>" + cdm_html + "</div>" if cdm_html else ""}
+                    {"<div class='row'>" + mid_html + "</div>" if mid_html else ""}
+                    {"<div class='row'>" + cam_html + "</div>" if cam_html else ""}
+                    {"<div class='row'>" + att_html + "</div>" if att_html else ""}
+                </div>
+                <div class="bench-area">
+                    <div class="bench-title">👥 Substitutes Bench</div>
+                    <div class="row">{subs_html}</div>
+                </div>
+            </div>
+            </body></html>"""
+
+            components.html(pitch_component, height=520)
 
             st.divider()
 
@@ -516,19 +548,6 @@ elif current_page == "Socials":
                     render_html("<p style='color: #aaa;'>No goals recorded.</p>")
             except Exception:
                 st.markdown("Goal log loading...")
-
-            st.divider()
-
-            # --- SUBSTITUTES (FULL WIDTH) ---
-            st.markdown("### 👥 Substitutes")
-            subs = [game_data.get(f"SUB{i}") for i in range(1, 7)]
-            active_subs = [str(s).strip() for s in subs if pd.notnull(s) and str(s).strip().lower() not in ["", "-", "nan", "none"]]
-            
-            if active_subs:
-                for sub in active_subs:
-                    st.markdown(f"• {sub}")
-            else:
-                render_html("<p style='color: #aaa;'>No substitutes listed.</p>")
 
         except Exception as e:
             st.error("Error loading match data.")
@@ -576,9 +595,8 @@ elif current_page == "About Us":
     render_page_header("About Derby Penguins")
     render_html("""
     <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 600px; margin: 0 auto; text-align: center;">
-        <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Our Ethos</p>
         <p style="margin-bottom: 15px; font-size: 0.9rem;">At Derby Penguins, we are dedicated to grassroots football, sportsmanship, Chris Eley buying fat jabs off men in pub toilets, and building a supportive team community on and off the pitch.</p>
-        <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Club Lore</p>
-        <p style="margin-bottom: 0; font-size: 0.9rem;">Founded to bring together fat lads who want to run about on a Sunday as well as a Thursday, Derby Penguins provides a competitive, welcoming environment to play football across all our squad levels.</p>
-    </div>
+        <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Club Lore</p>
+        <p style="margin-bottom: 0; font-size: 0.9rem;">Founded to bring together fat lads who want to run about on a Sunday as well as a Thursday, Derby Penguins provides a competitive, welcoming environment to play football across all our squad levels.</p>
+    </div>
     """)
