@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 import re
 import textwrap
 
-# Helper function to render HTML/CSS safely without Markdown parser interference
+# 1. HELPER FUNCTION TO RENDER HTML SAFELY
 def render_html(html_str):
     clean_html = textwrap.dedent(str(html_str)).strip()
     if hasattr(st, "html"):
@@ -12,7 +12,7 @@ def render_html(html_str):
     else:
         st.markdown(clean_html, unsafe_allow_html=True)
 
-# 1. PAGE CONFIGURATION & LOGO URLS
+# 2. PAGE CONFIGURATION & LOGO URLS
 APP_ICON_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/PenguinsLogo.png"
 HEADER_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/ClubLogo.jpeg"
 VIDEO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/a6e86bfe-69d7-4146-add8-2ba2d49c942b.MP4"
@@ -26,26 +26,17 @@ st.set_page_config(
     layout="wide"
 )
 
-# Handle Query Params safely for main navigation
-query_params = st.query_params
-
-if "nav" in query_params:
-    st.session_state["active_page"] = query_params["nav"]
-
+# 3. INTERNAL SESSION STATE NAVIGATION (NO URL QUERY PARAMS)
 if "active_page" not in st.session_state:
     st.session_state["active_page"] = "Homepage"
 
-current_page = st.session_state["active_page"]
-
-# Handle Query Params safely for team subtabs
 for team_key in ["Penguins", "Socials", "Community", "Club"]:
-    param_name = f"sub_{team_key}"
-    if param_name in query_params:
-        st.session_state[f"{team_key}_subtab"] = query_params[param_name]
-    elif f"{team_key}_subtab" not in st.session_state:
+    if f"{team_key}_subtab" not in st.session_state:
         st.session_state[f"{team_key}_subtab"] = "Player Stats"
 
-# 2. GLOBAL STYLING
+current_page = st.session_state["active_page"]
+
+# 4. GLOBAL STYLING (Including Native Streamlit Button Overrides)
 style_html = f"""
 <head>
 <link rel="apple-touch-icon" sizes="180x180" href="{APP_ICON_URL}">
@@ -84,64 +75,38 @@ h1, h2, h3, h4, h5, h6, p, label, div {{
     object-fit: contain;
     display: block !important;
 }}
-.dashboard-grid {{
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    width: 100%;
-    margin-bottom: 10px;
+
+/* Custom Styling for Native Streamlit Buttons (Nav Grid) */
+div.stButton > button {{
+    width: 100% !important;
+    padding: 10px 4px !important;
+    font-weight: 600 !important;
+    font-size: 0.8rem !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease-in-out !important;
 }}
-@media (max-width: 600px) {{
-    .dashboard-grid {{
-        grid-template-columns: repeat(2, 1fr);
-    }}
+
+/* Active Page Button Style */
+div.stButton > button[kind="primary"] {{
+    background-color: #22252e !important;
+    color: #FFB81C !important;
+    border: 1px solid #FFB81C !important;
+    box-shadow: 0 0 8px rgba(255, 184, 28, 0.2) !important;
 }}
-.dashboard-btn {{
+
+/* Inactive Page Button Style */
+div.stButton > button[kind="secondary"] {{
     background-color: #1a1c23 !important;
     color: #ffffff !important;
     border: 1px solid #333333 !important;
-    border-radius: 8px !important;
-    padding: 10px 6px !important;
-    font-weight: 600 !important;
-    font-size: 0.75rem !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
-    cursor: pointer;
-    text-align: center !important;
-    text-decoration: none !important;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    transition: all 0.2s ease-in-out !important;
-    width: 100%;
-    box-sizing: border-box;
 }}
-.dashboard-btn:hover {{
+
+div.stButton > button[kind="secondary"]:hover {{
     border-color: #FFB81C !important;
     color: #FFB81C !important;
     background-color: #22252e !important;
 }}
-.dashboard-btn img {{
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-}}
-.dashboard-btn.inverted img {{
-    filter: invert(1);
-}}
-.subtab-grid {{
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 4px;
-    width: 100%;
-    margin-bottom: 12px;
-}}
-@media (max-width: 600px) {{
-    .subtab-grid {{
-        grid-template-columns: repeat(2, 1fr);
-    }}
-}}
+
 [data-testid="stVideo"] {{
     max-width: 480px !important;
     margin: 0 auto !important;
@@ -170,7 +135,7 @@ h1, h2, h3, h4, h5, h6, p, label, div {{
 """
 render_html(style_html)
 
-# 3. TOP HEADER LOGO
+# 5. TOP HEADER LOGO
 header_html = f"""
 <div class="header-logo-container">
     <img src="{HEADER_LOGO_URL}" class="header-logo" alt="Derby Penguins Logo">
@@ -179,7 +144,7 @@ header_html = f"""
 """
 render_html(header_html)
 
-# 4. SPREADSHEET DATA LOADER
+# 6. SPREADSHEET DATA LOADER
 SPREADSHEET_ID = "19wTGruEyetdVNhfjkyVqLDueyV9joVtRsI51RAqurjA"
 
 @st.cache_data(ttl=60)
@@ -207,41 +172,52 @@ def render_page_header(title, img_url=None, invert=False):
     else:
         render_html(f"<h2 style='text-align: center; margin-bottom: 12px;'>{title}</h2>")
 
-# 5. TOP INTERACTIVE NAVIGATION
+# 7. TOP INTERACTIVE NAVIGATION (NATIVE STREAMLIT BUTTON GRID)
 pages_config = [
-    ("🏠 Home", "Homepage", None, False),
-    ("Penguins", "Penguins", HEADER_LOGO_URL, True),
-    ("Socials", "Socials", SOCIALS_LOGO_URL, True),
-    ("Community", "Community", WHITE_COMMUNITY_LOGO_URL, False),
-    ("Club", "Club", HEADER_LOGO_URL, True),
-    ("ℹ️ About", "About Us", None, False)
+    ("🏠 Home", "Homepage"),
+    ("🐧 Penguins", "Penguins"),
+    ("📱 Socials", "Socials"),
+    ("🤝 Community", "Community"),
+    ("⚽ Club", "Club"),
+    ("ℹ️ About", "About Us")
 ]
 
-nav_html = '<div class="dashboard-grid">'
-for label, key, img_url, invert in pages_config:
-    active_style = "border-color: #FFB81C; color: #FFB81C; background-color: #22252e;" if current_page == key else ""
-    invert_class = "inverted" if invert else ""
-    img_tag = f'<img src="{img_url}" class="{invert_class}">' if img_url else ''
-    nav_html += f'<a href="?nav={key}" target="_self" class="dashboard-btn" style="{active_style}">{img_tag}<span>{label}</span></a>'
-nav_html += '</div>'
+# Grid 1: First 3 Pages
+row1_cols = st.columns(3)
+for idx, (label, key) in enumerate(pages_config[:3]):
+    is_active = (current_page == key)
+    btn_type = "primary" if is_active else "secondary"
+    if row1_cols[idx].button(label, key=f"top_nav_{key}", use_container_width=True, type=btn_type):
+        st.session_state["active_page"] = key
+        st.rerun()
 
-render_html(nav_html)
+# Grid 2: Next 3 Pages
+row2_cols = st.columns(3)
+for idx, (label, key) in enumerate(pages_config[3:]):
+    is_active = (current_page == key)
+    btn_type = "primary" if is_active else "secondary"
+    if row2_cols[idx].button(label, key=f"top_nav_{key}", use_container_width=True, type=btn_type):
+        st.session_state["active_page"] = key
+        st.rerun()
+
 st.divider()
 
-# Sub-tab Navigation Helper Function
+# Sub-tab Navigation Helper Function using Native Buttons
 def render_subtab_cards(team_key, has_match_center=True):
     tabs = ["Player Stats", "Results", "Match Center", "News"] if has_match_center else ["Combined Stats", "Club Schedule", "Club News"]
     current_subtab = st.session_state.get(f"{team_key}_subtab", tabs[0])
 
-    subtab_html = '<div class="subtab-grid">'
+    sub_cols = st.columns(len(tabs))
     for idx, tab_name in enumerate(tabs):
         btn_label = f"📊 Stats" if "Stats" in tab_name else f"📅 Results" if "Results" in tab_name else f"📅 Schedule" if "Schedule" in tab_name else f"⚽ Lineups" if "Match" in tab_name else f"📰 News"
-        active_style = "border-color: #FFB81C; color: #FFB81C; background-color: #22252e;" if current_subtab == tab_name else ""
-        subtab_html += f'<a href="?nav={current_page}&sub_{team_key}={tab_name}" target="_self" class="dashboard-btn" style="{active_style}"><span>{btn_label}</span></a>'
-    subtab_html += '</div>'
+        is_active = (current_subtab == tab_name)
+        btn_type = "primary" if is_active else "secondary"
+        
+        if sub_cols[idx].button(btn_label, key=f"sub_nav_{team_key}_{tab_name}", use_container_width=True, type=btn_type):
+            st.session_state[f"{team_key}_subtab"] = tab_name
+            st.rerun()
 
-    render_html(subtab_html)
-    return current_subtab
+    return st.session_state.get(f"{team_key}_subtab", tabs[0])
 
 
 # ==========================================
