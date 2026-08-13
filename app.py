@@ -492,10 +492,20 @@ elif current_page == "Socials":
             cam_html = "".join([make_player_card(k, lineup[k]) for k in cam_order if k in lineup])
             att_html = "".join([make_player_card(k, lineup[k]) for k in att_order if k in lineup])
 
-            # Substitutes list formatted into cards
+            # Dynamic row wrapping for Substitutes (1 row if <= 4, 2 rows if >= 5)
             subs_raw = [game_data.get(f"SUB{i}") for i in range(1, 10)]
             active_subs = [str(s).strip() for s in subs_raw if pd.notnull(s) and str(s).strip().lower() not in ["", "-", "nan", "none"]]
-            subs_html = "".join([make_player_card("SUB", sub_name) for sub_name in active_subs]) if active_subs else "<div style='font-size: 8px; color: #666;'>No substitutes listed</div>"
+
+            if not active_subs:
+                subs_html = "<div class='row'><div style='font-size: 8px; color: #666;'>No substitutes listed</div></div>"
+            elif len(active_subs) <= 4:
+                row_content = "".join([make_player_card("SUB", s) for s in active_subs])
+                subs_html = f"<div class='row'>{row_content}</div>"
+            else:
+                mid = (len(active_subs) + 1) // 2
+                row1_content = "".join([make_player_card("SUB", s) for s in active_subs[:mid]])
+                row2_content = "".join([make_player_card("SUB", s) for s in active_subs[mid:]])
+                subs_html = f"<div class='row'>{row1_content}</div><div class='row' style='margin-top: 3px;'>{row2_content}</div>"
 
             pitch_component = f"""<!DOCTYPE html><html><head><style>
             body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
@@ -520,12 +530,12 @@ elif current_page == "Socials":
                 </div>
                 <div class="bench-area">
                     <div class="bench-title">👥 Substitutes Bench</div>
-                    <div class="row">{subs_html}</div>
+                    {subs_html}
                 </div>
             </div>
             </body></html>"""
 
-            components.html(pitch_component, height=520)
+            components.html(pitch_component, height=550)
 
             st.divider()
 
