@@ -591,10 +591,13 @@ elif current_page == "Socials":
                 table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
                 for col in filtered_df.columns:
                     val = row[col]
-                    if col in ["Goals Per Game", "Assists Per Game", "Goal Involvements Per Game"]:
-                        formatted_val = f"{val:.2f}"
+                    if pd.isnull(val):
+                        formatted_val = "-"
                     elif isinstance(val, (int, float)):
-                        formatted_val = f"{int(val)}"
+                        if val % 1 == 0:
+                            formatted_val = f"{int(val)}"
+                        else:
+                            formatted_val = f"{val:.2f}"
                     else:
                         formatted_val = str(val)
                     table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
@@ -860,115 +863,4 @@ elif current_page == "Socials":
             body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
             .pitch-frame {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; box-sizing: border-box; width: 100%; overflow: hidden; }}
             .pitch {{ padding: 8px 2px 10px 2px; position: relative; box-sizing: border-box; min-height: 400px; display: flex; flex-direction: column; justify-content: space-between; }}
-            .halfway-line {{ position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed rgba(255, 184, 28, 0.3); }}
-            .center-circle {{ position: absolute; top: calc(50% - 25px); left: calc(50% - 25px); width: 50px; height: 50px; border: 1px dashed rgba(255, 184, 28, 0.3); border-radius: 50%; }}
-            .row {{ display: flex; justify-content: space-around; align-items: center; position: relative; z-index: 2; width: 100%; gap: 1px; }}
-            .bench-area {{ background: #0f1116; border-top: 2px dashed #FFB81C; padding: 6px 4px 6px 4px; box-sizing: border-box; }}
-            .bench-title {{ font-size: 8px; font-weight: 800; color: #FFB81C; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; text-align: center; }}
-            </style></head><body>
-            <div class="pitch-frame">
-                <div class="pitch">
-                    <div class="halfway-line"></div>
-                    <div class="center-circle"></div>
-                    {"<div class='row'>" + gk_html + "</div>" if gk_html else ""}
-                    {"<div class='row'>" + def_html + "</div>" if def_html else ""}
-                    {"<div class='row'>" + cdm_html + "</div>" if cdm_html else ""}
-                    {"<div class='row'>" + mid_html + "</div>" if mid_html else ""}
-                    {"<div class='row'>" + cam_html + "</div>" if cam_html else ""}
-                    {"<div class='row'>" + att_html + "</div>" if att_html else ""}
-                </div>
-                <div class="bench-area">
-                    <div class="bench-title">👥 Substitutes Bench</div>
-                    <div class="row">{subs_html}</div>
-                </div>
-            </div>
-            </body></html>"""
-
-            components.html(pitch_component, height=520)
-
-            st.divider()
-
-            st.markdown("### ⚽ Goals & Assists")
-            try:
-                goals_df = load_sheet("Socials_Goals")
-                match_col = (
-                    "Match ID" if "Match ID" in goals_df.columns else "GameID"
-                )
-                match_goals = goals_df[
-                    goals_df[match_col].astype(str) == str(selected_game_id)
-                ]
-
-                if not match_goals.empty:
-                    for _, row in match_goals.iterrows():
-                        scorer = row.get(
-                            "Goalscorer", row.get("Scorer", "Unknown")
-                        )
-                        assist = row.get("Assist", "")
-                        if (
-                            pd.notnull(assist)
-                            and str(assist).strip().lower()
-                            not in ["", "none", "-", "unassisted", "nan"]
-                        ):
-                            render_html(
-                                f"• <b>{scorer}</b> ⚽ ( {str(assist).strip()} 🅰️ )"
-                            )
-                        else:
-                            render_html(f"• <b>{scorer}</b> ⚽")
-                else:
-                    render_html(
-                        "<p style='color: #aaa;'>No goals recorded.</p>"
-                    )
-            except Exception:
-                st.markdown("Goal log loading...")
-
-        except Exception as e:
-            st.error("Error loading match data.")
-
-    elif subtab == "News":
-        st.info("Socials team announcements and news coming soon.")
-
-
-# ==========================================
-# --- 4. DERBY PENGUINS COMMUNITY ---
-# ==========================================
-elif current_page == "Community":
-    render_page_header(
-        "Derby Penguins Community", BLACK_COMMUNITY_LOGO_URL, invert=True
-    )
-    subtab = render_subtab_cards("Community")
-
-    if subtab == "Player Stats":
-        st.info("Community team player stats coming soon.")
-    elif subtab == "Results":
-        st.info("Community team results coming soon.")
-    elif subtab == "Match Center":
-        st.info("Community team lineup pitch coming soon.")
-    elif subtab == "News":
-        st.info("Community team news and updates.")
-
-
-# ==========================================
-# --- 5. DERBY PENGUINS CLUB OVERVIEW ---
-# ==========================================
-elif current_page == "Club":
-    render_page_header("Derby Penguins Club Overview", HEADER_LOGO_URL, invert=True)
-    subtab = render_subtab_cards("Club", has_match_center=False)
-
-    if subtab == "Combined Stats":
-        st.info("Combined club stats across all teams coming soon.")
-    elif subtab == "Club Schedule":
-        st.info("Full club schedule coming soon.")
-    elif subtab == "Club News":
-        st.info("Club-wide announcements coming soon.")
-
-
-# ==========================================
-# --- 6. ABOUT US ---
-# ==========================================
-elif current_page == "About Us":
-    render_page_header("About Derby Penguins FC", APP_ICON_URL)
-    st.markdown("""
-    **Derby Penguins FC** is an amateur football club based in Derbyshire.
-    
-    This application provides statistics, match results, pitch lineups, and updates across all teams.
-    """)
+            .halfway-line {{ position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed rgba(255, 184, 28, 0.3); }}"""
