@@ -258,12 +258,13 @@ def render_page_header(title, img_url=None, invert=False):
 
 pages_config = [
     ("🏠 Home", "Homepage", None),
-    ("Penguins", "Penguins", HEADER_LOGO_URL),
-    ("Socials", "Socials", SOCIALS_LOGO_URL),
-    ("Community", "Community", BLACK_COMMUNITY_LOGO_URL),
-    ("🐧⚽ Club", "Club", HEADER_LOGO_URL),
+    ("🐧 Penguins 🐧", "Penguins", None),
+    ("🐧 Socials 🐧", "Socials", None),
+    ("🐧 Community 🐧", "Community", None),
+    ("🐧 Club 🐧", "Club", None),
     ("ℹ️ About", "About Us", None),
 ]
+
 
 def nav_button(label, key, logo_url, column):
     is_active = current_page == key
@@ -278,7 +279,7 @@ def nav_button(label, key, logo_url, column):
         button_label,
         key=f"top_nav_{key}",
         use_container_width=True,
-        type=btn_type
+        type=btn_type,
     ):
         st.session_state["active_page"] = key
         st.rerun()
@@ -298,6 +299,7 @@ for idx, (label, key, logo_url) in enumerate(pages_config[3:]):
     nav_button(label, key, logo_url, row2_cols[idx])
 
 st.divider()
+
 
 # Sub-tab Navigation Helper Function using Native Buttons
 def render_subtab_cards(team_key, has_match_center=True):
@@ -834,11 +836,11 @@ elif current_page == "Club":
     subtab = render_subtab_cards("Club", has_match_center=False)
 
     if subtab == "Combined Stats":
-        st.info("Combined club statistics across all teams coming soon.")
+        st.info("Combined club statistics across all teams.")
     elif subtab == "Club Schedule":
-        st.info("Overall club fixtures and event schedules coming soon.")
+        st.info("Combined club match schedule and upcoming fixtures.")
     elif subtab == "Club News":
-        st.info("General club-wide announcements.")
+        st.info("Club-wide news and announcements.")
 
 
 # ==========================================
@@ -846,8 +848,4 @@ elif current_page == "Club":
 # ==========================================
 elif current_page == "About Us":
     render_page_header("About Derby Penguins FC")
-    st.markdown("""
-    Welcome to the official app for **Derby Penguins FC**.
-    
-    Here you can keep track of player stats, match lineups, game results, and club announcements across all our teams!
-    """)
+    st.info("Information about Derby Penguins FC.")
