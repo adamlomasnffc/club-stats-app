@@ -124,7 +124,7 @@ button[aria-label="Penguins"]::before {{
     vertical-align: middle;
 }}
 
-button[aria-label*="Socials"]::before {{
+button[aria-label="Socials"]::before {{
     content: "";
     display: inline-block;
     width: 16px;
@@ -147,6 +147,7 @@ button[aria-label="Community"]::before {{
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
+    filter: invert(1);
     margin-right: 5px;
     vertical-align: middle;
 }}
@@ -185,7 +186,7 @@ div.stButton > button[kind="secondary"]:hover {{
     justify-content: center !important;
 }}
 
-/* Metric Card Label (Apps Leader / Top Scorer) */
+/* Metric Card Label */
 [data-testid="stMetricLabel"] {{
     font-size: 0.75rem !important;
     color: #d1d5db !important;
@@ -199,7 +200,7 @@ div.stButton > button[kind="secondary"]:hover {{
     width: 100% !important;
 }}
 
-/* Metric Card Value (Player Name) */
+/* Metric Card Value */
 [data-testid="stMetricValue"] {{
     color: #FFB81C !important;
     font-size: 0.95rem !important;
@@ -217,7 +218,7 @@ div.stButton > button[kind="secondary"]:hover {{
     width: 100% !important;
 }}
 
-/* Metric Card Delta / Results (4 Assists / 9 Apps) */
+/* Metric Card Delta / Results */
 [data-testid="stMetricDelta"] {{
     font-size: 0.75rem !important;
     justify-content: center !important;
@@ -296,9 +297,9 @@ def render_page_header(title, img_url=None, invert=False):
 pages_config = [
     ("🏠 Home", "Homepage"),
     ("Penguins", "Penguins"),
-    ("🐧⚽ Socials", "Socials"),
+    ("Socials", "Socials"),
     ("Community", "Community"),
-    ("⚽ Club", "Club"),
+    ("🐧⚽ Club", "Club"),
     ("ℹ️ About", "About Us"),
 ]
 
