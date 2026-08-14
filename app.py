@@ -902,13 +902,514 @@ elif current_page == "Community":
     subtab = render_subtab_cards("Community")
 
     if subtab == "Player Stats":
-        st.info("Community player stats coming soon.")
+        try:
+            games_df = load_sheet("Community_Games")
+            goals_df = load_sheet("Community_Goals")
+
+            # Non-player metadata columns in Games sheet
+            meta_cols = {
+                "gameid",
+                "date",
+                "location",
+                "opponent",
+                "ko time",
+                "result",
+                "outcome",
+                "formation",
+                "motm",
+                "venue",
+                "home/away",
+            }
+
+            player_apps = {}
+            player_goals = {}
+            player_assists = {}
+
+            # Calculate Appearances from Community_Games
+            if not games_df.empty:
+                player_cols = [
+                    c for c in games_df.columns if c.strip().lower() not in meta_cols
+                ]
+                for _, row in games_df.iterrows():
+                    game_players = set()
+                    for col in player_cols:
+                        val = str(row[col]).strip() if pd.notnull(row[col]) else ""
+                        if val and val.lower() not in [
+                            "nan",
+                            "none",
+                            "",
+                            "-",
+                            "unknown",
+                        ]:
+                            game_players.add(val)
+                    for p in game_players:
+                        player_apps[p] = player_apps.get(p, 0) + 1
+
+            # Calculate Goals and Assists from Community_Goals
+            if not goals_df.empty:
+                scorer_col = (
+                    "Goalscorer"
+                    if "Goalscorer" in goals_df.columns
+                    else ("Scorer" if "Scorer" in goals_df.columns else None)
+                )
+                assist_col = "Assist" if "Assist" in goals_df.columns else None
+
+                if scorer_col:
+                    for val in goals_df[scorer_col]:
+                        p = str(val).strip() if pd.notnull(val) else ""
+                        if p and p.lower() not in [
+                            "nan",
+                            "none",
+                            "",
+                            "-",
+                            "unknown",
+                            "own goal",
+                            "og",
+                        ]:
+                            player_goals[p] = player_goals.get(p, 0) + 1
+
+                if assist_col:
+                    for val in goals_df[assist_col]:
+                        p = str(val).strip() if pd.notnull(val) else ""
+                        if p and p.lower() not in [
+                            "nan",
+                            "none",
+                            "",
+                            "-",
+                            "unassisted",
+                            "unknown",
+                        ]:
+                            player_assists[p] = player_assists.get(p, 0) + 1
+
+            all_players = (
+                set(player_apps.keys())
+                .union(player_goals.keys())
+                .union(player_assists.keys())
+            )
+
+            stats_list = []
+            for p in all_players:
+                apps = player_apps.get(p, 0)
+                g = player_goals.get(p, 0)
+                a = player_assists.get(p, 0)
+                gi = g + a
+                gpg = round(g / apps, 2) if apps > 0 else 0.0
+                apg = round(a / apps, 2) if apps > 0 else 0.0
+                gipg = round(gi / apps, 2) if apps > 0 else 0.0
+
+                stats_list.append(
+                    {
+                        "Player": p,
+                        "Appearances": apps,
+                        "Goals": g,
+                        "Assists": a,
+                        "Goal Involvements": gi,
+                        "Goals Per Game": gpg,
+                        "Assists Per Game": apg,
+                        "Goal Involvements Per Game": gipg,
+                    }
+                )
+
+            df = pd.DataFrame(stats_list)
+            if df.empty:
+                df = pd.DataFrame(
+                    columns=[
+                        "Player",
+                        "Appearances",
+                        "Goals",
+                        "Assists",
+                        "Goal Involvements",
+                        "Goals Per Game",
+                        "Assists Per Game",
+                        "Goal Involvements Per Game",
+                    ]
+                )
+
+            top_apps = (
+                df.sort_values(by="Appearances", ascending=False).iloc[0]
+                if not df.empty
+                else None
+            )
+            top_scorer = (
+                df.sort_values(by="Goals", ascending=False).iloc[0]
+                if not df.empty
+                else None
+            )
+            top_assister = (
+                df.sort_values(by="Assists", ascending=False).iloc[0]
+                if not df.empty
+                else None
+            )
+            top_involvements = (
+                df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
+                if not df.empty
+                else None
+            )
+
+            row1_col1, row1_col2 = st.columns(2)
+            row1_col1.metric(
+                "🏃 Apps Leader",
+                f"{top_apps['Player']}" if top_apps is not None else "-",
+                f"{top_apps['Appearances']} Apps" if top_apps is not None else "0 Apps",
+            )
+            row1_col2.metric(
+                "⚽ Top Scorer",
+                f"{top_scorer['Player']}" if top_scorer is not None else "-",
+                f"{top_scorer['Goals']} Goals" if top_scorer is not None else "0 Goals",
+            )
+
+            row2_col1, row2_col2 = st.columns(2)
+            row2_col1.metric(
+                "🅰️ Top Assister",
+                f"{top_assister['Player']}" if top_assister is not None else "-",
+                f"{top_assister['Assists']} Assists"
+                if top_assister is not None
+                else "0 Assists",
+            )
+            row2_col2.metric(
+                "🔥 Top Contributor",
+                f"{top_involvements['Player']}" if top_involvements is not None else "-",
+                f"{top_involvements['Goal Involvements']} G+A"
+                if top_involvements is not None
+                else "0 G+A",
+            )
+
+            st.divider()
+
+            st.markdown("### Community Player Stats")
+
+            search_query = st.text_input("🔍 Search Player", "")
+            sort_by = st.selectbox(
+                "Sort By Column", options=df.columns, index=1
+            )
+            sort_order = st.radio(
+                "Order", ["Descending", "Ascending"], horizontal=True
+            )
+
+            filtered_df = df.copy()
+            if search_query:
+                filtered_df = filtered_df[
+                    filtered_df["Player"].str.contains(
+                        search_query, case=False, na=False
+                    )
+                ]
+
+            ascending = True if sort_order == "Ascending" else False
+            filtered_df = filtered_df.sort_values(
+                by=sort_by, ascending=ascending
+            ).reset_index(drop=True)
+
+            table_html = "<div class='mobile-table-container'><table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 650px;'><tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
+            for col in filtered_df.columns:
+                table_html += f"<th style='padding: 8px; border-bottom: 2px solid #333; text-align: center; font-size: 12px;'>{col}</th>"
+            table_html += "</tr>"
+
+            for idx, row in filtered_df.iterrows():
+                bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
+                table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
+                for col in filtered_df.columns:
+                    val = row[col]
+                    if pd.isnull(val):
+                        formatted_val = "-"
+                    elif isinstance(val, (int, float)):
+                        if val % 1 == 0:
+                            formatted_val = f"{int(val)}"
+                        else:
+                            formatted_val = f"{val:.2f}"
+                    else:
+                        formatted_val = str(val)
+                    table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
+                table_html += "</tr>"
+            table_html += "</table></div>"
+
+            render_html(table_html)
+
+        except Exception as e:
+            st.error(f"Error loading stats: {e}")
+
     elif subtab == "Results":
-        st.info("Community results and fixtures coming soon.")
+        try:
+            games_df = load_sheet("Community_Games")
+            target_cols = [
+                "GameID",
+                "Date",
+                "Location",
+                "Opponent",
+                "KO Time",
+                "Result",
+                "Outcome",
+            ]
+            display_cols = [c for c in target_cols if c in games_df.columns]
+            if not display_cols:
+                display_cols = list(games_df.columns[:7])
+
+            fixtures_df = (
+                games_df[display_cols].copy().dropna(subset=[display_cols[0]])
+            )
+
+            f_table_html = "<div class='mobile-table-container'><table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 500px;'><tr style='background-color: #FFB81C; color: #111; font-weight: bold; font-size: 12px;'>"
+            for col in fixtures_df.columns:
+                f_table_html += f"<th style='padding: 8px; border-bottom: 2px solid #333; text-align: center;'>{col}</th>"
+            f_table_html += "</tr>"
+
+            for idx, row in fixtures_df.reset_index(drop=True).iterrows():
+                bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
+                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
+                for col in fixtures_df.columns:
+                    val = row[col]
+                    formatted_val = (
+                        "-"
+                        if pd.isnull(val)
+                        or str(val).strip().lower() in ["nan", "none", ""]
+                        else str(val).strip()
+                    )
+                    f_table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
+                f_table_html += "</tr>"
+            f_table_html += "</table></div>"
+
+            render_html(f_table_html)
+
+        except Exception as e:
+            st.error("Error loading results data.")
+
     elif subtab == "Match Center":
-        st.info("Community match center coming soon.")
+        try:
+            games_df = load_sheet("Community_Games")
+
+            def create_game_label(row):
+                opponent = str(row.get("Opponent", "Unknown")).strip()
+                result = str(row.get("Result", "")).strip()
+                date = str(row.get("Date", "")).strip()
+                venue_val = ""
+                for col in row.index:
+                    col_lower = str(col).strip().lower()
+                    if (
+                        "home" in col_lower
+                        or "away" in col_lower
+                        or col_lower == "venue"
+                    ):
+                        venue_val = str(row[col]).strip().lower()
+                        break
+                is_away = venue_val.startswith("a")
+
+                if result and result.lower() != "nan":
+                    if is_away:
+                        scores = [s.strip() for s in result.split("-")]
+                        match_title = (
+                            f"{opponent} {scores[1]}-{scores[0]} Community"
+                            if len(scores) == 2
+                            else f"{opponent} {result} Community"
+                        )
+                    else:
+                        match_title = f"Community {result} {opponent}"
+                else:
+                    match_title = (
+                        f"{opponent} vs Community"
+                        if is_away
+                        else f"Community vs {opponent}"
+                    )
+                return (
+                    f"{match_title} ({date})"
+                    if date and date.lower() != "nan"
+                    else match_title
+                )
+
+            game_options = {
+                create_game_label(row): row["GameID"]
+                for _, row in games_df.iterrows()
+            }
+            options_list = list(game_options.keys())
+            default_idx = len(options_list) - 1 if options_list else 0
+
+            selected_label = st.selectbox(
+                "Select Game:", options=options_list, index=default_idx
+            )
+            selected_game_id = game_options[selected_label]
+            game_data = games_df[
+                games_df["GameID"] == selected_game_id
+            ].iloc[0]
+
+            raw_motm = str(game_data.get("MOTM", "")).strip()
+            motm_val = (
+                raw_motm
+                if raw_motm and raw_motm.lower() not in ["nan", "none", "-"]
+                else "-"
+            )
+
+            m_col1, m_col2 = st.columns(2)
+            m_col1.metric("🗓️ Date", str(game_data.get("Date", "-")))
+            m_col2.metric("🛡️ Opponent", str(game_data.get("Opponent", "-")))
+
+            m_col3, m_col4 = st.columns(2)
+            m_col3.metric("⚽ Score", str(game_data.get("Result", "-")))
+            m_col4.metric("🏆 MOTM", motm_val)
+
+            st.divider()
+
+            # LINEUP PITCH VIEW
+            formation = str(game_data.get("Formation", "4-3-3")).strip()
+            st.subheader(f"Match Lineup ({formation})")
+
+            goal_counts, assist_counts = {}, {}
+            try:
+                goals_df = load_sheet("Community_Goals")
+                match_col = (
+                    "Match ID" if "Match ID" in goals_df.columns else "GameID"
+                )
+                match_goals = goals_df[
+                    goals_df[match_col].astype(str) == str(selected_game_id)
+                ]
+
+                if not match_goals.empty:
+                    for _, row in match_goals.iterrows():
+                        scorer = str(
+                            row.get("Goalscorer", row.get("Scorer", ""))
+                        ).strip()
+                        assist = str(row.get("Assist", "")).strip()
+                        if scorer and scorer.lower() not in [
+                            "unknown",
+                            "none",
+                            "-",
+                            "nan",
+                            "",
+                        ]:
+                            goal_counts[scorer] = goal_counts.get(scorer, 0) + 1
+                        if assist and assist.lower() not in [
+                            "none",
+                            "-",
+                            "unassisted",
+                            "nan",
+                            "",
+                        ]:
+                            assist_counts[assist] = (
+                                assist_counts.get(assist, 0) + 1
+                            )
+            except Exception:
+                pass
+
+            def_order = ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RWB", "RB"]
+            cdm_order = ["CDM", "CDM1", "CDM2"]
+            mid_order = ["LM", "CM", "CM1", "CM2", "CM3", "RM"]
+            cam_order = ["CAM", "CAM1", "CAM2"]
+            att_order = ["LW", "ST", "ST1", "ST2", "ST3", "RW"]
+
+            lineup = {}
+            for col_name in game_data.index:
+                col_clean = str(col_name).strip()
+                val = game_data.get(col_name)
+                if (
+                    pd.notnull(val)
+                    and str(val).strip().lower() not in ["", "-", "nan", "none"]
+                ):
+                    lineup[col_clean] = str(val).strip()
+
+            def make_player_card(pos_key, name):
+                c_pos = clean_pos_label(pos_key)
+                g_count = goal_counts.get(name, 0)
+                a_count = assist_counts.get(name, 0)
+                icons = []
+                if g_count > 0:
+                    icons.append("⚽" * g_count)
+                if a_count > 0:
+                    icons.append("🅰️" * a_count)
+                badge_html = (
+                    f'<div style="font-size: 7px; margin-top: 1px; line-height: 1;">{" ".join(icons)}</div>'
+                    if icons
+                    else ""
+                )
+
+                return f"""<div style="background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 2px 2px; margin: 1px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden;"><div style="font-size: 7px; color: #FFB81C; font-weight: bold; line-height: 1;">{c_pos}</div><div style="font-size: 8.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1;">{name}</div>{badge_html}</div>"""
+
+            gk_html = "".join(
+                [make_player_card(k, lineup[k]) for k in lineup if k == "GK"]
+            )
+            def_html = "".join(
+                [
+                    make_player_card(k, lineup[k])
+                    for k in def_order
+                    if k in lineup
+                ]
+            )
+            cdm_html = "".join(
+                [
+                    make_player_card(k, lineup[k])
+                    for k in cdm_order
+                    if k in lineup
+                ]
+            )
+            mid_html = "".join(
+                [
+                    make_player_card(k, lineup[k])
+                    for k in mid_order
+                    if k in lineup
+                ]
+            )
+            cam_html = "".join(
+                [
+                    make_player_card(k, lineup[k])
+                    for k in cam_order
+                    if k in lineup
+                ]
+            )
+            att_html = "".join(
+                [
+                    make_player_card(k, lineup[k])
+                    for k in att_order
+                    if k in lineup
+                ]
+            )
+
+            subs_raw = [game_data.get(f"SUB{i}") for i in range(1, 10)]
+            active_subs = [
+                str(s).strip()
+                for s in subs_raw
+                if pd.notnull(s)
+                and str(s).strip().lower() not in ["", "-", "nan", "none"]
+            ]
+            subs_html = (
+                "".join(
+                    [
+                        make_player_card("SUB", sub_name)
+                        for sub_name in active_subs
+                    ]
+                )
+                if active_subs
+                else "<div style='font-size: 8px; color: #666;'>No substitutes listed</div>"
+            )
+
+            pitch_component = f"""<!DOCTYPE html><html><head><style>
+            body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
+            .pitch-frame {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; box-sizing: border-box; width: 100%; overflow: hidden; }}
+            .pitch {{ padding: 8px 2px 10px 2px; position: relative; box-sizing: border-box; min-height: 400px; display: flex; flex-direction: column; justify-content: space-between; }}
+            .halfway-line {{ position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed rgba(255, 184, 28, 0.3); }}
+            .pitch-row {{ display: flex; justify-content: space-around; align-items: center; width: 100%; z-index: 2; margin: 2px 0; }}
+            .subs-section {{ background: #111; padding: 6px; border-top: 1px solid #333; width: 100%; box-sizing: border-box; }}
+            </style></head>
+            <body>
+            <div class="pitch-frame">
+                <div class="pitch">
+                    <div class="halfway-line"></div>
+                    <div class="pitch-row">{att_html}</div>
+                    <div class="pitch-row">{cam_html}</div>
+                    <div class="pitch-row">{mid_html}</div>
+                    <div class="pitch-row">{cdm_html}</div>
+                    <div class="pitch-row">{def_html}</div>
+                    <div class="pitch-row">{gk_html}</div>
+                </div>
+                <div class="subs-section">
+                    <div style="font-size: 9px; color: #FFB81C; font-weight: bold; margin-bottom: 4px; text-align: center;">SUBSTITUTES</div>
+                    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2px;">{subs_html}</div>
+                </div>
+            </div>
+            </body></html>"""
+
+            components.html(pitch_component, height=520, scrolling=False)
+
+        except Exception as e:
+            st.error(f"Error loading Match Center data: {e}")
+
     elif subtab == "News":
-        st.info("Community news coming soon.")
+        st.info("Community team announcements coming soon.")
 
 
 # ==========================================
