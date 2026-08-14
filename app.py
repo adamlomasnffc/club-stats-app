@@ -1,6 +1,7 @@
-import streamlit as st
-import pandas as pd
 import os
+import pandas as pd
+import streamlit as st
+from streamlit_gsheets import GSheetsConnection
 
 # ==========================================
 # 1. PAGE CONFIGURATION & LOGO PATHS
@@ -42,9 +43,9 @@ def render_page_header(title: str, logo_key: str):
 def load_all_team_data():
     """
     Fetches raw game and goal events for all 3 team divisions.
-    Adjust connection setup to match your st.connection / gsheets library setup.
     """
-    conn = st.connection("gsheets", type="gsheets")
+    # Use GSheetsConnection class instead of string
+    conn = st.connection("gsheets", type=GSheetsConnection)
     
     # Load Socials
     socials_games = conn.read(worksheet="Socials_Games")
