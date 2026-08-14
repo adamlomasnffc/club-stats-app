@@ -5,7 +5,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 
-# 1. HELPER FUNCTION TO RENDER HTML SAFELY
+# 1. HELPER FUNCTION TO RRENDER HTML SAFELY
 def render_html(html_str):
     clean_html = textwrap.dedent(str(html_str)).strip()
     if hasattr(st, "html"):
@@ -321,7 +321,7 @@ def render_subtab_cards(team_key, has_match_center=True):
                 else (
                     f"📅 Schedule"
                     if "Schedule" in tab_name
-                    else f"⚽ Lineups" if "Match" in tab_name else f"📰 News"
+                    else f"⚽ Match Centre" if "Match" in tab_name else f"📰 News"
                 )
             )
         )
@@ -385,49 +385,175 @@ elif current_page == "Socials":
 
     if subtab == "Player Stats":
         try:
-            df = load_sheet("Socials_Player_Stats").iloc[:, :8]
-            if "Player" in df.columns:
-                df = df.dropna(subset=["Player"])
+            games_df = load_sheet("Socials_Games")
+            goals_df = load_sheet("Socials_Goals")
 
-            top_apps = df.sort_values(
-                by="Appearances", ascending=False
-            ).iloc[0]
-            top_scorer = df.sort_values(by="Goals", ascending=False).iloc[0]
-            top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
-            top_involvements = df.sort_values(
-                by="Goal Involvements", ascending=False
-            ).iloc[0]
+            # Non-player metadata columns in Games sheet
+            meta_cols = {
+                "gameid",
+                "date",
+                "location",
+                "opponent",
+                "ko time",
+                "result",
+                "outcome",
+                "formation",
+                "motm",
+                "venue",
+                "home/away",
+            }
 
-            def safe_val(val):
-                try:
-                    return (
-                        str(int(float(val))) if pd.notnull(val) else "0"
-                    )
-                except Exception:
-                    return str(val)
+            player_apps = {}
+            player_goals = {}
+            player_assists = {}
+
+            # Calculate Appearances from Socials_Games
+            if not games_df.empty:
+                player_cols = [
+                    c for c in games_df.columns if c.strip().lower() not in meta_cols
+                ]
+                for _, row in games_df.iterrows():
+                    game_players = set()
+                    for col in player_cols:
+                        val = str(row[col]).strip() if pd.notnull(row[col]) else ""
+                        if val and val.lower() not in [
+                            "nan",
+                            "none",
+                            "",
+                            "-",
+                            "unknown",
+                        ]:
+                            game_players.add(val)
+                    for p in game_players:
+                        player_apps[p] = player_apps.get(p, 0) + 1
+
+            # Calculate Goals and Assists from Socials_Goals
+            if not goals_df.empty:
+                scorer_col = (
+                    "Goalscorer"
+                    if "Goalscorer" in goals_df.columns
+                    else ("Scorer" if "Scorer" in goals_df.columns else None)
+                )
+                assist_col = "Assist" if "Assist" in goals_df.columns else None
+
+                if scorer_col:
+                    for val in goals_df[scorer_col]:
+                        p = str(val).strip() if pd.notnull(val) else ""
+                        if p and p.lower() not in [
+                            "nan",
+                            "none",
+                            "",
+                            "-",
+                            "unknown",
+                            "own goal",
+                            "og",
+                        ]:
+                            player_goals[p] = player_goals.get(p, 0) + 1
+
+                if assist_col:
+                    for val in goals_df[assist_col]:
+                        p = str(val).strip() if pd.notnull(val) else ""
+                        if p and p.lower() not in [
+                            "nan",
+                            "none",
+                            "",
+                            "-",
+                            "unassisted",
+                            "unknown",
+                        ]:
+                            player_assists[p] = player_assists.get(p, 0) + 1
+
+            all_players = (
+                set(player_apps.keys())
+                .union(player_goals.keys())
+                .union(player_assists.keys())
+            )
+
+            stats_list = []
+            for p in all_players:
+                apps = player_apps.get(p, 0)
+                g = player_goals.get(p, 0)
+                a = player_assists.get(p, 0)
+                gi = g + a
+                gpg = round(g / apps, 2) if apps > 0 else 0.0
+                apg = round(a / apps, 2) if apps > 0 else 0.0
+                gipg = round(gi / apps, 2) if apps > 0 else 0.0
+
+                stats_list.append(
+                    {
+                        "Player": p,
+                        "Appearances": apps,
+                        "Goals": g,
+                        "Assists": a,
+                        "Goal Involvements": gi,
+                        "Goals Per Game": gpg,
+                        "Assists Per Game": apg,
+                        "Goal Involvements Per Game": gipg,
+                    }
+                )
+
+            df = pd.DataFrame(stats_list)
+            if df.empty:
+                df = pd.DataFrame(
+                    columns=[
+                        "Player",
+                        "Appearances",
+                        "Goals",
+                        "Assists",
+                        "Goal Involvements",
+                        "Goals Per Game",
+                        "Assists Per Game",
+                        "Goal Involvements Per Game",
+                    ]
+                )
+
+            top_apps = (
+                df.sort_values(by="Appearances", ascending=False).iloc[0]
+                if not df.empty
+                else None
+            )
+            top_scorer = (
+                df.sort_values(by="Goals", ascending=False).iloc[0]
+                if not df.empty
+                else None
+            )
+            top_assister = (
+                df.sort_values(by="Assists", ascending=False).iloc[0]
+                if not df.empty
+                else None
+            )
+            top_involvements = (
+                df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
+                if not df.empty
+                else None
+            )
 
             row1_col1, row1_col2 = st.columns(2)
             row1_col1.metric(
                 "🏃 Apps Leader",
-                f"{top_apps['Player']}",
-                f"{safe_val(top_apps['Appearances'])} Apps",
+                f"{top_apps['Player']}" if top_apps is not None else "-",
+                f"{top_apps['Appearances']} Apps" if top_apps is not None else "0 Apps",
             )
             row1_col2.metric(
                 "⚽ Top Scorer",
-                f"{top_scorer['Player']}",
-                f"{safe_val(top_scorer['Goals'])} Goals",
+                f"{top_scorer['Player']}" if top_scorer is not None else "-",
+                f"{top_scorer['Goals']} Goals" if top_scorer is not None else "0 Goals",
             )
 
             row2_col1, row2_col2 = st.columns(2)
             row2_col1.metric(
                 "🅰️ Top Assister",
-                f"{top_assister['Player']}",
-                f"{safe_val(top_assister['Assists'])} Assists",
+                f"{top_assister['Player']}" if top_assister is not None else "-",
+                f"{top_assister['Assists']} Assists"
+                if top_assister is not None
+                else "0 Assists",
             )
             row2_col2.metric(
                 "🔥 Top Contributor",
-                f"{top_involvements['Player']}",
-                f"{safe_val(top_involvements['Goal Involvements'])} G+A",
+                f"{top_involvements['Player']}" if top_involvements is not None else "-",
+                f"{top_involvements['Goal Involvements']} G+A"
+                if top_involvements is not None
+                else "0 G+A",
             )
 
             st.divider()
@@ -455,7 +581,7 @@ elif current_page == "Socials":
                 by=sort_by, ascending=ascending
             ).reset_index(drop=True)
 
-            table_html = "<div class='mobile-table-container'><table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 500px;'><tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
+            table_html = "<div class='mobile-table-container'><table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 650px;'><tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
             for col in filtered_df.columns:
                 table_html += f"<th style='padding: 8px; border-bottom: 2px solid #333; text-align: center; font-size: 12px;'>{col}</th>"
             table_html += "</tr>"
@@ -465,17 +591,12 @@ elif current_page == "Socials":
                 table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
                 for col in filtered_df.columns:
                     val = row[col]
-                    formatted_val = (
-                        f"{int(val)}"
-                        if pd.notnull(val)
-                        and isinstance(val, (int, float))
-                        and float(val).is_integer()
-                        else (
-                            f"{val:.1f}"
-                            if isinstance(val, float)
-                            else str(val)
-                        )
-                    )
+                    if col in ["Goals Per Game", "Assists Per Game", "Goal Involvements Per Game"]:
+                        formatted_val = f"{val:.2f}"
+                    elif isinstance(val, (int, float)):
+                        formatted_val = f"{int(val)}"
+                    else:
+                        formatted_val = str(val)
                     table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
                 table_html += "</tr>"
             table_html += "</table></div>"
@@ -483,7 +604,7 @@ elif current_page == "Socials":
             render_html(table_html)
 
         except Exception as e:
-            st.error("Error loading stats.")
+            st.error(f"Error loading stats: {e}")
 
     elif subtab == "Results":
         try:
@@ -830,22 +951,24 @@ elif current_page == "Community":
 # --- 5. DERBY PENGUINS CLUB OVERVIEW ---
 # ==========================================
 elif current_page == "Club":
-    render_page_header(
-        "Derby Penguins Club Overview", HEADER_LOGO_URL, invert=True
-    )
+    render_page_header("Derby Penguins Club Overview", HEADER_LOGO_URL, invert=True)
     subtab = render_subtab_cards("Club", has_match_center=False)
 
     if subtab == "Combined Stats":
-        st.info("Combined club statistics across all teams.")
+        st.info("Combined club stats across all teams coming soon.")
     elif subtab == "Club Schedule":
-        st.info("Combined club match schedule and upcoming fixtures.")
+        st.info("Full club schedule coming soon.")
     elif subtab == "Club News":
-        st.info("Club-wide news and announcements.")
+        st.info("Club-wide announcements coming soon.")
 
 
 # ==========================================
 # --- 6. ABOUT US ---
 # ==========================================
 elif current_page == "About Us":
-    render_page_header("About Derby Penguins FC")
-    st.info("Information about Derby Penguins FC.")
+    render_page_header("About Derby Penguins FC", APP_ICON_URL)
+    st.markdown("""
+    **Derby Penguins FC** is an amateur football club based in Derbyshire.
+    
+    This application provides statistics, match results, pitch lineups, and updates across all teams.
+    """)
