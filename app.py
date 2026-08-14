@@ -863,4 +863,76 @@ elif current_page == "Socials":
             body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
             .pitch-frame {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; box-sizing: border-box; width: 100%; overflow: hidden; }}
             .pitch {{ padding: 8px 2px 10px 2px; position: relative; box-sizing: border-box; min-height: 400px; display: flex; flex-direction: column; justify-content: space-between; }}
-            .halfway-line {{ position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed rgba(255, 184, 28, 0.3); }}"""
+            .halfway-line {{ position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed rgba(255, 184, 28, 0.3); }}
+            .pitch-row {{ display: flex; justify-content: space-around; align-items: center; width: 100%; z-index: 2; margin: 2px 0; }}
+            .subs-section {{ background: #111; padding: 6px; border-top: 1px solid #333; width: 100%; box-sizing: border-box; }}
+            </style></head>
+            <body>
+            <div class="pitch-frame">
+                <div class="pitch">
+                    <div class="halfway-line"></div>
+                    <div class="pitch-row">{att_html}</div>
+                    <div class="pitch-row">{cam_html}</div>
+                    <div class="pitch-row">{mid_html}</div>
+                    <div class="pitch-row">{cdm_html}</div>
+                    <div class="pitch-row">{def_html}</div>
+                    <div class="pitch-row">{gk_html}</div>
+                </div>
+                <div class="subs-section">
+                    <div style="font-size: 9px; color: #FFB81C; font-weight: bold; margin-bottom: 4px; text-align: center;">SUBSTITUTES</div>
+                    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2px;">{subs_html}</div>
+                </div>
+            </div>
+            </body></html>"""
+
+            components.html(pitch_component, height=520, scrolling=False)
+
+        except Exception as e:
+            st.error(f"Error loading Match Center data: {e}")
+
+    elif subtab == "News":
+        st.info("Socials team announcements coming soon.")
+
+
+# ==========================================
+# --- 4. DERBY PENGUINS COMMUNITY ---
+# ==========================================
+elif current_page == "Community":
+    render_page_header("Derby Penguins Community", WHITE_COMMUNITY_LOGO_URL, invert=False)
+    subtab = render_subtab_cards("Community")
+
+    if subtab == "Player Stats":
+        st.info("Community player stats coming soon.")
+    elif subtab == "Results":
+        st.info("Community results and fixtures coming soon.")
+    elif subtab == "Match Center":
+        st.info("Community match center coming soon.")
+    elif subtab == "News":
+        st.info("Community news coming soon.")
+
+
+# ==========================================
+# --- 5. DERBY PENGUINS CLUB ---
+# ==========================================
+elif current_page == "Club":
+    render_page_header("Derby Penguins FC", HEADER_LOGO_URL, invert=True)
+    subtab = render_subtab_cards("Club", has_match_center=False)
+
+    if subtab == "Combined Stats":
+        st.info("Combined overall club statistics coming soon.")
+    elif subtab == "Club Schedule":
+        st.info("Full club schedule and event calendar coming soon.")
+    elif subtab == "Club News":
+        st.info("Latest announcements across all club teams.")
+
+
+# ==========================================
+# --- 6. ABOUT US ---
+# ==========================================
+elif current_page == "About Us":
+    render_page_header("About Derby Penguins FC")
+    st.markdown("""
+    Welcome to the official app for **Derby Penguins FC**! 
+    
+    Track player statistics, view detailed match center lineups, stay up-to-date with club results, and catch our latest videos and Facebook updates all in one place.
+    """)
