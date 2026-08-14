@@ -1,8 +1,9 @@
-import streamlit as st
-import pandas as pd
-import streamlit.components.v1 as components
 import re
 import textwrap
+import pandas as pd
+import streamlit as st
+import streamlit.components.v1 as components
+
 
 # 1. HELPER FUNCTION TO RENDER HTML SAFELY
 def render_html(html_str):
@@ -12,6 +13,7 @@ def render_html(html_str):
     else:
         st.markdown(clean_html, unsafe_allow_html=True)
 
+
 # 2. PAGE CONFIGURATION & LOGO URLS
 APP_ICON_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/PenguinsLogo.png"
 HEADER_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/ClubLogo.jpeg"
@@ -19,11 +21,10 @@ VIDEO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main
 
 SOCIALS_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/SocialsLogo.jpeg"
 WHITE_COMMUNITY_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/WhiteCommunityLogo.jpeg"
+BLACK_COMMUNITY_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/BlackCommunityLogo.jpeg"
 
 st.set_page_config(
-    page_title="Derby Penguins App",
-    page_icon=APP_ICON_URL,
-    layout="wide"
+    page_title="Derby Penguins App", page_icon=APP_ICON_URL, layout="wide"
 )
 
 # 3. INTERNAL SESSION STATE NAVIGATION (NO URL QUERY PARAMS)
@@ -103,6 +104,51 @@ div.stButton > button {{
     font-size: 0.8rem !important;
     border-radius: 8px !important;
     transition: all 0.2s ease-in-out !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}}
+
+/* Custom Image Icons for Top Nav Buttons */
+button[aria-label="Penguins"]::before {{
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-image: url('{HEADER_LOGO_URL}');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: invert(1);
+    margin-right: 5px;
+    vertical-align: middle;
+}}
+
+button[aria-label*="Socials"]::before {{
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-image: url('{SOCIALS_LOGO_URL}');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: invert(1);
+    margin-right: 5px;
+    vertical-align: middle;
+}}
+
+button[aria-label="Community"]::before {{
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-image: url('{BLACK_COMMUNITY_LOGO_URL}');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin-right: 5px;
+    vertical-align: middle;
 }}
 
 /* Active Page Button Style */
@@ -126,20 +172,31 @@ div.stButton > button[kind="secondary"]:hover {{
     background-color: #22252e !important;
 }}
 
-/* METRIC CARDS / KPI STYLING */
+/* METRIC CARDS / KPI STYLING & FULL CENTRAL ALIGNMENT */
 [data-testid="stMetric"] {{
     background-color: #1a1c23 !important;
     border-radius: 8px !important;
     padding: 8px 4px !important;
     border: 1px solid #333 !important;
     text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
 }}
 
-/* Metric Card Label */
+/* Metric Card Label (Apps Leader / Top Scorer) */
 [data-testid="stMetricLabel"] {{
     font-size: 0.75rem !important;
     color: #d1d5db !important;
     justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+}}
+[data-testid="stMetricLabel"] > div {{
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
 }}
 
 /* Metric Card Value (Player Name) */
@@ -150,12 +207,27 @@ div.stButton > button[kind="secondary"]:hover {{
     line-height: 1.2 !important;
     white-space: normal !important;
     word-break: break-word !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+}}
+[data-testid="stMetricValue"] > div {{
+    text-align: center !important;
+    justify-content: center !important;
+    width: 100% !important;
 }}
 
-/* Metric Card Sub-label */
+/* Metric Card Delta / Results (4 Assists / 9 Apps) */
 [data-testid="stMetricDelta"] {{
     font-size: 0.75rem !important;
     justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+}}
+[data-testid="stMetricDelta"] > div {{
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
 }}
 
 [data-testid="stVideo"] {{
@@ -189,6 +261,7 @@ render_html(header_html)
 # 6. SPREADSHEET DATA LOADER
 SPREADSHEET_ID = "19wTGruEyetdVNhfjkyVqLDueyV9joVtRsI51RAqurjA"
 
+
 @st.cache_data(ttl=60)
 def load_sheet(sheet_name):
     url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
@@ -196,10 +269,12 @@ def load_sheet(sheet_name):
     df.columns = df.columns.str.strip()
     return df
 
+
 def clean_pos_label(pos):
     if pd.isnull(pos):
         return ""
-    return re.sub(r'\d+$', '', str(pos))
+    return re.sub(r"\d+$", "", str(pos))
+
 
 # Page Title Renderer replacing Emojis with Logos
 def render_page_header(title, img_url=None, invert=False):
@@ -212,50 +287,79 @@ def render_page_header(title, img_url=None, invert=False):
         </div>
         """)
     else:
-        render_html(f"<h2 style='text-align: center; margin-bottom: 12px;'>{title}</h2>")
+        render_html(
+            f"<h2 style='text-align: center; margin-bottom: 12px;'>{title}</h2>"
+        )
+
 
 # 7. TOP INTERACTIVE NAVIGATION (FORCED 3x2 GRID)
 pages_config = [
     ("🏠 Home", "Homepage"),
-    ("🐧 Penguins", "Penguins"),
-    ("📱 Socials", "Socials"),
-    ("🤝 Community", "Community"),
+    ("Penguins", "Penguins"),
+    ("🐧⚽ Socials", "Socials"),
+    ("Community", "Community"),
     ("⚽ Club", "Club"),
-    ("ℹ️ About", "About Us")
+    ("ℹ️ About", "About Us"),
 ]
 
 # Row 1: 3 Buttons
 row1_cols = st.columns(3)
 for idx, (label, key) in enumerate(pages_config[:3]):
-    is_active = (current_page == key)
+    is_active = current_page == key
     btn_type = "primary" if is_active else "secondary"
-    if row1_cols[idx].button(label, key=f"top_nav_{key}", use_container_width=True, type=btn_type):
+    if row1_cols[idx].button(
+        label, key=f"top_nav_{key}", use_container_width=True, type=btn_type
+    ):
         st.session_state["active_page"] = key
         st.rerun()
 
 # Row 2: 3 Buttons
 row2_cols = st.columns(3)
 for idx, (label, key) in enumerate(pages_config[3:]):
-    is_active = (current_page == key)
+    is_active = current_page == key
     btn_type = "primary" if is_active else "secondary"
-    if row2_cols[idx].button(label, key=f"top_nav_{key}", use_container_width=True, type=btn_type):
+    if row2_cols[idx].button(
+        label, key=f"top_nav_{key}", use_container_width=True, type=btn_type
+    ):
         st.session_state["active_page"] = key
         st.rerun()
 
 st.divider()
 
+
 # Sub-tab Navigation Helper Function using Native Buttons
 def render_subtab_cards(team_key, has_match_center=True):
-    tabs = ["Player Stats", "Results", "Match Center", "News"] if has_match_center else ["Combined Stats", "Club Schedule", "Club News"]
+    tabs = (
+        ["Player Stats", "Results", "Match Center", "News"]
+        if has_match_center
+        else ["Combined Stats", "Club Schedule", "Club News"]
+    )
     current_subtab = st.session_state.get(f"{team_key}_subtab", tabs[0])
 
     sub_cols = st.columns(len(tabs))
     for idx, tab_name in enumerate(tabs):
-        btn_label = f"📊 Stats" if "Stats" in tab_name else f"📅 Results" if "Results" in tab_name else f"📅 Schedule" if "Schedule" in tab_name else f"⚽ Lineups" if "Match" in tab_name else f"📰 News"
-        is_active = (current_subtab == tab_name)
+        btn_label = (
+            f"📊 Stats"
+            if "Stats" in tab_name
+            else (
+                f"📅 Results"
+                if "Results" in tab_name
+                else (
+                    f"📅 Schedule"
+                    if "Schedule" in tab_name
+                    else f"⚽ Lineups" if "Match" in tab_name else f"📰 News"
+                )
+            )
+        )
+        is_active = current_subtab == tab_name
         btn_type = "primary" if is_active else "secondary"
-        
-        if sub_cols[idx].button(btn_label, key=f"sub_nav_{team_key}_{tab_name}", use_container_width=True, type=btn_type):
+
+        if sub_cols[idx].button(
+            btn_label,
+            key=f"sub_nav_{team_key}_{tab_name}",
+            use_container_width=True,
+            type=btn_type,
+        ):
             st.session_state[f"{team_key}_subtab"] = tab_name
             st.rerun()
 
@@ -266,15 +370,17 @@ def render_subtab_cards(team_key, has_match_center=True):
 # --- 1. HOMEPAGE ---
 # ==========================================
 if current_page == "Homepage":
-    
+
     st.markdown("### 🎥 Feature Video")
     st.video(VIDEO_URL)
 
     st.divider()
 
     st.markdown("### 📲 Latest Club Updates")
-    fb_page_url = "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/" 
-    
+    fb_page_url = (
+        "https://www.facebook.com/p/Derby-Penguins-FC-61568730025829/"
+    )
+
     fb_iframe = f"""<div style="display: flex; justify-content: center; width: 100%; overflow: hidden;"><div style="width: 100%; max-width: 500px; overflow: hidden; border-radius: 8px; background: #111;"><iframe src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=340&height=650&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" width="100%" height="650" style="border:none; overflow:hidden; max-width: 100vw;" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe></div></div>"""
     components.html(fb_iframe, height=660, scrolling=False)
 
@@ -309,39 +415,71 @@ elif current_page == "Socials":
             if "Player" in df.columns:
                 df = df.dropna(subset=["Player"])
 
-            top_apps = df.sort_values(by="Appearances", ascending=False).iloc[0]
+            top_apps = df.sort_values(
+                by="Appearances", ascending=False
+            ).iloc[0]
             top_scorer = df.sort_values(by="Goals", ascending=False).iloc[0]
             top_assister = df.sort_values(by="Assists", ascending=False).iloc[0]
-            top_involvements = df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
+            top_involvements = df.sort_values(
+                by="Goal Involvements", ascending=False
+            ).iloc[0]
 
             def safe_val(val):
                 try:
-                    return str(int(float(val))) if pd.notnull(val) else "0"
+                    return (
+                        str(int(float(val))) if pd.notnull(val) else "0"
+                    )
                 except Exception:
                     return str(val)
 
             row1_col1, row1_col2 = st.columns(2)
-            row1_col1.metric("🏃 Apps Leader", f"{top_apps['Player']}", f"{safe_val(top_apps['Appearances'])} Apps")
-            row1_col2.metric("⚽ Top Scorer", f"{top_scorer['Player']}", f"{safe_val(top_scorer['Goals'])} Goals")
-            
+            row1_col1.metric(
+                "🏃 Apps Leader",
+                f"{top_apps['Player']}",
+                f"{safe_val(top_apps['Appearances'])} Apps",
+            )
+            row1_col2.metric(
+                "⚽ Top Scorer",
+                f"{top_scorer['Player']}",
+                f"{safe_val(top_scorer['Goals'])} Goals",
+            )
+
             row2_col1, row2_col2 = st.columns(2)
-            row2_col1.metric("🅰️ Top Assister", f"{top_assister['Player']}", f"{safe_val(top_assister['Assists'])} Assists")
-            row2_col2.metric("🔥 Top Contributor", f"{top_involvements['Player']}", f"{safe_val(top_involvements['Goal Involvements'])} G+A")
+            row2_col1.metric(
+                "🅰️ Top Assister",
+                f"{top_assister['Player']}",
+                f"{safe_val(top_assister['Assists'])} Assists",
+            )
+            row2_col2.metric(
+                "🔥 Top Contributor",
+                f"{top_involvements['Player']}",
+                f"{safe_val(top_involvements['Goal Involvements'])} G+A",
+            )
 
             st.divider()
 
             st.markdown("### Socials Player Stats")
 
             search_query = st.text_input("🔍 Search Player", "")
-            sort_by = st.selectbox("Sort By Column", options=df.columns, index=1)
-            sort_order = st.radio("Order", ["Descending", "Ascending"], horizontal=True)
+            sort_by = st.selectbox(
+                "Sort By Column", options=df.columns, index=1
+            )
+            sort_order = st.radio(
+                "Order", ["Descending", "Ascending"], horizontal=True
+            )
 
             filtered_df = df.copy()
             if search_query:
-                filtered_df = filtered_df[filtered_df["Player"].str.contains(search_query, case=False, na=False)]
+                filtered_df = filtered_df[
+                    filtered_df["Player"].str.contains(
+                        search_query, case=False, na=False
+                    )
+                ]
 
             ascending = True if sort_order == "Ascending" else False
-            filtered_df = filtered_df.sort_values(by=sort_by, ascending=ascending).reset_index(drop=True)
+            filtered_df = filtered_df.sort_values(
+                by=sort_by, ascending=ascending
+            ).reset_index(drop=True)
 
             table_html = "<div class='mobile-table-container'><table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 500px;'><tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
             for col in filtered_df.columns:
@@ -353,7 +491,17 @@ elif current_page == "Socials":
                 table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
                 for col in filtered_df.columns:
                     val = row[col]
-                    formatted_val = f"{int(val)}" if pd.notnull(val) and isinstance(val, (int, float)) and float(val).is_integer() else (f"{val:.1f}" if isinstance(val, float) else str(val))
+                    formatted_val = (
+                        f"{int(val)}"
+                        if pd.notnull(val)
+                        and isinstance(val, (int, float))
+                        and float(val).is_integer()
+                        else (
+                            f"{val:.1f}"
+                            if isinstance(val, float)
+                            else str(val)
+                        )
+                    )
                     table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
                 table_html += "</tr>"
             table_html += "</table></div>"
@@ -366,12 +514,22 @@ elif current_page == "Socials":
     elif subtab == "Results":
         try:
             games_df = load_sheet("Socials_Games")
-            target_cols = ["GameID", "Date", "Location", "Opponent", "KO Time", "Result", "Outcome"]
+            target_cols = [
+                "GameID",
+                "Date",
+                "Location",
+                "Opponent",
+                "KO Time",
+                "Result",
+                "Outcome",
+            ]
             display_cols = [c for c in target_cols if c in games_df.columns]
             if not display_cols:
                 display_cols = list(games_df.columns[:7])
-                
-            fixtures_df = games_df[display_cols].copy().dropna(subset=[display_cols[0]])
+
+            fixtures_df = (
+                games_df[display_cols].copy().dropna(subset=[display_cols[0]])
+            )
 
             f_table_html = "<div class='mobile-table-container'><table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 500px;'><tr style='background-color: #FFB81C; color: #111; font-weight: bold; font-size: 12px;'>"
             for col in fixtures_df.columns:
@@ -383,7 +541,12 @@ elif current_page == "Socials":
                 f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
                 for col in fixtures_df.columns:
                     val = row[col]
-                    formatted_val = "-" if pd.isnull(val) or str(val).strip().lower() in ["nan", "none", ""] else str(val).strip()
+                    formatted_val = (
+                        "-"
+                        if pd.isnull(val)
+                        or str(val).strip().lower() in ["nan", "none", ""]
+                        else str(val).strip()
+                    )
                     f_table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
                 f_table_html += "</tr>"
             f_table_html += "</table></div>"
@@ -404,7 +567,11 @@ elif current_page == "Socials":
                 venue_val = ""
                 for col in row.index:
                     col_lower = str(col).strip().lower()
-                    if "home" in col_lower or "away" in col_lower or col_lower == "venue":
+                    if (
+                        "home" in col_lower
+                        or "away" in col_lower
+                        or col_lower == "venue"
+                    ):
                         venue_val = str(row[col]).strip().lower()
                         break
                 is_away = venue_val.startswith("a")
@@ -412,28 +579,51 @@ elif current_page == "Socials":
                 if result and result.lower() != "nan":
                     if is_away:
                         scores = [s.strip() for s in result.split("-")]
-                        match_title = f"{opponent} {scores[1]}-{scores[0]} Socials" if len(scores) == 2 else f"{opponent} {result} Socials"
+                        match_title = (
+                            f"{opponent} {scores[1]}-{scores[0]} Socials"
+                            if len(scores) == 2
+                            else f"{opponent} {result} Socials"
+                        )
                     else:
                         match_title = f"Socials {result} {opponent}"
                 else:
-                    match_title = f"{opponent} vs Socials" if is_away else f"Socials vs {opponent}"
-                return f"{match_title} ({date})" if date and date.lower() != "nan" else match_title
+                    match_title = (
+                        f"{opponent} vs Socials"
+                        if is_away
+                        else f"Socials vs {opponent}"
+                    )
+                return (
+                    f"{match_title} ({date})"
+                    if date and date.lower() != "nan"
+                    else match_title
+                )
 
-            game_options = {create_game_label(row): row["GameID"] for _, row in games_df.iterrows()}
+            game_options = {
+                create_game_label(row): row["GameID"]
+                for _, row in games_df.iterrows()
+            }
             options_list = list(game_options.keys())
             default_idx = len(options_list) - 1 if options_list else 0
 
-            selected_label = st.selectbox("Select Game:", options=options_list, index=default_idx)
+            selected_label = st.selectbox(
+                "Select Game:", options=options_list, index=default_idx
+            )
             selected_game_id = game_options[selected_label]
-            game_data = games_df[games_df["GameID"] == selected_game_id].iloc[0]
+            game_data = games_df[
+                games_df["GameID"] == selected_game_id
+            ].iloc[0]
 
             raw_motm = str(game_data.get("MOTM", "")).strip()
-            motm_val = raw_motm if raw_motm and raw_motm.lower() not in ["nan", "none", "-"] else "-"
+            motm_val = (
+                raw_motm
+                if raw_motm and raw_motm.lower() not in ["nan", "none", "-"]
+                else "-"
+            )
 
             m_col1, m_col2 = st.columns(2)
             m_col1.metric("🗓️ Date", str(game_data.get("Date", "-")))
             m_col2.metric("🛡️ Opponent", str(game_data.get("Opponent", "-")))
-            
+
             m_col3, m_col4 = st.columns(2)
             m_col3.metric("⚽ Score", str(game_data.get("Result", "-")))
             m_col4.metric("🏆 MOTM", motm_val)
@@ -447,17 +637,37 @@ elif current_page == "Socials":
             goal_counts, assist_counts = {}, {}
             try:
                 goals_df = load_sheet("Socials_Goals")
-                match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
-                match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
+                match_col = (
+                    "Match ID" if "Match ID" in goals_df.columns else "GameID"
+                )
+                match_goals = goals_df[
+                    goals_df[match_col].astype(str) == str(selected_game_id)
+                ]
 
                 if not match_goals.empty:
                     for _, row in match_goals.iterrows():
-                        scorer = str(row.get("Goalscorer", row.get("Scorer", ""))).strip()
+                        scorer = str(
+                            row.get("Goalscorer", row.get("Scorer", ""))
+                        ).strip()
                         assist = str(row.get("Assist", "")).strip()
-                        if scorer and scorer.lower() not in ["unknown", "none", "-", "nan", ""]:
+                        if scorer and scorer.lower() not in [
+                            "unknown",
+                            "none",
+                            "-",
+                            "nan",
+                            "",
+                        ]:
                             goal_counts[scorer] = goal_counts.get(scorer, 0) + 1
-                        if assist and assist.lower() not in ["none", "-", "unassisted", "nan", ""]:
-                            assist_counts[assist] = assist_counts.get(assist, 0) + 1
+                        if assist and assist.lower() not in [
+                            "none",
+                            "-",
+                            "unassisted",
+                            "nan",
+                            "",
+                        ]:
+                            assist_counts[assist] = (
+                                assist_counts.get(assist, 0) + 1
+                            )
             except Exception:
                 pass
 
@@ -471,7 +681,10 @@ elif current_page == "Socials":
             for col_name in game_data.index:
                 col_clean = str(col_name).strip()
                 val = game_data.get(col_name)
-                if pd.notnull(val) and str(val).strip().lower() not in ["", "-", "nan", "none"]:
+                if (
+                    pd.notnull(val)
+                    and str(val).strip().lower() not in ["", "-", "nan", "none"]
+                ):
                     lineup[col_clean] = str(val).strip()
 
             def make_player_card(pos_key, name):
@@ -479,33 +692,75 @@ elif current_page == "Socials":
                 g_count = goal_counts.get(name, 0)
                 a_count = assist_counts.get(name, 0)
                 icons = []
-                if g_count > 0: icons.append("⚽" * g_count)
-                if a_count > 0: icons.append("🅰️" * a_count)
-                badge_html = f'<div style="font-size: 7px; margin-top: 1px; line-height: 1;">{" ".join(icons)}</div>' if icons else ""
+                if g_count > 0:
+                    icons.append("⚽" * g_count)
+                if a_count > 0:
+                    icons.append("🅰️" * a_count)
+                badge_html = (
+                    f'<div style="font-size: 7px; margin-top: 1px; line-height: 1;">{" ".join(icons)}</div>'
+                    if icons
+                    else ""
+                )
 
                 return f"""<div style="background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 2px 2px; margin: 1px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden;"><div style="font-size: 7px; color: #FFB81C; font-weight: bold; line-height: 1;">{c_pos}</div><div style="font-size: 8.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1;">{name}</div>{badge_html}</div>"""
 
-            gk_html = "".join([make_player_card(k, lineup[k]) for k in lineup if k == "GK"])
-            def_html = "".join([make_player_card(k, lineup[k]) for k in def_order if k in lineup])
-            cdm_html = "".join([make_player_card(k, lineup[k]) for k in cdm_order if k in lineup])
-            mid_html = "".join([make_player_card(k, lineup[k]) for k in mid_order if k in lineup])
-            cam_html = "".join([make_player_card(k, lineup[k]) for k in cam_order if k in lineup])
-            att_html = "".join([make_player_card(k, lineup[k]) for k in att_order if k in lineup])
+            gk_html = "".join(
+                [make_player_card(k, lineup[k]) for k in lineup if k == "GK"]
+            )
+            def_html = "".join(
+                [
+                    make_player_card(k, lineup[k])
+                    for k in def_order
+                    if k in lineup
+                ]
+            )
+            cdm_html = "".join(
+                [
+                    make_player_card(k, lineup[k])
+                    for k in cdm_order
+                    if k in lineup
+                ]
+            )
+            mid_html = "".join(
+                [
+                    make_player_card(k, lineup[k])
+                    for k in mid_order
+                    if k in lineup
+                ]
+            )
+            cam_html = "".join(
+                [
+                    make_player_card(k, lineup[k])
+                    for k in cam_order
+                    if k in lineup
+                ]
+            )
+            att_html = "".join(
+                [
+                    make_player_card(k, lineup[k])
+                    for k in att_order
+                    if k in lineup
+                ]
+            )
 
-            # Dynamic row wrapping for Substitutes (1 row if <= 4, 2 rows if >= 5)
+            # Substitutes list formatted into cards
             subs_raw = [game_data.get(f"SUB{i}") for i in range(1, 10)]
-            active_subs = [str(s).strip() for s in subs_raw if pd.notnull(s) and str(s).strip().lower() not in ["", "-", "nan", "none"]]
-
-            if not active_subs:
-                subs_html = "<div class='row'><div style='font-size: 8px; color: #666;'>No substitutes listed</div></div>"
-            elif len(active_subs) <= 4:
-                row_content = "".join([make_player_card("SUB", s) for s in active_subs])
-                subs_html = f"<div class='row'>{row_content}</div>"
-            else:
-                mid = (len(active_subs) + 1) // 2
-                row1_content = "".join([make_player_card("SUB", s) for s in active_subs[:mid]])
-                row2_content = "".join([make_player_card("SUB", s) for s in active_subs[mid:]])
-                subs_html = f"<div class='row'>{row1_content}</div><div class='row' style='margin-top: 3px;'>{row2_content}</div>"
+            active_subs = [
+                str(s).strip()
+                for s in subs_raw
+                if pd.notnull(s)
+                and str(s).strip().lower() not in ["", "-", "nan", "none"]
+            ]
+            subs_html = (
+                "".join(
+                    [
+                        make_player_card("SUB", sub_name)
+                        for sub_name in active_subs
+                    ]
+                )
+                if active_subs
+                else "<div style='font-size: 8px; color: #666;'>No substitutes listed</div>"
+            )
 
             pitch_component = f"""<!DOCTYPE html><html><head><style>
             body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
@@ -530,12 +785,12 @@ elif current_page == "Socials":
                 </div>
                 <div class="bench-area">
                     <div class="bench-title">👥 Substitutes Bench</div>
-                    {subs_html}
+                    <div class="row">{subs_html}</div>
                 </div>
             </div>
             </body></html>"""
 
-            components.html(pitch_component, height=550)
+            components.html(pitch_component, height=520)
 
             st.divider()
 
@@ -543,19 +798,33 @@ elif current_page == "Socials":
             st.markdown("### ⚽ Goals & Assists")
             try:
                 goals_df = load_sheet("Socials_Goals")
-                match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
-                match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
+                match_col = (
+                    "Match ID" if "Match ID" in goals_df.columns else "GameID"
+                )
+                match_goals = goals_df[
+                    goals_df[match_col].astype(str) == str(selected_game_id)
+                ]
 
                 if not match_goals.empty:
                     for _, row in match_goals.iterrows():
-                        scorer = row.get("Goalscorer", row.get("Scorer", "Unknown"))
+                        scorer = row.get(
+                            "Goalscorer", row.get("Scorer", "Unknown")
+                        )
                         assist = row.get("Assist", "")
-                        if pd.notnull(assist) and str(assist).strip().lower() not in ["", "none", "-", "unassisted", "nan"]:
-                            render_html(f"• <b>{scorer}</b> ⚽ ( {str(assist).strip()} 🅰️ )")
+                        if (
+                            pd.notnull(assist)
+                            and str(assist).strip().lower()
+                            not in ["", "none", "-", "unassisted", "nan"]
+                        ):
+                            render_html(
+                                f"• <b>{scorer}</b> ⚽ ( {str(assist).strip()} 🅰️ )"
+                            )
                         else:
                             render_html(f"• <b>{scorer}</b> ⚽")
                 else:
-                    render_html("<p style='color: #aaa;'>No goals recorded.</p>")
+                    render_html(
+                        "<p style='color: #aaa;'>No goals recorded.</p>"
+                    )
             except Exception:
                 st.markdown("Goal log loading...")
 
@@ -563,14 +832,18 @@ elif current_page == "Socials":
             st.error("Error loading match data.")
 
     elif subtab == "News":
-        st.info("📢 Training details, match locations, and team announcements go here.")
+        st.info(
+            "📢 Training details, match locations, and team announcements go here."
+        )
 
 
 # ==========================================
 # --- 4. DERBY PENGUINS COMMUNITY ---
 # ==========================================
 elif current_page == "Community":
-    render_page_header("Derby Penguins Community", WHITE_COMMUNITY_LOGO_URL, invert=False)
+    render_page_header(
+        "Derby Penguins Community", BLACK_COMMUNITY_LOGO_URL, invert=False
+    )
     subtab = render_subtab_cards("Community")
 
     if subtab == "Player Stats":
@@ -587,7 +860,9 @@ elif current_page == "Community":
 # --- 5. DERBY PENGUINS CLUB ---
 # ==========================================
 elif current_page == "Club":
-    render_page_header("Derby Penguins Club Overview", HEADER_LOGO_URL, invert=True)
+    render_page_header(
+        "Derby Penguins Club Overview", HEADER_LOGO_URL, invert=True
+    )
     subtab = render_subtab_cards("Club", has_match_center=False)
 
     if subtab == "Combined Stats":
@@ -606,7 +881,7 @@ elif current_page == "About Us":
     render_html("""
     <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 600px; margin: 0 auto; text-align: center;">
         <p style="margin-bottom: 15px; font-size: 0.9rem;">At Derby Penguins, we are dedicated to grassroots football, sportsmanship, Chris Eley buying fat jabs off men in pub toilets, and building a supportive team community on and off the pitch.</p>
-        <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Club Lore</p>
-        <p style="margin-bottom: 0; font-size: 0.9rem;">Founded to bring together fat lads who want to run about on a Sunday as well as a Thursday, Derby Penguins provides a competitive, welcoming environment to play football across all our squad levels.</p>
-    </div>
+        <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Club Lore</p>
+        <p style="margin-bottom: 0; font-size: 0.9rem;">Founded to bring together fat lads who want to run about on a Sunday as well as a Thursday, Derby Penguins provides a competitive, welcoming environment to play football across all our squad levels.</p>
+    </div>
     """)
