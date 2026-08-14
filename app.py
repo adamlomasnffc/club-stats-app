@@ -39,7 +39,7 @@ for team_key in ["Penguins", "Socials", "Community", "Club"]:
 
 current_page = st.session_state["active_page"]
 
-# 4. GLOBAL STYLING (FIXES: UNIFORM BUTTONS & STRICT METRIC CENTERING)
+# 4. GLOBAL STYLING (FIXED BUTTON LOGO CSS)
 style_html = f"""
 <head>
 <link rel="apple-touch-icon" sizes="180x180" href="{APP_ICON_URL}">
@@ -66,13 +66,12 @@ h1, h2, h3, h4, h5, h6, p, label, div {{
     text-align: center !important;
 }}
 
-/* FORCE EVEN GRID & SIDE-BY-SIDE KPI CARDS */
+/* FORCE 3x2 BUTTON GRID & SIDE-BY-SIDE KPI CARDS ON ALL SCREENS */
 div[data-testid="stHorizontalBlock"] {{
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     gap: 6px !important;
-    align-items: stretch !important;
 }}
 div[data-testid="stHorizontalBlock"] > div {{
     flex: 1 1 0px !important;
@@ -99,34 +98,25 @@ div[data-testid="stHorizontalBlock"] > div {{
     margin: 0 auto !important;
 }}
 
-/* UNIFORM BUTTON SIZING FOR ALL NAV & SUBTAB BUTTONS */
+/* Custom Styling for Native Streamlit Buttons (Nav Grid) */
 div.stButton > button {{
     width: 100% !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    max-height: 40px !important;
-    padding: 2px 2px !important;
+    padding: 8px 2px !important;
     font-weight: 600 !important;
-    font-size: 0.75rem !important;
+    font-size: 0.8rem !important;
     border-radius: 8px !important;
     transition: all 0.2s ease-in-out !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
 }}
 
+/* Ensure button text wrapper displays inline elements nicely */
 div.stButton > button p {{
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     margin: 0 !important;
-    font-size: 0.75rem !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
 }}
 
 /* Active Page Button Style */
@@ -150,7 +140,7 @@ div.stButton > button[kind="secondary"]:hover {{
     background-color: #22252e !important;
 }}
 
-/* STRICT CENTER ALIGNMENT FOR METRIC CARDS / KPI */
+/* METRIC CARDS / KPI STYLING */
 [data-testid="stMetric"] {{
     background-color: #1a1c23 !important;
     border-radius: 8px !important;
@@ -161,16 +151,6 @@ div.stButton > button[kind="secondary"]:hover {{
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    min-height: 65px !important;
-}}
-
-[data-testid="stMetric"] > div {{
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
 }}
 
 [data-testid="stMetricLabel"] {{
@@ -179,17 +159,16 @@ div.stButton > button[kind="secondary"]:hover {{
     justify-content: center !important;
     text-align: center !important;
     width: 100% !important;
-    display: flex !important;
 }}
-
-[data-testid="stMetricLabel"] * {{
-    text-align: center !important;
+[data-testid="stMetricLabel"] > div {{
     justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
 }}
 
 [data-testid="stMetricValue"] {{
     color: #FFB81C !important;
-    font-size: 0.88rem !important;
+    font-size: 0.95rem !important;
     font-weight: 700 !important;
     line-height: 1.2 !important;
     white-space: normal !important;
@@ -197,14 +176,11 @@ div.stButton > button[kind="secondary"]:hover {{
     justify-content: center !important;
     text-align: center !important;
     width: 100% !important;
-    display: flex !important;
-    align-items: center !important;
 }}
-
-[data-testid="stMetricValue"] * {{
+[data-testid="stMetricValue"] > div {{
     text-align: center !important;
     justify-content: center !important;
-    margin: 0 auto !important;
+    width: 100% !important;
 }}
 
 [data-testid="stMetricDelta"] {{
@@ -212,7 +188,11 @@ div.stButton > button[kind="secondary"]:hover {{
     justify-content: center !important;
     text-align: center !important;
     width: 100% !important;
-    display: flex !important;
+}}
+[data-testid="stMetricDelta"] > div {{
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
 }}
 
 [data-testid="stVideo"] {{
@@ -232,6 +212,7 @@ div.stButton > button[kind="secondary"]:hover {{
 }}
 </style>
 """
+render_html(style_html)
 
 # 5. TOP HEADER LOGO
 header_html = f"""
