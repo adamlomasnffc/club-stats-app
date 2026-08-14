@@ -27,7 +27,7 @@ st.set_page_config(
     page_title="Derby Penguins App", page_icon=APP_ICON_URL, layout="wide"
 )
 
-# 3. INTERNAL SESSION STATE NAVIGATION (NO URL QUERY PARAMS)
+# 3. INTERNAL SESSION STATE NAVIGATION
 if "active_page" not in st.session_state:
     st.session_state["active_page"] = "Homepage"
 
@@ -39,7 +39,7 @@ for team_key in ["Penguins", "Socials", "Community", "Club"]:
 
 current_page = st.session_state["active_page"]
 
-# 4. GLOBAL STYLING
+# 4. GLOBAL STYLING (FIXED BUTTON LOGO CSS)
 style_html = f"""
 <head>
 <link rel="apple-touch-icon" sizes="180x180" href="{APP_ICON_URL}">
@@ -111,47 +111,55 @@ div.stButton > button {{
     justify-content: center !important;
 }}
 
-/* Custom Image Icons for Top Nav Buttons */
-button[aria-label="Penguins"]::before {{
-    content: "";
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    background-image: url('{HEADER_LOGO_URL}');
-    background-size: contain;
-    background-position: center;
-    background-repeat: no-repeat;
-    filter: invert(1);
-    margin-right: 5px;
-    vertical-align: middle;
+/* Ensure button text wrapper displays inline elements nicely */
+div.stButton > button p {{
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
 }}
 
-button[aria-label="Socials"]::before {{
-    content: "";
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    background-image: url('{SOCIALS_LOGO_URL}');
-    background-size: contain;
-    background-position: center;
-    background-repeat: no-repeat;
-    filter: invert(1);
-    margin-right: 5px;
-    vertical-align: middle;
+/* FIXED LOGO INJECTION TARGETING INNER PARAGRAPH WITH SUBSTRING MATCHING */
+button[aria-label*="Penguins"] p::before {{
+    content: "" !important;
+    display: inline-block !important;
+    width: 18px !important;
+    height: 18px !important;
+    background-image: url('{HEADER_LOGO_URL}') !important;
+    background-size: contain !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    filter: invert(1) !important;
+    margin-right: 6px !important;
+    flex-shrink: 0 !important;
 }}
 
-button[aria-label="Community"]::before {{
-    content: "";
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    background-image: url('{BLACK_COMMUNITY_LOGO_URL}');
-    background-size: contain;
-    background-position: center;
-    background-repeat: no-repeat;
-    filter: invert(1);
-    margin-right: 5px;
-    vertical-align: middle;
+button[aria-label*="Socials"] p::before {{
+    content: "" !important;
+    display: inline-block !important;
+    width: 18px !important;
+    height: 18px !important;
+    background-image: url('{SOCIALS_LOGO_URL}') !important;
+    background-size: contain !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    filter: invert(1) !important;
+    margin-right: 6px !important;
+    flex-shrink: 0 !important;
+}}
+
+button[aria-label*="Community"] p::before {{
+    content: "" !important;
+    display: inline-block !important;
+    width: 18px !important;
+    height: 18px !important;
+    background-image: url('{BLACK_COMMUNITY_LOGO_URL}') !important;
+    background-size: contain !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    filter: invert(1) !important;
+    margin-right: 6px !important;
+    flex-shrink: 0 !important;
 }}
 
 /* Active Page Button Style */
@@ -175,7 +183,7 @@ div.stButton > button[kind="secondary"]:hover {{
     background-color: #22252e !important;
 }}
 
-/* METRIC CARDS / KPI STYLING & FULL CENTRAL ALIGNMENT */
+/* METRIC CARDS / KPI STYLING */
 [data-testid="stMetric"] {{
     background-color: #1a1c23 !important;
     border-radius: 8px !important;
@@ -188,7 +196,6 @@ div.stButton > button[kind="secondary"]:hover {{
     justify-content: center !important;
 }}
 
-/* Metric Card Label */
 [data-testid="stMetricLabel"] {{
     font-size: 0.75rem !important;
     color: #d1d5db !important;
@@ -202,7 +209,6 @@ div.stButton > button[kind="secondary"]:hover {{
     width: 100% !important;
 }}
 
-/* Metric Card Value */
 [data-testid="stMetricValue"] {{
     color: #FFB81C !important;
     font-size: 0.95rem !important;
@@ -220,7 +226,6 @@ div.stButton > button[kind="secondary"]:hover {{
     width: 100% !important;
 }}
 
-/* Metric Card Delta / Results */
 [data-testid="stMetricDelta"] {{
     font-size: 0.75rem !important;
     justify-content: center !important;
@@ -279,7 +284,6 @@ def clean_pos_label(pos):
     return re.sub(r"\d+$", "", str(pos))
 
 
-# Page Title Renderer replacing Emojis with Logos
 def render_page_header(title, img_url=None, invert=False):
     if img_url:
         invert_style = "filter: invert(1);" if invert else ""
@@ -633,7 +637,7 @@ elif current_page == "Socials":
 
             st.divider()
 
-            # --- STARTING 11 & INTEGRATED BENCH PITCH VIEW ---
+            # LINEUP PITCH VIEW
             formation = str(game_data.get("Formation", "4-3-3")).strip()
             st.subheader(f"Match Lineup ({formation})")
 
@@ -746,7 +750,6 @@ elif current_page == "Socials":
                 ]
             )
 
-            # Substitutes list formatted into cards
             subs_raw = [game_data.get(f"SUB{i}") for i in range(1, 10)]
             active_subs = [
                 str(s).strip()
@@ -797,7 +800,6 @@ elif current_page == "Socials":
 
             st.divider()
 
-            # --- GOALS & ASSISTS (FULL WIDTH) ---
             st.markdown("### ⚽ Goals & Assists")
             try:
                 goals_df = load_sheet("Socials_Goals")
