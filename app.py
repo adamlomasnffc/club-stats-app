@@ -33,7 +33,9 @@ if "active_page" not in st.session_state:
 
 for team_key in ["Penguins", "Socials", "Community", "Club"]:
     if f"{team_key}_subtab" not in st.session_state:
-        st.session_state[f"{team_key}_subtab"] = "Player Stats"
+        st.session_state[f"{team_key}_subtab"] = (
+            "Player Stats" if team_key != "Club" else "Combined Stats"
+        )
 
 current_page = st.session_state["active_page"]
 
@@ -833,9 +835,7 @@ elif current_page == "Socials":
             st.error("Error loading match data.")
 
     elif subtab == "News":
-        st.info(
-            "📢 Training details, match locations, and team announcements go here."
-        )
+        st.info("Socials team announcements and news coming soon.")
 
 
 # ==========================================
@@ -843,22 +843,22 @@ elif current_page == "Socials":
 # ==========================================
 elif current_page == "Community":
     render_page_header(
-        "Derby Penguins Community", BLACK_COMMUNITY_LOGO_URL, invert=False
+        "Derby Penguins Community", BLACK_COMMUNITY_LOGO_URL, invert=True
     )
     subtab = render_subtab_cards("Community")
 
     if subtab == "Player Stats":
-        st.info("Community stats coming soon.")
+        st.info("Community team player stats coming soon.")
     elif subtab == "Results":
-        st.info("Community results coming soon.")
+        st.info("Community team results coming soon.")
     elif subtab == "Match Center":
-        st.info("Community match center coming soon.")
+        st.info("Community team lineup pitch coming soon.")
     elif subtab == "News":
-        st.info("Community announcements.")
+        st.info("Community team news and updates.")
 
 
 # ==========================================
-# --- 5. DERBY PENGUINS CLUB ---
+# --- 5. DERBY PENGUINS CLUB OVERVIEW ---
 # ==========================================
 elif current_page == "Club":
     render_page_header(
@@ -867,22 +867,20 @@ elif current_page == "Club":
     subtab = render_subtab_cards("Club", has_match_center=False)
 
     if subtab == "Combined Stats":
-        st.info("Combined stats across all squads will be displayed here.")
+        st.info("Combined club statistics across all teams coming soon.")
     elif subtab == "Club Schedule":
-        st.info("Combined fixture list for all teams.")
+        st.info("Overall club fixtures and event schedules coming soon.")
     elif subtab == "Club News":
-        st.info("Overall club announcements.")
+        st.info("General club-wide announcements.")
 
 
 # ==========================================
-# --- 6. ABOUT DERBY PENGUINS ---
+# --- 6. ABOUT US ---
 # ==========================================
 elif current_page == "About Us":
-    render_page_header("About Derby Penguins")
-    render_html("""
-    <div style="background-color: #1a1c23; border: 1px solid #333; border-radius: 10px; padding: 20px; max-width: 600px; margin: 0 auto; text-align: center;">
-        <p style="margin-bottom: 15px; font-size: 0.9rem;">At Derby Penguins, we are dedicated to grassroots football, sportsmanship, Chris Eley buying fat jabs off men in pub toilets, and building a supportive team community on and off the pitch.</p>
-        <p style="color: #FFB81C; font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">Club Lore</p>
-        <p style="margin-bottom: 0; font-size: 0.9rem;">Founded to bring together fat lads who want to run about on a Sunday as well as a Thursday, Derby Penguins provides a competitive, welcoming environment to play football across all our squad levels.</p>
-    </div>
+    render_page_header("About Derby Penguins FC")
+    st.markdown("""
+    Welcome to the official app for **Derby Penguins FC**.
+    
+    Here you can keep track of player stats, match lineups, game results, and club announcements across all our teams!
     """)
