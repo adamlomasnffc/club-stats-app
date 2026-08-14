@@ -119,49 +119,6 @@ div.stButton > button p {{
     margin: 0 !important;
 }}
 
-/* FIXED LOGO INJECTION TARGETING INNER PARAGRAPH WITH SUBSTRING MATCHING */
-button[aria-label*="Penguins"] p::before {{
-    content: "" !important;
-    display: inline-block !important;
-    width: 18px !important;
-    height: 18px !important;
-    background-image: url('{HEADER_LOGO_URL}') !important;
-    background-size: contain !important;
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-    filter: invert(1) !important;
-    margin-right: 6px !important;
-    flex-shrink: 0 !important;
-}}
-
-button[aria-label*="Socials"] p::before {{
-    content: "" !important;
-    display: inline-block !important;
-    width: 18px !important;
-    height: 18px !important;
-    background-image: url('{SOCIALS_LOGO_URL}') !important;
-    background-size: contain !important;
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-    filter: invert(1) !important;
-    margin-right: 6px !important;
-    flex-shrink: 0 !important;
-}}
-
-button[aria-label*="Community"] p::before {{
-    content: "" !important;
-    display: inline-block !important;
-    width: 18px !important;
-    height: 18px !important;
-    background-image: url('{BLACK_COMMUNITY_LOGO_URL}') !important;
-    background-size: contain !important;
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-    filter: invert(1) !important;
-    margin-right: 6px !important;
-    flex-shrink: 0 !important;
-}}
-
 /* Active Page Button Style */
 div.stButton > button[kind="primary"] {{
     background-color: #22252e !important;
@@ -299,40 +256,48 @@ def render_page_header(title, img_url=None, invert=False):
         )
 
 
-# 7. TOP INTERACTIVE NAVIGATION (FORCED 3x2 GRID)
 pages_config = [
-    ("🏠 Home", "Homepage"),
-    ("Penguins", "Penguins"),
-    ("Socials", "Socials"),
-    ("Community", "Community"),
-    ("🐧⚽ Club", "Club"),
-    ("ℹ️ About", "About Us"),
+    ("🏠 Home", "Homepage", None),
+    ("Penguins", "Penguins", HEADER_LOGO_URL),
+    ("Socials", "Socials", SOCIALS_LOGO_URL),
+    ("Community", "Community", BLACK_COMMUNITY_LOGO_URL),
+    ("🐧⚽ Club", "Club", HEADER_LOGO_URL),
+    ("ℹ️ About", "About Us", None),
 ]
 
-# Row 1: 3 Buttons
-row1_cols = st.columns(3)
-for idx, (label, key) in enumerate(pages_config[:3]):
+def nav_button(label, key, logo_url, column):
     is_active = current_page == key
     btn_type = "primary" if is_active else "secondary"
-    if row1_cols[idx].button(
-        label, key=f"top_nav_{key}", use_container_width=True, type=btn_type
+
+    if logo_url:
+        button_label = f"![logo]({logo_url}) {label}"
+    else:
+        button_label = label
+
+    if column.button(
+        button_label,
+        key=f"top_nav_{key}",
+        use_container_width=True,
+        type=btn_type
     ):
         st.session_state["active_page"] = key
         st.rerun()
 
-# Row 2: 3 Buttons
+
+# Row 1
+row1_cols = st.columns(3)
+
+for idx, (label, key, logo_url) in enumerate(pages_config[:3]):
+    nav_button(label, key, logo_url, row1_cols[idx])
+
+
+# Row 2
 row2_cols = st.columns(3)
-for idx, (label, key) in enumerate(pages_config[3:]):
-    is_active = current_page == key
-    btn_type = "primary" if is_active else "secondary"
-    if row2_cols[idx].button(
-        label, key=f"top_nav_{key}", use_container_width=True, type=btn_type
-    ):
-        st.session_state["active_page"] = key
-        st.rerun()
+
+for idx, (label, key, logo_url) in enumerate(pages_config[3:]):
+    nav_button(label, key, logo_url, row2_cols[idx])
 
 st.divider()
-
 
 # Sub-tab Navigation Helper Function using Native Buttons
 def render_subtab_cards(team_key, has_match_center=True):
