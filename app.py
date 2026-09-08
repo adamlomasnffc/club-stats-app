@@ -878,15 +878,108 @@ elif current_page == "Socials":
             pitch_component = f"""<!DOCTYPE html><html><head><style>
             body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
             .pitch-frame {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; box-sizing: border-box; width: 100%; overflow: hidden; }}
-            .pitch {{ padding: 8px 2px 10px 2px; position: relative; box-sizing: border-box; min-height: 400px; display: flex; flex-direction: column; justify-content: space-between; }}
-            .halfway-line {{ position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed rgba(255, 184, 28, 0.3); }}
+            
+            /* Dark green pitch styling with field markings */
+            .pitch {{ 
+                background-color: #1b3b22; 
+                padding: 8px 6px 10px 6px; 
+                position: relative; 
+                box-sizing: border-box; 
+                min-height: 400px; 
+                display: flex; 
+                flex-direction: column; 
+                justify-content: space-between; 
+                overflow: hidden;
+            }}
+            
+            /* Pitch Markings */
+            .halfway-line {{ 
+                position: absolute; 
+                top: 50%; 
+                left: 0; 
+                right: 0; 
+                border-top: 2px solid rgba(255, 255, 255, 0.25); 
+                pointer-events: none;
+            }}
+            .center-circle {{ 
+                position: absolute; 
+                top: 50%; 
+                left: 50%; 
+                transform: translate(-50%, -50%); 
+                width: 70px; 
+                height: 70px; 
+                border: 2px solid rgba(255, 255, 255, 0.25); 
+                border-radius: 50%; 
+                pointer-events: none;
+            }}
+            .center-spot {{
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 4px;
+                height: 4px;
+                background-color: rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                pointer-events: none;
+            }}
+            .penalty-box-top {{
+                position: absolute;
+                top: 0;
+                left: 20%;
+                right: 20%;
+                height: 55px;
+                border: 2px solid rgba(255, 255, 255, 0.25);
+                border-top: none;
+                pointer-events: none;
+            }}
+            .penalty-box-bottom {{
+                position: absolute;
+                bottom: 0;
+                left: 20%;
+                right: 20%;
+                height: 55px;
+                border: 2px solid rgba(255, 255, 255, 0.25);
+                border-bottom: none;
+                pointer-events: none;
+            }}
+            .goal-top {{
+                position: absolute;
+                top: -8px;
+                left: 40%;
+                right: 40%;
+                height: 8px;
+                border: 2px solid rgba(255, 255, 255, 0.4);
+                border-bottom: none;
+                pointer-events: none;
+            }}
+            .goal-bottom {{
+                position: absolute;
+                bottom: -8px;
+                left: 40%;
+                right: 40%;
+                height: 8px;
+                border: 2px solid rgba(255, 255, 255, 0.4);
+                border-top: none;
+                pointer-events: none;
+            }}
+
             .pitch-row {{ display: flex; justify-content: space-around; align-items: center; width: 100%; z-index: 2; margin: 2px 0; }}
             .subs-section {{ background: #111; padding: 6px; border-top: 1px solid #333; width: 100%; box-sizing: border-box; }}
             </style></head>
             <body>
             <div class="pitch-frame">
                 <div class="pitch">
+                    <!-- Pitch Markings Layer -->
+                    <div class="goal-top"></div>
+                    <div class="goal-bottom"></div>
+                    <div class="penalty-box-top"></div>
+                    <div class="penalty-box-bottom"></div>
                     <div class="halfway-line"></div>
+                    <div class="center-circle"></div>
+                    <div class="center-spot"></div>
+
+                    <!-- Player Rows Layer -->
                     <div class="pitch-row">{att_html}</div>
                     <div class="pitch-row">{cam_html}</div>
                     <div class="pitch-row">{mid_html}</div>
