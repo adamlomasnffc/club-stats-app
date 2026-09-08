@@ -388,17 +388,37 @@ Want quick, full-screen access to your squad's stats, fixtures, and line-ups wit
 
     st.divider()
 
-    # --- LIVE VISITOR COUNTER WIDGET (BOTTOM) ---
-    st.markdown("### 📊 Total App Visits")
+    t.divider()
+
+    # --- MULTI-WINDOW VISITOR COUNTER ---
+    st.markdown("### 📊 App Traffic")
     
-    badge_url = "https://visitor-badge.laobi.icu/badge?page_id=derby-penguins-fc.app.main"
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown(
-            f"<div style='text-align: center;'><img src='{badge_url}' alt='Visitor Count' style='height: 28px;'/></div>", 
-            unsafe_allow_html=True
-        )
+    # We use st.session_state to ensure a user clicking around tabs doesn't inflate counts
+    if "counted_visitor_api" not in st.session_state:
+        try:
+            import requests
+            # This hits a free public counter namespace for Derby Penguins
+            # It increments the hit count automatically on first load per session
+            requests.get("https://api.counterapi.dev/v1/derby-penguins/app-visits/up", timeout=2)
+            st.session_state["counted_visitor_api"] = True
+        except Exception:
+            pass
+
+    # Fetch current stats from the counter API
+    try:
+        import requests
+        response = requests.get("https://api.counterapi.dev/v1/derby-penguins/app-visits", timeout=2)
+        data = response.json()
+        all_time_visits = data.get("count", "-")
+    except Exception:
+        all_time_visits = "-"
+
+    # Render using your clean 4-column metric card layout
+    v_col1, v_col2, v_col3, v_col4 = st.columns(4)
+    v_col1.metric("Today", "-")      # API standard tier tracks global count
+    v_col2.metric("This Week", "-")  # (Free public counters track total hits)
+    v_col3.metric("This Month", "-")
+    v_col4.metric("All-Time", all_time_visits)
 
 
 # ==========================================
