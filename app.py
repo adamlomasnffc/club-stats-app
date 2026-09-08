@@ -2204,11 +2204,220 @@ elif current_page == "Community":
 # --- 5. DERBY PENGUINS CLUB ---
 # ==========================================
 elif current_page == "Club":
-    render_page_header("Derby Penguins FC", HEADER_LOGO_URL, invert=True)
+    render_page_header("Derby Penguins Club", HEADER_LOGO_URL, invert=True)
     subtab = render_subtab_cards("Club", has_match_center=False)
 
     if subtab == "Combined Stats":
-        st.info("Combined overall club statistics coming soon.")
+        try:
+            # Define the prefixes for the three sections
+            sections = ["Penguins", "Socials", "Community"]
+            
+            master_apps = {}
+            master_goals = {}
+            master_assists = {}
+
+            for prefix in sections:
+                games_df = load_sheet(f"{prefix}_Games")
+                goals_df = load_sheet(f"{prefix}_Goals")
+
+                # 1. Calculate Appearances from Games sheet
+                if games_df is not None and not games_df.empty:
+                    player_cols = games_df.columns[10:37]  # Columns K through AD
+                    for _, row in games_df.iterrows():
+                        game_players = set()
+                        for col in player_cols:
+                            val = str(row[col]).strip() if pd.notnull(row[col]) else ""
+                            if val and val.lower() not in [
+                                "nan", "none", "", "-", "unknown",
+                            ]:
+                                game_players.add(val)
+                        for p in game_players:
+                            master_apps[p] = master_apps.get(p, 0) + 1
+
+                # 2. Calculate Goals and Assists from Goals sheet
+                if goals_df is not None and not goals_df.empty:
+                    scorer_col = (
+                        "Goalscorer"
+                        if "Goalscorer" in goals_df.columns
+                        else ("Scorer" if "Scorer" in goals_df.columns else None)
+                    )
+                    assist_col = "Assist" if "Assist" in goals_df.columns else None
+
+                    if scorer_col:
+                        for val in goals_df[scorer_col]:
+                            p = str(val).strip() if pd.notnull(val) else ""
+                            if p and p.lower() not in [
+                                "nan", "none", "", "-", "unknown", "own goal", "og",
+                            ]:
+                                master_goals[p] = master_goals.get(p, 0) + 1
+
+                    if assist_col:
+                        for val in goals_df[assist_col]:
+                            p = str(val).strip() if pd.notnull(val) else ""
+                            if p and p.lower() not in [
+                                "nan", "none", "", "-", "unassisted", "unknown",
+                            ]:
+                                master_assists[p] = master_assists.get(p, 0) + 1
+
+            # Combine into master stats list
+            all_players = (
+                set(master_apps.keys())
+                .union(master_goals.keys())
+                .union(master_assists.keys())
+            )
+
+            stats_list = []
+            for p in all_players:
+                apps = master_apps.get(p, 0)
+                g = master_goals.get(p, 0)
+                a = master_assists.get(p, 0)
+                gi = g + a
+                gpg = round(g / apps, 2) if apps > 0 else 0.0
+                apg = round(a / apps, 2) if apps > 0 else 0.0
+                gipg = round(gi / apps, 2) if apps > 0 else 0.0
+
+                stats_list.append(
+                    {
+                        "Player": p,
+                        "Appearances": apps,
+                        "Goals": g,
+                        "Assists": a,
+                        "Goal Involvements": gi,
+                        "Goals Per Game": gpg,
+                        "Assists Per Game": apg,
+                        "Goal Involvements Per Game": gipg,
+                    }
+                )
+
+            df = pd.DataFrame(stats_list)
+            if df.empty:
+                df = pd.DataFrame(
+                    columns=[
+                        "Player",
+                        "Appearances",
+                        "Goals",
+                        "Assists",
+                        "Goal Involvements",
+                        "Goals Per Game",
+                        "Assists Per Game",
+                        "Goal Involvements Per Game",
+                    ]
+                )
+
+            # Top KPI calculations
+            top_apps = (
+                df.sort_values(by="Appearances", ascending=False).iloc[0]
+                if not df.empty
+                else None
+            )
+            top_scorer = (
+                df.sort_values(by="Goals", ascending=False).iloc[0]
+                if not df.empty
+                else None
+            )
+            top_assister = (
+                df.sort_values(by="Assists", ascending=False).iloc[0]
+                if not df.empty
+                else None
+            )
+            top_involvements = (
+                df.sort_values(by="Goal Involvements", ascending=False).iloc[0]
+                if not df.empty
+                else None
+            )
+
+            # Render KPI Cards
+            row1_col1, row1_col2 = st.columns(2)
+            row1_col1.metric(
+                "🏃 Apps Leader",
+                f"{top_apps['Player']}" if top_apps is not None else "-",
+                f"{top_apps['Appearances']} Apps" if top_apps is not None else "0 Apps",
+            )
+            row1_col2.metric(
+                "⚽ Top Scorer",
+                f"{top_scorer['Player']}" if top_scorer is not None else "-",
+                f"{top_scorer['Goals']} Goals" if top_scorer is not None else "0 Goals",
+            )
+
+            row2_col1, row2_col2 = st.columns(2)
+            row2_col1.metric(
+                "🅰️ Top Assister",
+                f"{top_assister['Player']}" if top_assister is not None else "-",
+                f"{top_assister['Assists']} Assists"
+                if top_assister is not None
+                else "0 Assists",
+            )
+            row2_col2.metric(
+                "🔥 Top Contributor",
+                f"{top_involvements['Player']}" if top_involvements is not None else "-",
+                f"{top_involvements['Goal Involvements']} G+A"
+                if top_involvements is not None
+                else "0 G+A",
+            )
+
+            st.divider()
+
+            st.markdown("### Combined Club Player Stats")
+
+            # Search and Sort Controls
+            search_query = st.text_input("🔍 Search Player", "")
+            sort_by = st.selectbox(
+                "Sort By Column", options=df.columns, index=1
+            )
+            sort_order = st.radio(
+                "Order", ["Descending", "Ascending"], horizontal=True
+            )
+
+            filtered_df = df.copy()
+            if search_query:
+                filtered_df = filtered_df[
+                    filtered_df["Player"].str.contains(
+                        search_query, case=False, na=False
+                    )
+                ]
+
+            ascending = True if sort_order == "Ascending" else False
+            filtered_df = filtered_df.sort_values(
+                by=sort_by, ascending=ascending
+            ).reset_index(drop=True)
+
+            # Render Custom Table
+            table_html = "<div class='mobile-table-container'><table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 650px;'><tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
+            for col in filtered_df.columns:
+                th_style = "padding: 8px; border-bottom: 2px solid #333; text-align: center; font-size: 12px;"
+                if col == "Player":
+                    th_style += " white-space: nowrap; text-align: center;"
+                table_html += f"<th style='{th_style}'>{col}</th>"
+            table_html += "</tr>"
+
+            for idx, row in filtered_df.iterrows():
+                bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
+                table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
+                for col in filtered_df.columns:
+                    val = row[col]
+                    if pd.isnull(val):
+                        formatted_val = "-"
+                    elif isinstance(val, (int, float)):
+                        if val % 1 == 0:
+                            formatted_val = f"{int(val)}"
+                        else:
+                            formatted_val = f"{val:.2f}"
+                    else:
+                        formatted_val = str(val)
+                    
+                    td_style = "padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;"
+                    if col == "Player":
+                        td_style += " white-space: nowrap; text-align: center; font-weight: 500;"
+                        
+                    table_html += f"<td style='{td_style}'>{formatted_val}</td>"
+                table_html += "</tr>"
+            table_html += "</table></div>"
+
+            render_html(table_html)
+
+        except Exception as e:
+            st.error(f"Error loading combined club stats: {e}")
+
     elif subtab == "Club Schedule":
         st.info("Full club schedule and event calendar coming soon.")
 
