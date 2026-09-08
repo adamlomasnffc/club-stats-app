@@ -304,9 +304,9 @@ st.divider()
 # Sub-tab Navigation Helper Function using Native Buttons
 def render_subtab_cards(team_key, has_match_center=True):
     tabs = (
-        ["Player Stats", "Results", "Match Center", "News"]
+        ["Player Stats", "Results", "Match Center"]
         if has_match_center
-        else ["Combined Stats", "Club Schedule", "Club News"]
+        else ["Combined Stats", "Club Schedule"]
     )
     current_subtab = st.session_state.get(f"{team_key}_subtab", tabs[0])
 
@@ -321,7 +321,7 @@ def render_subtab_cards(team_key, has_match_center=True):
                 else (
                     f"📅 Schedule"
                     if "Schedule" in tab_name
-                    else f"⚽ Match Centre" if "Match" in tab_name else f"📰 News"
+                    else f"⚽ Match Centre"
                 )
             )
         )
@@ -372,9 +372,6 @@ elif current_page == "Penguins":
         st.info("First team results and fixtures coming soon.")
     elif subtab == "Match Center":
         st.info("First team lineup pitch and goal logs coming soon.")
-    elif subtab == "News":
-        st.info("First team announcements.")
-
 
 # ==========================================
 # --- 3. DERBY PENGUINS SOCIALS ---
@@ -890,9 +887,6 @@ elif current_page == "Socials":
         except Exception as e:
             st.error(f"Error loading Match Center data: {e}")
 
-    elif subtab == "News":
-        st.info("Socials team announcements coming soon.")
-
 
 # ==========================================
 # --- 4. DERBY PENGUINS COMMUNITY ---
@@ -1407,9 +1401,6 @@ elif current_page == "Community":
 
         except Exception as e:
             st.error(f"Error loading Match Center data: {e}")
-
-    elif subtab == "News":
-        st.info("Community team announcements coming soon.")
 
 
 # ==========================================
