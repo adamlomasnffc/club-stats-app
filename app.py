@@ -774,11 +774,11 @@ elif current_page == "Socials":
             except Exception:
                 pass
 
-            def_order = ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RWB", "RB"]
-            cdm_order = ["CDM", "CDM1", "CDM2"]
+            def_order = ["LB", "CB", "CB1", "CB2", "CB3", "RB"]
+            cdm_order = ["LWB", "CDM", "CDM1", "CDM2", "RWB"]
             mid_order = ["LM", "CM", "CM1", "CM2", "CM3", "RM"]
-            cam_order = ["CAM", "CAM1", "CAM2"]
-            att_order = ["LW", "ST", "ST1", "ST2", "ST3", "RW"]
+            cam_order = ["LW", "CAM", "CAM1", "CAM2", "RW"]
+            att_order = ["ST1", "ST2",]
 
             lineup = {}
             for col_name in game_data.index:
@@ -1383,11 +1383,11 @@ elif current_page == "Community":
             except Exception:
                 pass
 
-            def_order = ["LB", "LWB", "CB", "CB1", "CB2", "CB3", "RWB", "RB"]
-            cdm_order = ["CDM", "CDM1", "CDM2"]
+            def_order = ["LB", "CB", "CB1", "CB2", "CB3", "RB"]
+            cdm_order = ["LWB", "CDM", "CDM1", "CDM2", "RWB"]
             mid_order = ["LM", "CM", "CM1", "CM2", "CM3", "RM"]
-            cam_order = ["CAM", "CAM1", "CAM2"]
-            att_order = ["LW", "ST", "ST1", "ST2", "ST3", "RW"]
+            cam_order = ["LW", "CAM", "CAM1", "CAM2", "RW"]
+            att_order = ["ST1", "ST2",]
 
             lineup = {}
             for col_name in game_data.index:
