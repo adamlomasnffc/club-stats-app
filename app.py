@@ -409,8 +409,8 @@ elif current_page == "Socials":
 
           # Calculate Appearances from Socials_Games
             if not games_df.empty:
-                # Tell it explicitly to only look at Columns K through AD (Indices 10 to 29)
-                player_cols = games_df.columns[10:30] 
+                # Tell it explicitly to only look at Columns K through AD (Indices 10 to 36)
+                player_cols = games_df.columns[10:37] 
                 
                 for _, row in games_df.iterrows():
                     game_players = set()
@@ -927,8 +927,8 @@ elif current_page == "Community":
 
             # Calculate Appearances from Community_Games
             if not games_df.empty:
-               # Tell it explicitly to only look at Columns K through AD (Indices 10 to 29)
-                player_cols = games_df.columns[10:30] 
+               # Tell it explicitly to only look at Columns K through AD (Indices 10 to 36)
+                player_cols = games_df.columns[10:37] 
                 
                 for _, row in games_df.iterrows():
                     game_players = set()
