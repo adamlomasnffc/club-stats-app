@@ -1310,19 +1310,22 @@ elif current_page == "Community":
                 c_pos = clean_pos_label(pos_key)
                 g_count = goal_counts.get(name, 0)
                 a_count = assist_counts.get(name, 0)
+                
                 icons = []
                 if g_count > 0:
                     icons.append("⚽" * g_count)
                 if a_count > 0:
                     icons.append("🅰️" * a_count)
-                badge_html = (
-                    f'<div style="font-size: 7px; margin-top: 1px; line-height: 1;">{" ".join(icons)}</div>'
-                    if icons
-                    else ""
-                )
-
-                return f"""<div style="background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 2px 2px; margin: 1px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden;"><div style="font-size: 7px; color: #FFB81C; font-weight: bold; line-height: 1;">{c_pos}</div><div style="font-size: 8.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1;">{name}</div>{badge_html}</div>"""
-
+                
+                # If there are icons, use them; otherwise, use a non-breaking space to reserve the exact same height line
+                badge_content = " ".join(icons) if icons else "&nbsp;"
+                
+                return f"""<div style="background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 3px 2px; margin: 1px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="font-size: 7px; color: #FFB81C; font-weight: bold; line-height: 1;">{c_pos}</div>
+                    <div style="font-size: 8.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1; margin: 2px 0;">{name}</div>
+                    <div style="font-size: 7px; line-height: 1; min-height: 7px;">{badge_content}</div>
+                </div>"""
+                
             gk_html = "".join(
                 [make_player_card(k, lineup[k]) for k in lineup if k == "GK"]
             )
