@@ -240,7 +240,33 @@ def clean_pos_label(pos):
         return ""
     return re.sub(r"\d+$", "", str(pos))
 
-
+# --- VISITOR TRAFFIC HELPER ---
+def log_and_get_visitor_stats():
+    try:
+        # Load the visitor log sheet (read-only check)
+        df_logs = load_sheet("Visitor_Log")
+        
+        if df_logs.empty or "Timestamp" not in df_logs.columns:
+            return 0, 0, 0, 0
+            
+        df_logs["Timestamp"] = pd.to_datetime(df_logs["Timestamp"], errors="coerce")
+        df_logs = df_logs.dropna(subset=["Timestamp"])
+        
+        now = datetime.datetime.now()
+        today = now.date()
+        start_of_week = today - datetime.timedelta(days=today.weekday())
+        start_of_month = today.replace(day=1)
+        
+        total_all_time = len(df_logs)
+        total_today = len(df_logs[df_logs["Timestamp"].dt.date == today])
+        total_week = len(df_logs[df_logs["Timestamp"].dt.date >= start_of_week])
+        total_month = len(df_logs[df_logs["Timestamp"].dt.date >= start_of_month])
+        
+        return total_all_time, total_month, total_week, total_today
+    except Exception:
+        # Graceful fallback if the tab isn't populated or named differently yet
+        return "-", "-", "-", "-"
+        
 def render_page_header(title, img_url=None, invert=False):
     if img_url:
         invert_style = "filter: invert(1);" if invert else ""
