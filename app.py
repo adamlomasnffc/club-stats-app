@@ -1414,8 +1414,6 @@ elif current_page == "Club":
         st.info("Combined overall club statistics coming soon.")
     elif subtab == "Club Schedule":
         st.info("Full club schedule and event calendar coming soon.")
-    elif subtab == "Club News":
-        st.info("Latest announcements across all club teams.")
 
 
 # ==========================================
