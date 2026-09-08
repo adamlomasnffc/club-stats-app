@@ -582,7 +582,7 @@ elif current_page == "Socials":
             for col in filtered_df.columns:
                 th_style = "padding: 8px; border-bottom: 2px solid #333; text-align: center; font-size: 12px;"
                 if col == "Player":
-                    th_style += " white-space: nowrap; text-align: center; padding-left: 12px;"
+                    th_style += " white-space: nowrap; text-align: center;"
                 table_html += f"<th style='{th_style}'>{col}</th>"
             table_html += "</tr>"
 
@@ -603,7 +603,7 @@ elif current_page == "Socials":
                     
                     td_style = "padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;"
                     if col == "Player":
-                        td_style += " white-space: nowrap; text-align: left; padding-left: 12px; font-weight: 500;"
+                        td_style += " white-space: nowrap; text-align: center; font-weight: 500;"
                         
                     table_html += f"<td style='{td_style}'>{formatted_val}</td>"
                 table_html += "</tr>"
