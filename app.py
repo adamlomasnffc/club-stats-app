@@ -927,9 +927,9 @@ elif current_page == "Community":
 
             # Calculate Appearances from Community_Games
             if not games_df.empty:
-                player_cols = [
-                    c for c in games_df.columns if c.strip().lower() not in meta_cols
-                ]
+               # Tell it explicitly to only look at Columns K through AD (Indices 10 to 29)
+                player_cols = games_df.columns[10:30] 
+                
                 for _, row in games_df.iterrows():
                     game_players = set()
                     for col in player_cols:
@@ -944,7 +944,7 @@ elif current_page == "Community":
                             game_players.add(val)
                     for p in game_players:
                         player_apps[p] = player_apps.get(p, 0) + 1
-
+                        
             # Calculate Goals and Assists from Community_Goals
             if not goals_df.empty:
                 scorer_col = (
