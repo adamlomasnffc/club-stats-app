@@ -239,33 +239,6 @@ def clean_pos_label(pos):
     if pd.isnull(pos):
         return ""
     return re.sub(r"\d+$", "", str(pos))
-
-# --- VISITOR TRAFFIC HELPER ---
-def log_and_get_visitor_stats():
-    try:
-        # Load the visitor log sheet (read-only check)
-        df_logs = load_sheet("Visitor_Log")
-        
-        if df_logs.empty or "Timestamp" not in df_logs.columns:
-            return 0, 0, 0, 0
-            
-        df_logs["Timestamp"] = pd.to_datetime(df_logs["Timestamp"], errors="coerce")
-        df_logs = df_logs.dropna(subset=["Timestamp"])
-        
-        now = datetime.datetime.now()
-        today = now.date()
-        start_of_week = today - datetime.timedelta(days=today.weekday())
-        start_of_month = today.replace(day=1)
-        
-        total_all_time = len(df_logs)
-        total_today = len(df_logs[df_logs["Timestamp"].dt.date == today])
-        total_week = len(df_logs[df_logs["Timestamp"].dt.date >= start_of_week])
-        total_month = len(df_logs[df_logs["Timestamp"].dt.date >= start_of_month])
-        
-        return total_all_time, total_month, total_week, total_today
-    except Exception:
-        # Graceful fallback if the tab isn't populated or named differently yet
-        return "-", "-", "-", "-"
         
 def render_page_header(title, img_url=None, invert=False):
     if img_url:
@@ -412,6 +385,20 @@ Want quick, full-screen access to your squad's stats, fixtures, and line-ups wit
 
     fb_iframe = f"""<div style="display: flex; justify-content: center; width: 100%; overflow: hidden;"><div style="width: 100%; max-width: 500px; overflow: hidden; border-radius: 8px; background: #111;"><iframe src="https://www.facebook.com/plugins/page.php?href={fb_page_url}&tabs=timeline&width=340&height=650&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" width="100%" height="650" style="border:none; overflow:hidden; max-width: 100vw;" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe></div></div>"""
     components.html(fb_iframe, height=660, scrolling=False)
+
+    st.divider()
+
+    # --- LIVE VISITOR COUNTER WIDGET (BOTTOM) ---
+    st.markdown("### 📊 Total App Visits")
+    
+    badge_url = "https://visitor-badge.laobi.icu/badge?page_id=derby-penguins-fc.app.main"
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown(
+            f"<div style='text-align: center;'><img src='{badge_url}' alt='Visitor Count' style='height: 28px;'/></div>", 
+            unsafe_allow_html=True
+        )
 
 
 # ==========================================
