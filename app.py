@@ -1399,7 +1399,7 @@ elif current_page == "Community":
                 ):
                     lineup[col_clean] = str(val).strip()
 
-             def make_player_card(pos_key, name):
+            def make_player_card(pos_key, name):
                 c_pos = clean_pos_label(pos_key)
                 g_count = goal_counts.get(name, 0)
                 a_count = assist_counts.get(name, 0)
