@@ -578,9 +578,13 @@ elif current_page == "Socials":
                 by=sort_by, ascending=ascending
             ).reset_index(drop=True)
 
-            table_html = "<div class='mobile-table-container'><table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 650px;'><tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
+          table_html = "<div class='mobile-table-container'><table style='width:100%; border-collapse: collapse; text-align: center; font-family: sans-serif; min-width: 650px;'><tr style='background-color: #FFB81C; color: #111; font-weight: bold;'>"
             for col in filtered_df.columns:
-                table_html += f"<th style='padding: 8px; border-bottom: 2px solid #333; text-align: center; font-size: 12px;'>{col}</th>"
+                # Give Player column extra breathing room and prevent wrapping in headers too
+                th_style = "padding: 8px; border-bottom: 2px solid #333; text-align: center; font-size: 12px;"
+                if col == "Player":
+                    th_style += " white-space: nowrap; text-align: left; padding-left: 12px;"
+                table_html += f"<th style='{th_style}'>{col}</th>"
             table_html += "</tr>"
 
             for idx, row in filtered_df.iterrows():
@@ -597,7 +601,13 @@ elif current_page == "Socials":
                             formatted_val = f"{val:.2f}"
                     else:
                         formatted_val = str(val)
-                    table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
+                    
+                    # Apply no-wrap and left-align specifically to the Player column cells
+                    td_style = "padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;"
+                    if col == "Player":
+                        td_style += " white-space: nowrap; text-align: left; padding-left: 12px; font-weight: 500;"
+                        
+                    table_html += f"<td style='{td_style}'>{formatted_val}</td>"
                 table_html += "</tr>"
             table_html += "</table></div>"
 
