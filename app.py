@@ -2429,6 +2429,8 @@ elif current_page == "About Us":
     render_page_header("About Derby Penguins FC")
     st.markdown("""
     Welcome to the official app for **Derby Penguins FC**! 
+
+    We are a team of lads who enjoy playing football and watching Chris Eley lose lots of weight using dodgy fat jabs he buys off men in pub toilets. 
     
-    Track player statistics, view detailed match center lineups, stay up-to-date with club results, and catch our latest videos and Facebook updates all in one place.
+    You can track player stats, view detailed match center lineups, stay up to date with club results, and catch our latest videos and Facebook updates all in one place.
     """)
