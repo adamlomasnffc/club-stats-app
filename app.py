@@ -345,6 +345,35 @@ def render_subtab_cards(team_key, has_match_center=True):
 # ==========================================
 if current_page == "Homepage":
 
+    # --- ADD TO HOME SCREEN GUIDE ---
+    with st.expander("📲 How to Install App on Your Phone (Tap Here)", expanded=False):
+        st.markdown("""
+### 📱 How to Install the Derby Penguins App on Your Phone
+
+Want quick, full-screen access to your squad's stats, fixtures, and line-ups without having to open a web browser every time? Turn this app into a real app icon right on your home screen in seconds.
+
+---
+
+#### 🍏 For iPhone / iPad (Safari Browser)
+*Because Apple forces everything through Safari, you **must** use Safari for this step.*
+1. **Open Safari** and go to your app’s web link.
+2. Tap the **Share button** at the bottom (square box with an arrow pointing up).
+3. Scroll down and tap **"Add to Home Screen"**.
+4. Tap **"Add"** in the top right corner.
+5. **Boom!** It's right on your home screen ready to launch full-screen.
+
+---
+
+#### 🤖 For Android (Chrome Browser)
+1. **Open Google Chrome** and go to your app’s web link.
+2. Tap the **three vertical dots** in the top-right corner.
+3. Tap **"Add to Home screen"** or **"Install app"**.
+4. Tap **"Install"** or **"Add"**.
+5. **Job done!** Check your home screen or app drawer.
+        """)
+
+    st.divider()
+
     st.markdown("### 🎥 Feature Video")
     st.video(VIDEO_URL)
 
