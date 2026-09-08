@@ -984,7 +984,7 @@ elif current_page == "Socials":
             </div>
             </body></html>"""
 
-            components.html(pitch_component, height=580, scrolling=False)
+            components.html(pitch_component, height=700, scrolling=False)
 
         except Exception as e:
             st.error(f"Error loading Match Center data: {e}")
