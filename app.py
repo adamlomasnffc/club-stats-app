@@ -847,7 +847,7 @@ elif current_page == "Socials":
                 ]
             )
 
-            subs_raw = [game_data.get(f"SUB{i}") for i in range(1, 13)] # Expanded up to 12 if needed
+            subs_raw = [game_data.get(f"SUB{i}") for i in range(1, 13)] # Up to 12 subs max (3 rows of 4)
             active_subs = [
                 str(s).strip()
                 for s in subs_raw
@@ -856,18 +856,21 @@ elif current_page == "Socials":
             ]
 
             if active_subs:
-                # Chunk active subs into rows of 4
-                rows_of_subs = [active_subs[i:i + 4] for i in range(0, len(active_subs), 4)]
+                # Always pad active subs up to a multiple of 4 (max 12 total to fill 3 rows)
+                total_slots = 12 if len(active_subs) > 8 else (8 if len(active_subs) > 4 else 4)
+                padded_subs = active_subs + [""] * (total_slots - len(active_subs))
+                
+                # Chunk into rows of 4
+                rows_of_subs = [padded_subs[i:i + 4] for i in range(0, len(padded_subs), 4)]
                 subs_html = ""
                 
                 for row_subs in rows_of_subs:
-                    row_cards = "".join([make_player_card("SUB", sub_name) for sub_name in row_subs])
-                    
-                    # If a row has fewer than 4 subs, pad it with invisible spacer cards so widths stay uniform
-                    if len(row_subs) < 4:
-                        for _ in range(4 - len(row_subs)):
-                            row_cards += '<div style="flex: 1 1 0px; margin: 1px; visibility: hidden;"></div>'
-                            
+                    row_cards = ""
+                    for sub_name in row_subs:
+                        # If it's an empty slot, pass an empty string for the name
+                        display_name = sub_name if sub_name else ""
+                        row_cards += make_player_card("SUB", display_name)
+                        
                     subs_html += f'<div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px;">{row_cards}</div>'
             else:
                 subs_html = "<div style='font-size: 8px; color: #666; text-align: center;'>No substitutes listed</div>"
