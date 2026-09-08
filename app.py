@@ -388,7 +388,7 @@ Want quick, full-screen access to your squad's stats, fixtures, and line-ups wit
 
     st.divider()
 
-    t.divider()
+    st.divider()
 
     # --- MULTI-WINDOW VISITOR COUNTER ---
     st.markdown("### 📊 App Traffic")
