@@ -1375,23 +1375,33 @@ elif current_page == "Community":
                 ]
             )
 
-            subs_raw = [game_data.get(f"SUB{i}") for i in range(1, 10)]
+            subs_raw = [game_data.get(f"SUB{i}") for i in range(1, 13)] # Up to 12 subs max (3 rows of 4)
             active_subs = [
                 str(s).strip()
                 for s in subs_raw
                 if pd.notnull(s)
                 and str(s).strip().lower() not in ["", "-", "nan", "none"]
             ]
-            subs_html = (
-                "".join(
-                    [
-                        make_player_card("SUB", sub_name)
-                        for sub_name in active_subs
-                    ]
-                )
-                if active_subs
-                else "<div style='font-size: 8px; color: #666;'>No substitutes listed</div>"
-            )
+
+            if active_subs:
+                # Always pad active subs up to a multiple of 4 (max 12 total to fill 3 rows)
+                total_slots = 12 if len(active_subs) > 8 else (8 if len(active_subs) > 4 else 4)
+                padded_subs = active_subs + [""] * (total_slots - len(active_subs))
+                
+                # Chunk into rows of 4
+                rows_of_subs = [padded_subs[i:i + 4] for i in range(0, len(padded_subs), 4)]
+                subs_html = ""
+                
+                for row_subs in rows_of_subs:
+                    row_cards = ""
+                    for sub_name in row_subs:
+                        # If it's an empty slot, pass an empty string for the name
+                        display_name = sub_name if sub_name else ""
+                        row_cards += make_player_card("SUB", display_name)
+                        
+                    subs_html += f'<div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px;">{row_cards}</div>'
+            else:
+                subs_html = "<div style='font-size: 8px; color: #666; text-align: center;'>No substitutes listed</div>"
 
             pitch_component = f"""<!DOCTYPE html><html><head><style>
             body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
