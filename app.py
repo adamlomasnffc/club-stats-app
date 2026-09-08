@@ -896,7 +896,7 @@ elif current_page == "Socials":
                 padding: 10px 6px 12px 6px; 
                 position: relative; 
                 box-sizing: border-box; 
-                min-height: 380px; 
+                min-height: 500px; 
                 display: flex; 
                 flex-direction: column; 
                 justify-content: space-between; 
