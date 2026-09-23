@@ -684,12 +684,9 @@ elif current_page == "Penguins":
             for idx, row in fixtures_df.reset_index(drop=True).iterrows():
                 bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
                 game_id_val = row["GameID"] if "GameID" in fixtures_df.columns else ""
-                onclick_attr = (
-                    f"onclick=\"window.location.href='?page=Penguins&game={game_id_val}'\" style=\"cursor:pointer;\""
-                    if game_id_val != ""
-                    else ""
-                )
-                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;' {onclick_attr}>"
+                link_href = f"?page=Penguins&game={game_id_val}" if str(game_id_val).strip() != "" else ""
+
+                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
                 for col in fixtures_df.columns:
                     val = row[col]
                     formatted_val = (
@@ -698,9 +695,12 @@ elif current_page == "Penguins":
                         or str(val).strip().lower() in ["nan", "none", ""]
                         else str(val).strip()
                     )
-                    f_table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
+                    if link_href:
+                        cell_content = f"<a href='{link_href}' target='_self' style='color: inherit; text-decoration: none; display: block; padding: 6px; cursor: pointer;'>{formatted_val}</a>"
+                        f_table_html += f"<td style='padding: 0; border-bottom: 1px solid #2A2D35; text-align: center;'>{cell_content}</td>"
+                    else:
+                        f_table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
                 f_table_html += "</tr>"
-            f_table_html += "</table></div>"
 
             render_html(f_table_html)
 
@@ -1321,12 +1321,9 @@ elif current_page == "Socials":
             for idx, row in fixtures_df.reset_index(drop=True).iterrows():
                 bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
                 game_id_val = row["GameID"] if "GameID" in fixtures_df.columns else ""
-                onclick_attr = (
-                    f"onclick=\"window.location.href='?page=Socials&game={game_id_val}'\" style=\"cursor:pointer;\""
-                    if game_id_val != ""
-                    else ""
-                )
-                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;' {onclick_attr}>"
+                link_href = f"?page=PSocials&game={game_id_val}" if str(game_id_val).strip() != "" else ""
+
+                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
                 for col in fixtures_df.columns:
                     val = row[col]
                     formatted_val = (
@@ -1335,9 +1332,12 @@ elif current_page == "Socials":
                         or str(val).strip().lower() in ["nan", "none", ""]
                         else str(val).strip()
                     )
-                    f_table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
+                    if link_href:
+                        cell_content = f"<a href='{link_href}' target='_self' style='color: inherit; text-decoration: none; display: block; padding: 6px; cursor: pointer;'>{formatted_val}</a>"
+                        f_table_html += f"<td style='padding: 0; border-bottom: 1px solid #2A2D35; text-align: center;'>{cell_content}</td>"
+                    else:
+                        f_table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
                 f_table_html += "</tr>"
-            f_table_html += "</table></div>"
 
             render_html(f_table_html)
 
@@ -1952,12 +1952,9 @@ elif current_page == "Community":
             for idx, row in fixtures_df.reset_index(drop=True).iterrows():
                 bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
                 game_id_val = row["GameID"] if "GameID" in fixtures_df.columns else ""
-                onclick_attr = (
-                    f"onclick=\"window.location.href='?page=Community&game={game_id_val}'\" style=\"cursor:pointer;\""
-                    if game_id_val != ""
-                    else ""
-                )
-                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;' {onclick_attr}>"
+                link_href = f"?page=Community&game={game_id_val}" if str(game_id_val).strip() != "" else ""
+
+                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
                 for col in fixtures_df.columns:
                     val = row[col]
                     formatted_val = (
@@ -1966,9 +1963,12 @@ elif current_page == "Community":
                         or str(val).strip().lower() in ["nan", "none", ""]
                         else str(val).strip()
                     )
-                    f_table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
+                    if link_href:
+                        cell_content = f"<a href='{link_href}' target='_self' style='color: inherit; text-decoration: none; display: block; padding: 6px; cursor: pointer;'>{formatted_val}</a>"
+                        f_table_html += f"<td style='padding: 0; border-bottom: 1px solid #2A2D35; text-align: center;'>{cell_content}</td>"
+                    else:
+                        f_table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
                 f_table_html += "</tr>"
-            f_table_html += "</table></div>"
 
             render_html(f_table_html)
 
