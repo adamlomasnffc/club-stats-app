@@ -778,7 +778,7 @@ elif current_page == "Penguins":
                     "Match ID" if "Match ID" in goals_df.columns else "GameID"
             )
 
-            def normalize_id(val):
+                def normalize_id(val):
                 try:
                     return str(int(float(val)))
             except (ValueError, TypeError):
