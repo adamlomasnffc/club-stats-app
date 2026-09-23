@@ -254,6 +254,8 @@ def render_page_header(title, img_url=None, invert=False):
             f"<h2 style='text-align: center; margin-bottom: 12px;'>{title}</h2>"
         )
 
+if st.sidebar.checkbox("🔧 Show debug page"):
+    current_page = "Debug"
 
 pages_config = [
     ("🏠 Home", "Homepage", None),
