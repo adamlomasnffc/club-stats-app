@@ -37,6 +37,17 @@ for team_key in ["Penguins", "Socials", "Community", "Club"]:
             "Player Stats" if team_key != "Club" else "Combined Stats"
         )
 
+# 3b. HANDLE DEEP LINKS FROM RESULTS -> MATCH CENTER
+query_params = st.query_params
+if "page" in query_params and "game" in query_params:
+    linked_page = query_params["page"]
+    linked_game = query_params["game"]
+    if linked_page in ["Penguins", "Socials", "Community"]:
+        st.session_state["active_page"] = linked_page
+        st.session_state[f"{linked_page}_subtab"] = "Match Center"
+        st.session_state[f"{linked_page}_selected_game"] = linked_game
+    st.query_params.clear()
+
 current_page = st.session_state["active_page"]
 
 # 4. GLOBAL STYLING (FIXED BUTTON LOGO CSS)
@@ -672,7 +683,13 @@ elif current_page == "Penguins":
 
             for idx, row in fixtures_df.reset_index(drop=True).iterrows():
                 bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
-                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
+                game_id_val = row["GameID"] if "GameID" in fixtures_df.columns else ""
+                onclick_attr = (
+                    f"onclick=\"window.location.href='?page=Penguins&game={game_id_val}'\" style=\"cursor:pointer;\""
+                    if game_id_val != ""
+                    else ""
+                )
+                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;' {onclick_attr}>"
                 for col in fixtures_df.columns:
                     val = row[col]
                     formatted_val = (
@@ -738,6 +755,15 @@ elif current_page == "Penguins":
             }
             options_list = list(game_options.keys())
             default_idx = len(options_list) - 1 if options_list else 0
+
+            pending_game = st.session_state.pop("Penguins_selected_game", None)
+            if pending_game is not None:
+                matching_labels = [
+                    lbl for lbl, gid in game_options.items()
+                    if str(gid).strip() == str(pending_game).strip()
+                ]
+                if matching_labels:
+                    default_idx = options_list.index(matching_labels[0])
 
             selected_label = st.selectbox(
                 "Select Game:", options=options_list, index=default_idx
@@ -1294,7 +1320,13 @@ elif current_page == "Socials":
 
             for idx, row in fixtures_df.reset_index(drop=True).iterrows():
                 bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
-                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
+                game_id_val = row["GameID"] if "GameID" in fixtures_df.columns else ""
+                onclick_attr = (
+                    f"onclick=\"window.location.href='?page=Socials&game={game_id_val}'\" style=\"cursor:pointer;\""
+                    if game_id_val != ""
+                    else ""
+                )
+                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;' {onclick_attr}>"
                 for col in fixtures_df.columns:
                     val = row[col]
                     formatted_val = (
@@ -1360,6 +1392,15 @@ elif current_page == "Socials":
             }
             options_list = list(game_options.keys())
             default_idx = len(options_list) - 1 if options_list else 0
+
+            pending_game = st.session_state.pop("Socials_selected_game", None)
+            if pending_game is not None:
+                matching_labels = [
+                    lbl for lbl, gid in game_options.items()
+                    if str(gid).strip() == str(pending_game).strip()
+                ]
+                if matching_labels:
+                    default_idx = options_list.index(matching_labels[0])
 
             selected_label = st.selectbox(
                 "Select Game:", options=options_list, index=default_idx
@@ -1910,7 +1951,13 @@ elif current_page == "Community":
 
             for idx, row in fixtures_df.reset_index(drop=True).iterrows():
                 bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
-                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
+                game_id_val = row["GameID"] if "GameID" in fixtures_df.columns else ""
+                onclick_attr = (
+                    f"onclick=\"window.location.href='?page=Community&game={game_id_val}'\" style=\"cursor:pointer;\""
+                    if game_id_val != ""
+                    else ""
+                )
+                f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;' {onclick_attr}>"
                 for col in fixtures_df.columns:
                     val = row[col]
                     formatted_val = (
@@ -1976,6 +2023,15 @@ elif current_page == "Community":
             }
             options_list = list(game_options.keys())
             default_idx = len(options_list) - 1 if options_list else 0
+
+            pending_game = st.session_state.pop("Community_selected_game", None)
+            if pending_game is not None:
+                matching_labels = [
+                    lbl for lbl, gid in game_options.items()
+                    if str(gid).strip() == str(pending_game).strip()
+                ]
+                if matching_labels:
+                    default_idx = options_list.index(matching_labels[0])
 
             selected_label = st.selectbox(
                 "Select Game:", options=options_list, index=default_idx
