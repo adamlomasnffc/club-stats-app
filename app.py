@@ -262,6 +262,7 @@ pages_config = [
     ("🐧 Community 🐧", "Community", None),
     ("🐧 Club 🐧", "Club", None),
     ("ℹ️ About", "About Us", None),
+    ("ℹ️ Debug", "Debug", None),
 ]
 
 
@@ -2480,3 +2481,57 @@ elif current_page == "About Us":
     
     You can track player stats, view detailed match center lineups, stay up to date with club results, and catch our latest videos and Facebook updates all in one place.
     """)
+
+
+
+# ==========================================
+# --- 7. TEST ---
+# ==========================================
+elif current_page == "Debug":
+    st.title("🔧 Goals Data Debug")
+
+    team = st.radio("Team", ["Penguins", "Socials"], horizontal=True)
+
+    games_df = load_sheet(f"{team}_Games")
+    goals_df = load_sheet(f"{team}_Goals")
+
+    st.subheader("Raw Goals sheet")
+    st.write("Columns:", goals_df.columns.tolist())
+    st.write("Dtypes:")
+    st.write(goals_df.dtypes)
+    st.dataframe(goals_df)
+
+    st.subheader("Raw Games sheet (GameID column only)")
+    st.write("GameID dtype:", games_df["GameID"].dtype)
+    st.write(games_df["GameID"].tolist())
+
+    st.subheader("Match a specific game")
+    match_col = "Match ID" if "Match ID" in goals_df.columns else "GameID"
+    st.write("match_col resolved to:", match_col)
+
+    selected_game_id = st.selectbox("Pick a GameID", games_df["GameID"].tolist())
+    st.write("selected_game_id:", repr(selected_game_id), type(selected_game_id))
+    st.write("goals_df[match_col] unique:", goals_df[match_col].unique().tolist())
+
+    match_goals = goals_df[goals_df[match_col].astype(str) == str(selected_game_id)]
+    st.write("Rows matched:", len(match_goals))
+    st.dataframe(match_goals)
+
+    if not match_goals.empty:
+        scorer_col = "Goalscorer" if "Goalscorer" in goals_df.columns else "Scorer"
+        assist_col = "Assist"
+        st.write("Scorer values:", match_goals[scorer_col].tolist())
+        st.write("Assist values:", match_goals[assist_col].tolist())
+
+        st.subheader("Compare against lineup names")
+        game_row = games_df[games_df["GameID"] == selected_game_id].iloc[0]
+        lineup_names = [
+            str(game_row[c]).strip()
+            for c in games_df.columns[10:37]
+            if pd.notnull(game_row[c]) and str(game_row[c]).strip().lower() not in ["", "-", "nan", "none"]
+        ]
+        st.write("Lineup names:", lineup_names)
+
+        for name in match_goals[scorer_col].tolist():
+            clean = str(name).strip()
+            st.write(f"Scorer {repr(clean)} in lineup? →", clean in lineup_names)
