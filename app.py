@@ -262,7 +262,6 @@ pages_config = [
     ("🐧 Community 🐧", "Community", None),
     ("🐧 Club 🐧", "Club", None),
     ("ℹ️ About", "About Us", None),
-    ("ℹ️ Debug", "Debug", None),
 ]
 
 
