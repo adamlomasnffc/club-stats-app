@@ -1321,7 +1321,7 @@ elif current_page == "Socials":
             for idx, row in fixtures_df.reset_index(drop=True).iterrows():
                 bg_color = "#181a20" if idx % 2 == 0 else "#0e1117"
                 game_id_val = row["GameID"] if "GameID" in fixtures_df.columns else ""
-                link_href = f"?page=PSocials&game={game_id_val}" if str(game_id_val).strip() != "" else ""
+                link_href = f"?page=Socials&game={game_id_val}" if str(game_id_val).strip() != "" else ""
 
                 f_table_html += f"<tr style='background-color: {bg_color}; color: white; font-size: 12px;'>"
                 for col in fixtures_df.columns:
