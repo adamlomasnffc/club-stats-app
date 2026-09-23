@@ -773,13 +773,20 @@ elif current_page == "Penguins":
 
             goal_counts, assist_counts = {}, {}
             try:
-                goals_df = load_sheet("Penguins_Goals")
-                match_col = (
-                    "Match ID" if "Match ID" in goals_df.columns else "GameID"
-                )
-                match_goals = goals_df[
-                    goals_df[match_col].astype(str) == str(selected_game_id)
-                ]
+            goals_df = load_sheet("Penguins_Goals")
+            match_col = (
+            "Match ID" if "Match ID" in goals_df.columns else "GameID"
+            )
+            
+            def normalize_id(val):
+            try:
+            return str(int(float(val)))
+            except (ValueError, TypeError):
+            return str(val).strip()
+            
+            match_goals = goals_df[
+            goals_df[match_col].apply(normalize_id) == normalize_id(selected_game_id)
+            ]
 
                 if not match_goals.empty:
                     for _, row in match_goals.iterrows():
