@@ -3,9 +3,10 @@ import textwrap
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
+from highlights import render_highlights
 
 
-# 1. HELPER FUNCTION TO RRENDER HTML SAFELY
+# 1. HELPER FUNCTION TO RENDER HTML SAFELY
 def render_html(html_str):
     clean_html = textwrap.dedent(str(html_str)).strip()
     if hasattr(st, "html"):
@@ -250,7 +251,8 @@ def clean_pos_label(pos):
     if pd.isnull(pos):
         return ""
     return re.sub(r"\d+$", "", str(pos))
-        
+
+
 def render_page_header(title, img_url=None, invert=False):
     if img_url:
         invert_style = "filter: invert(1);" if invert else ""
@@ -264,6 +266,7 @@ def render_page_header(title, img_url=None, invert=False):
         render_html(
             f"<h2 style='text-align: center; margin-bottom: 12px;'>{title}</h2>"
         )
+
 
 pages_config = [
     ("🏠 Home", "Homepage", None),
@@ -315,25 +318,20 @@ def render_subtab_cards(team_key, has_match_center=True):
     tabs = (
         ["Player Stats", "Results", "Match Center"]
         if has_match_center
-        else ["Combined Stats", "Club Schedule"]
+        else ["Combined Stats", "Club Schedule", "Highlights"]
     )
     current_subtab = st.session_state.get(f"{team_key}_subtab", tabs[0])
 
     sub_cols = st.columns(len(tabs))
     for idx, tab_name in enumerate(tabs):
-        btn_label = (
-            f"📊 Stats"
-            if "Stats" in tab_name
-            else (
-                f"📅 Results"
-                if "Results" in tab_name
-                else (
-                    f"📅 Schedule"
-                    if "Schedule" in tab_name
-                    else f"⚽ Match Centre"
-                )
-            )
-        )
+        btn_label = {
+            "Player Stats": "📊 Stats",
+            "Combined Stats": "📊 Stats",
+            "Results": "📅 Results",
+            "Club Schedule": "📅 Schedule",
+            "Highlights": "🎬 Highlights",
+            "Match Center": "⚽ Match Centre",
+        }.get(tab_name, tab_name)
         is_active = current_subtab == tab_name
         btn_type = "primary" if is_active else "secondary"
 
@@ -398,19 +396,15 @@ Want quick, full-screen access to your squad's stats, fixtures, and line-ups wit
 
     st.divider()
 
-    st.divider()
-
-    st.divider()
-
     # --- LIVE VISITOR COUNTER ---
     st.markdown("### 📊 Total App Visits")
-    
+
     badge_url = "https://visitor-badge.laobi.icu/badge?page_id=derby-penguins-fc.app.main"
-    
+
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown(
-            f"<div style='text-align: center;'><img src='{badge_url}' alt='Visitor Count' style='height: 28px;'/></div>", 
+            f"<div style='text-align: center;'><img src='{badge_url}' alt='Visitor Count' style='height: 28px;'/></div>",
             unsafe_allow_html=True
         )
 
@@ -446,11 +440,11 @@ elif current_page == "Penguins":
             player_goals = {}
             player_assists = {}
 
-          # Calculate Appearances from Penguinss_Games
+            # Calculate Appearances from Penguins_Games
             if not games_df.empty:
                 # Tell it explicitly to only look at Columns K through AD (Indices 10 to 36)
-                player_cols = games_df.columns[10:37] 
-                
+                player_cols = games_df.columns[10:37]
+
                 for _, row in games_df.iterrows():
                     game_players = set()
                     for col in player_cols:
@@ -642,11 +636,11 @@ elif current_page == "Penguins":
                             formatted_val = f"{val:.2f}"
                     else:
                         formatted_val = str(val)
-                    
+
                     td_style = "padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;"
                     if col == "Player":
                         td_style += " white-space: nowrap; text-align: center; font-weight: 500;"
-                        
+
                     table_html += f"<td style='{td_style}'>{formatted_val}</td>"
                 table_html += "</tr>"
             table_html += "</table></div>"
@@ -701,6 +695,7 @@ elif current_page == "Penguins":
                     else:
                         f_table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
                 f_table_html += "</tr>"
+            f_table_html += "</table></div>"
 
             render_html(f_table_html)
 
@@ -858,15 +853,15 @@ elif current_page == "Penguins":
                 c_pos = clean_pos_label(pos_key)
                 g_count = goal_counts.get(name, 0)
                 a_count = assist_counts.get(name, 0)
-                
+
                 icons = []
                 if g_count > 0:
                     icons.append("⚽" * g_count)
                 if a_count > 0:
                     icons.append("🅰️" * a_count)
-                
+
                 badge_content = " ".join(icons) if icons else "&nbsp;"
-                
+
                 # Use fixed width for pitch players, flexible width for subs
                 if pos_key == "SUB":
                     card_style = "background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 3px 2px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;"
@@ -878,7 +873,7 @@ elif current_page == "Penguins":
                     <div style="font-size: 8.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1; margin: 2px 0;">{name}</div>
                     <div style="font-size: 7px; line-height: 1; min-height: 7px;">{badge_content}</div>
                 </div>"""
-                
+
             gk_html = "".join(
                 [make_player_card(k, lineup[k]) for k in lineup if k == "GK"]
             )
@@ -930,51 +925,51 @@ elif current_page == "Penguins":
                 # Always pad active subs up to a multiple of 4 (max 12 total to fill 3 rows)
                 total_slots = 12 if len(active_subs) > 8 else (8 if len(active_subs) > 4 else 4)
                 padded_subs = active_subs + [""] * (total_slots - len(active_subs))
-                
+
                 # Chunk into rows of 4
                 rows_of_subs = [padded_subs[i:i + 4] for i in range(0, len(padded_subs), 4)]
                 subs_html = ""
-                
+
                 for row_subs in rows_of_subs:
                     row_cards = ""
                     for sub_name in row_subs:
                         # If it's an empty slot, pass an empty string for the name
                         display_name = sub_name if sub_name else ""
                         row_cards += make_player_card("SUB", display_name)
-                        
+
                     subs_html += f'<div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px;">{row_cards}</div>'
             else:
                 subs_html = "<div style='font-size: 8px; color: #666; text-align: center;'>No substitutes listed</div>"
 
             pitch_component = f"""<!DOCTYPE html><html><head><style>
             body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
-            
+
             /* Main container holding the pitch and subs separately */
             .match-center-wrapper {{ display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }}
-            
+
             .pitch-frame {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; box-sizing: border-box; width: 100%; overflow: hidden; }}
-            
+
             /* Dark green pitch styling with field markings */
-            .pitch {{ 
-                background-color: #1b3b22; 
-                padding: 10px 6px 12px 6px; 
-                position: relative; 
-                box-sizing: border-box; 
-                min-height: 500px; 
-                display: flex; 
-                flex-direction: column; 
-                justify-content: space-between; 
+            .pitch {{
+                background-color: #1b3b22;
+                padding: 10px 6px 12px 6px;
+                position: relative;
+                box-sizing: border-box;
+                min-height: 500px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
                 overflow: hidden;
             }}
-            
+
             /* Pitch Markings */
-            .halfway-line {{ 
-                position: absolute; top: 50%; left: 0; right: 0; 
-                border-top: 2px solid rgba(255, 255, 255, 0.25); pointer-events: none; 
+            .halfway-line {{
+                position: absolute; top: 50%; left: 0; right: 0;
+                border-top: 2px solid rgba(255, 255, 255, 0.25); pointer-events: none;
             }}
-            .center-circle {{ 
-                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                width: 70px; height: 70px; border: 2px solid rgba(255, 255, 255, 0.25); border-radius: 50%; pointer-events: none; 
+            .center-circle {{
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                width: 70px; height: 70px; border: 2px solid rgba(255, 255, 255, 0.25); border-radius: 50%; pointer-events: none;
             }}
             .center-spot {{
                 position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -999,12 +994,12 @@ elif current_page == "Penguins":
 
             /* Rows use space-around, cards have a fixed max-width to future-proof for ~30 characters without stretching */
             .pitch-row {{ display: flex; justify-content: space-around; align-items: center; width: 100%; z-index: 2; margin: 2px 0; }}
-            
+
             /* Player card styling with a controlled width */
             .pitch .player-card {{
-                background: #111; color: white; border: 1px solid #333; border-radius: 4px; 
-                padding: 3px 4px; margin: 1px; text-align: center; 
-                width: 95px; max-width: 25vw; flex: 0 1 auto; box-sizing: border-box; overflow: hidden; 
+                background: #111; color: white; border: 1px solid #333; border-radius: 4px;
+                padding: 3px 4px; margin: 1px; text-align: center;
+                width: 95px; max-width: 25vw; flex: 0 1 auto; box-sizing: border-box; overflow: hidden;
                 display: flex; flex-direction: column; justify-content: space-between;
             }}
 
@@ -1012,8 +1007,8 @@ elif current_page == "Penguins":
             .subs-container {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; padding: 6px; box-sizing: border-box; width: 100%; }}
             .subs-row {{ display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px; gap: 2px; }}
             .subs-container .player-card {{
-                background: #111; color: white; border: 1px solid #333; border-radius: 4px; 
-                padding: 3px 2px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden; 
+                background: #111; color: white; border: 1px solid #333; border-radius: 4px;
+                padding: 3px 2px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden;
                 display: flex; flex-direction: column; justify-content: space-between;
             }}
             </style></head>
@@ -1039,7 +1034,7 @@ elif current_page == "Penguins":
                         <div class="pitch-row">{gk_html}</div>
                     </div>
                 </div>
-                
+
                 <!-- Substitutes Section Outside the Pitch -->
                 <div class="subs-container">
                     <div style="font-size: 9px; color: #FFB81C; font-weight: bold; margin-bottom: 4px; text-align: center;">SUBSTITUTES</div>
@@ -1052,6 +1047,8 @@ elif current_page == "Penguins":
 
         except Exception as e:
             st.error(f"Error loading Match Center data: {e}")
+
+
 # ==========================================
 # --- 3. DERBY PENGUINS SOCIALS ---
 # ==========================================
@@ -1083,11 +1080,11 @@ elif current_page == "Socials":
             player_goals = {}
             player_assists = {}
 
-          # Calculate Appearances from Socials_Games
+            # Calculate Appearances from Socials_Games
             if not games_df.empty:
                 # Tell it explicitly to only look at Columns K through AD (Indices 10 to 36)
-                player_cols = games_df.columns[10:37] 
-                
+                player_cols = games_df.columns[10:37]
+
                 for _, row in games_df.iterrows():
                     game_players = set()
                     for col in player_cols:
@@ -1279,11 +1276,11 @@ elif current_page == "Socials":
                             formatted_val = f"{val:.2f}"
                     else:
                         formatted_val = str(val)
-                    
+
                     td_style = "padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;"
                     if col == "Player":
                         td_style += " white-space: nowrap; text-align: center; font-weight: 500;"
-                        
+
                     table_html += f"<td style='{td_style}'>{formatted_val}</td>"
                 table_html += "</tr>"
             table_html += "</table></div>"
@@ -1338,6 +1335,7 @@ elif current_page == "Socials":
                     else:
                         f_table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
                 f_table_html += "</tr>"
+            f_table_html += "</table></div>"
 
             render_html(f_table_html)
 
@@ -1495,15 +1493,15 @@ elif current_page == "Socials":
                 c_pos = clean_pos_label(pos_key)
                 g_count = goal_counts.get(name, 0)
                 a_count = assist_counts.get(name, 0)
-                
+
                 icons = []
                 if g_count > 0:
                     icons.append("⚽" * g_count)
                 if a_count > 0:
                     icons.append("🅰️" * a_count)
-                
+
                 badge_content = " ".join(icons) if icons else "&nbsp;"
-                
+
                 # Use fixed width for pitch players, flexible width for subs
                 if pos_key == "SUB":
                     card_style = "background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 3px 2px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;"
@@ -1515,7 +1513,7 @@ elif current_page == "Socials":
                     <div style="font-size: 8.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1; margin: 2px 0;">{name}</div>
                     <div style="font-size: 7px; line-height: 1; min-height: 7px;">{badge_content}</div>
                 </div>"""
-                
+
             gk_html = "".join(
                 [make_player_card(k, lineup[k]) for k in lineup if k == "GK"]
             )
@@ -1567,51 +1565,51 @@ elif current_page == "Socials":
                 # Always pad active subs up to a multiple of 4 (max 12 total to fill 3 rows)
                 total_slots = 12 if len(active_subs) > 8 else (8 if len(active_subs) > 4 else 4)
                 padded_subs = active_subs + [""] * (total_slots - len(active_subs))
-                
+
                 # Chunk into rows of 4
                 rows_of_subs = [padded_subs[i:i + 4] for i in range(0, len(padded_subs), 4)]
                 subs_html = ""
-                
+
                 for row_subs in rows_of_subs:
                     row_cards = ""
                     for sub_name in row_subs:
                         # If it's an empty slot, pass an empty string for the name
                         display_name = sub_name if sub_name else ""
                         row_cards += make_player_card("SUB", display_name)
-                        
+
                     subs_html += f'<div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px;">{row_cards}</div>'
             else:
                 subs_html = "<div style='font-size: 8px; color: #666; text-align: center;'>No substitutes listed</div>"
 
             pitch_component = f"""<!DOCTYPE html><html><head><style>
             body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
-            
+
             /* Main container holding the pitch and subs separately */
             .match-center-wrapper {{ display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }}
-            
+
             .pitch-frame {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; box-sizing: border-box; width: 100%; overflow: hidden; }}
-            
+
             /* Dark green pitch styling with field markings */
-            .pitch {{ 
-                background-color: #1b3b22; 
-                padding: 10px 6px 12px 6px; 
-                position: relative; 
-                box-sizing: border-box; 
-                min-height: 500px; 
-                display: flex; 
-                flex-direction: column; 
-                justify-content: space-between; 
+            .pitch {{
+                background-color: #1b3b22;
+                padding: 10px 6px 12px 6px;
+                position: relative;
+                box-sizing: border-box;
+                min-height: 500px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
                 overflow: hidden;
             }}
-            
+
             /* Pitch Markings */
-            .halfway-line {{ 
-                position: absolute; top: 50%; left: 0; right: 0; 
-                border-top: 2px solid rgba(255, 255, 255, 0.25); pointer-events: none; 
+            .halfway-line {{
+                position: absolute; top: 50%; left: 0; right: 0;
+                border-top: 2px solid rgba(255, 255, 255, 0.25); pointer-events: none;
             }}
-            .center-circle {{ 
-                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                width: 70px; height: 70px; border: 2px solid rgba(255, 255, 255, 0.25); border-radius: 50%; pointer-events: none; 
+            .center-circle {{
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                width: 70px; height: 70px; border: 2px solid rgba(255, 255, 255, 0.25); border-radius: 50%; pointer-events: none;
             }}
             .center-spot {{
                 position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -1636,12 +1634,12 @@ elif current_page == "Socials":
 
             /* Rows use space-around, cards have a fixed max-width to future-proof for ~30 characters without stretching */
             .pitch-row {{ display: flex; justify-content: space-around; align-items: center; width: 100%; z-index: 2; margin: 2px 0; }}
-            
+
             /* Player card styling with a controlled width */
             .pitch .player-card {{
-                background: #111; color: white; border: 1px solid #333; border-radius: 4px; 
-                padding: 3px 4px; margin: 1px; text-align: center; 
-                width: 95px; max-width: 25vw; flex: 0 1 auto; box-sizing: border-box; overflow: hidden; 
+                background: #111; color: white; border: 1px solid #333; border-radius: 4px;
+                padding: 3px 4px; margin: 1px; text-align: center;
+                width: 95px; max-width: 25vw; flex: 0 1 auto; box-sizing: border-box; overflow: hidden;
                 display: flex; flex-direction: column; justify-content: space-between;
             }}
 
@@ -1649,8 +1647,8 @@ elif current_page == "Socials":
             .subs-container {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; padding: 6px; box-sizing: border-box; width: 100%; }}
             .subs-row {{ display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px; gap: 2px; }}
             .subs-container .player-card {{
-                background: #111; color: white; border: 1px solid #333; border-radius: 4px; 
-                padding: 3px 2px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden; 
+                background: #111; color: white; border: 1px solid #333; border-radius: 4px;
+                padding: 3px 2px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden;
                 display: flex; flex-direction: column; justify-content: space-between;
             }}
             </style></head>
@@ -1676,7 +1674,7 @@ elif current_page == "Socials":
                         <div class="pitch-row">{gk_html}</div>
                     </div>
                 </div>
-                
+
                 <!-- Substitutes Section Outside the Pitch -->
                 <div class="subs-container">
                     <div style="font-size: 9px; color: #FFB81C; font-weight: bold; margin-bottom: 4px; text-align: center;">SUBSTITUTES</div>
@@ -1724,9 +1722,9 @@ elif current_page == "Community":
 
             # Calculate Appearances from Community_Games
             if not games_df.empty:
-               # Tell it explicitly to only look at Columns K through AD (Indices 10 to 36)
-                player_cols = games_df.columns[10:37] 
-                
+                # Tell it explicitly to only look at Columns K through AD (Indices 10 to 36)
+                player_cols = games_df.columns[10:37]
+
                 for _, row in games_df.iterrows():
                     game_players = set()
                     for col in player_cols:
@@ -1741,7 +1739,7 @@ elif current_page == "Community":
                             game_players.add(val)
                     for p in game_players:
                         player_apps[p] = player_apps.get(p, 0) + 1
-                        
+
             # Calculate Goals and Assists from Community_Goals
             if not goals_df.empty:
                 scorer_col = (
@@ -1969,6 +1967,7 @@ elif current_page == "Community":
                     else:
                         f_table_html += f"<td style='padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;'>{formatted_val}</td>"
                 f_table_html += "</tr>"
+            f_table_html += "</table></div>"
 
             render_html(f_table_html)
 
@@ -2126,15 +2125,15 @@ elif current_page == "Community":
                 c_pos = clean_pos_label(pos_key)
                 g_count = goal_counts.get(name, 0)
                 a_count = assist_counts.get(name, 0)
-                
+
                 icons = []
                 if g_count > 0:
                     icons.append("⚽" * g_count)
                 if a_count > 0:
                     icons.append("🅰️" * a_count)
-                
+
                 badge_content = " ".join(icons) if icons else "&nbsp;"
-                
+
                 # Use fixed width for pitch players, flexible width for subs
                 if pos_key == "SUB":
                     card_style = "background: #111; color: white; border: 1px solid #333; border-radius: 4px; padding: 3px 2px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;"
@@ -2146,7 +2145,7 @@ elif current_page == "Community":
                     <div style="font-size: 8.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.1; margin: 2px 0;">{name}</div>
                     <div style="font-size: 7px; line-height: 1; min-height: 7px;">{badge_content}</div>
                 </div>"""
-                
+
             gk_html = "".join(
                 [make_player_card(k, lineup[k]) for k in lineup if k == "GK"]
             )
@@ -2198,51 +2197,51 @@ elif current_page == "Community":
                 # Always pad active subs up to a multiple of 4 (max 12 total to fill 3 rows)
                 total_slots = 12 if len(active_subs) > 8 else (8 if len(active_subs) > 4 else 4)
                 padded_subs = active_subs + [""] * (total_slots - len(active_subs))
-                
+
                 # Chunk into rows of 4
                 rows_of_subs = [padded_subs[i:i + 4] for i in range(0, len(padded_subs), 4)]
                 subs_html = ""
-                
+
                 for row_subs in rows_of_subs:
                     row_cards = ""
                     for sub_name in row_subs:
                         # If it's an empty slot, pass an empty string for the name
                         display_name = sub_name if sub_name else ""
                         row_cards += make_player_card("SUB", display_name)
-                        
+
                     subs_html += f'<div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px;">{row_cards}</div>'
             else:
                 subs_html = "<div style='font-size: 8px; color: #666; text-align: center;'>No substitutes listed</div>"
 
             pitch_component = f"""<!DOCTYPE html><html><head><style>
             body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
-            
+
             /* Main container holding the pitch and subs separately */
             .match-center-wrapper {{ display: flex; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; }}
-            
+
             .pitch-frame {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; box-sizing: border-box; width: 100%; overflow: hidden; }}
-            
+
             /* Dark green pitch styling with field markings */
-            .pitch {{ 
-                background-color: #1b3b22; 
-                padding: 10px 6px 12px 6px; 
-                position: relative; 
-                box-sizing: border-box; 
-                min-height: 500px; 
-                display: flex; 
-                flex-direction: column; 
-                justify-content: space-between; 
+            .pitch {{
+                background-color: #1b3b22;
+                padding: 10px 6px 12px 6px;
+                position: relative;
+                box-sizing: border-box;
+                min-height: 500px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
                 overflow: hidden;
             }}
-            
+
             /* Pitch Markings */
-            .halfway-line {{ 
-                position: absolute; top: 50%; left: 0; right: 0; 
-                border-top: 2px solid rgba(255, 255, 255, 0.25); pointer-events: none; 
+            .halfway-line {{
+                position: absolute; top: 50%; left: 0; right: 0;
+                border-top: 2px solid rgba(255, 255, 255, 0.25); pointer-events: none;
             }}
-            .center-circle {{ 
-                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                width: 70px; height: 70px; border: 2px solid rgba(255, 255, 255, 0.25); border-radius: 50%; pointer-events: none; 
+            .center-circle {{
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                width: 70px; height: 70px; border: 2px solid rgba(255, 255, 255, 0.25); border-radius: 50%; pointer-events: none;
             }}
             .center-spot {{
                 position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -2267,12 +2266,12 @@ elif current_page == "Community":
 
             /* Rows use space-around, cards have a fixed max-width to future-proof for ~30 characters without stretching */
             .pitch-row {{ display: flex; justify-content: space-around; align-items: center; width: 100%; z-index: 2; margin: 2px 0; }}
-            
+
             /* Player card styling with a controlled width */
             .pitch .player-card {{
-                background: #111; color: white; border: 1px solid #333; border-radius: 4px; 
-                padding: 3px 4px; margin: 1px; text-align: center; 
-                width: 95px; max-width: 25vw; flex: 0 1 auto; box-sizing: border-box; overflow: hidden; 
+                background: #111; color: white; border: 1px solid #333; border-radius: 4px;
+                padding: 3px 4px; margin: 1px; text-align: center;
+                width: 95px; max-width: 25vw; flex: 0 1 auto; box-sizing: border-box; overflow: hidden;
                 display: flex; flex-direction: column; justify-content: space-between;
             }}
 
@@ -2280,8 +2279,8 @@ elif current_page == "Community":
             .subs-container {{ background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; padding: 6px; box-sizing: border-box; width: 100%; }}
             .subs-row {{ display: flex; justify-content: space-between; width: 100%; margin-bottom: 2px; gap: 2px; }}
             .subs-container .player-card {{
-                background: #111; color: white; border: 1px solid #333; border-radius: 4px; 
-                padding: 3px 2px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden; 
+                background: #111; color: white; border: 1px solid #333; border-radius: 4px;
+                padding: 3px 2px; text-align: center; flex: 1 1 0px; min-width: 0; box-sizing: border-box; overflow: hidden;
                 display: flex; flex-direction: column; justify-content: space-between;
             }}
             </style></head>
@@ -2307,7 +2306,7 @@ elif current_page == "Community":
                         <div class="pitch-row">{gk_html}</div>
                     </div>
                 </div>
-                
+
                 <!-- Substitutes Section Outside the Pitch -->
                 <div class="subs-container">
                     <div style="font-size: 9px; color: #FFB81C; font-weight: bold; margin-bottom: 4px; text-align: center;">SUBSTITUTES</div>
@@ -2333,7 +2332,7 @@ elif current_page == "Club":
         try:
             # Define the prefixes for the three sections
             sections = ["Penguins", "Socials", "Community"]
-            
+
             master_apps = {}
             master_goals = {}
             master_assists = {}
@@ -2526,11 +2525,11 @@ elif current_page == "Club":
                             formatted_val = f"{val:.2f}"
                     else:
                         formatted_val = str(val)
-                    
+
                     td_style = "padding: 6px; border-bottom: 1px solid #2A2D35; text-align: center;"
                     if col == "Player":
                         td_style += " white-space: nowrap; text-align: center; font-weight: 500;"
-                        
+
                     table_html += f"<td style='{td_style}'>{formatted_val}</td>"
                 table_html += "</tr>"
             table_html += "</table></div>"
@@ -2542,6 +2541,9 @@ elif current_page == "Club":
 
     elif subtab == "Club Schedule":
         st.info("Full club schedule and event calendar coming soon.")
+
+    elif subtab == "Highlights":
+        render_highlights(load_sheet)
 
 
 # ==========================================
