@@ -1,3 +1,4 @@
+import html as html_lib
 import re
 import textwrap
 import pandas as pd
@@ -23,6 +24,9 @@ VIDEO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main
 SOCIALS_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/SocialsLogo.jpeg"
 WHITE_COMMUNITY_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/WhiteCommunityLogo.jpeg"
 BLACK_COMMUNITY_LOGO_URL = "https://raw.githubusercontent.com/adamlomasnffc/club-stats-app/main/BlackCommunityLogo.jpeg"
+
+# Minimum appearances before a player's Win % is shown (Community has no minimum)
+WIN_PCT_MIN_APPS = {"Penguins": 5, "Socials": 5, "Community": 1, "Club": 5}
 
 st.set_page_config(
     page_title="Derby Penguins App", page_icon=APP_ICON_URL, layout="wide"
@@ -518,7 +522,7 @@ elif current_page == "Penguins":
                 a = player_assists.get(p, 0)
                 gi = g + a
                 motm = player_motm.get(p, 0)
-                win_pct = round(player_wins.get(p, 0) / apps * 100, 1) if apps > 0 else 0.0
+                win_pct = round(player_wins.get(p, 0) / apps * 100, 1) if apps > 0 and apps >= WIN_PCT_MIN_APPS["Penguins"] else float("nan")
                 gpg = round(g / apps, 2) if apps > 0 else 0.0
                 apg = round(a / apps, 2) if apps > 0 else 0.0
                 gipg = round(gi / apps, 2) if apps > 0 else 0.0
@@ -607,6 +611,7 @@ elif current_page == "Penguins":
             st.divider()
 
             st.markdown("### Penguins Player Stats")
+            st.caption("Win % is shown once a player has made 5 or more appearances.")
 
             search_query = st.text_input("🔍 Search Player", "")
             sort_by = st.selectbox(
@@ -806,7 +811,7 @@ elif current_page == "Penguins":
             formation = str(game_data.get("Formation", "4-3-3")).strip()
             st.subheader(f"Match Lineup ({formation})")
 
-            goal_counts, assist_counts = {}, {}
+            goal_counts, assist_counts, goal_events = {}, {}, []
             try:
                 goals_df = load_sheet("Penguins_Goals")
                 match_col = (
@@ -829,6 +834,25 @@ elif current_page == "Penguins":
                             row.get("Goalscorer", row.get("Scorer", ""))
                         ).strip()
                         assist = str(row.get("Assist", "")).strip()
+
+                        # Record each goal in sheet order for the goalscorers box
+                        _s = scorer.lower()
+                        if _s in ["own goal", "og"]:
+                            _scorer_label = "Own goal"
+                        elif _s == "unknown":
+                            _scorer_label = "Unknown scorer"
+                        elif scorer and _s not in ["none", "-", "nan"]:
+                            _scorer_label = scorer
+                        else:
+                            _scorer_label = ""
+                        if _scorer_label:
+                            _assist_label = (
+                                assist
+                                if assist and assist.lower() not in ["none", "-", "unassisted", "nan"]
+                                else ""
+                            )
+                            goal_events.append((_scorer_label, _assist_label))
+
                         if scorer and scorer.lower() not in [
                             "unknown",
                             "none",
@@ -958,6 +982,28 @@ elif current_page == "Penguins":
             else:
                 subs_html = "<div style='font-size: 8px; color: #666; text-align: center;'>No substitutes listed</div>"
 
+            goals_box_html = ""
+            if goal_events:
+                goal_lines = ""
+                for scorer_name, assister_name in goal_events:
+                    assist_txt = (
+                        f" <span style='color: #9CA3AF;'>({html_lib.escape(assister_name)})</span>"
+                        if assister_name
+                        else ""
+                    )
+                    goal_lines += (
+                        f"<div style='font-size: 12px; color: #fff; padding: 3px 0;'>"
+                        f"⚽ {html_lib.escape(scorer_name)}{assist_txt}</div>"
+                    )
+                goals_box_html = (
+                    "<div style='background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; "
+                    "padding: 6px; box-sizing: border-box; width: 100%; text-align: center;'>"
+                    "<div style='font-size: 9px; color: #FFB81C; font-weight: bold; margin-bottom: 4px; "
+                    "text-align: center;'>GOALSCORERS</div>"
+                    f"{goal_lines}</div>"
+                )
+            goals_extra_height = (30 + 22 * len(goal_events)) if goal_events else 0
+
             pitch_component = f"""<!DOCTYPE html><html><head><style>
             body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
 
@@ -1057,10 +1103,11 @@ elif current_page == "Penguins":
                     <div style="font-size: 9px; color: #FFB81C; font-weight: bold; margin-bottom: 4px; text-align: center;">SUBSTITUTES</div>
                     {subs_html}
                 </div>
+                {goals_box_html}
             </div>
             </body></html>"""
 
-            components.html(pitch_component, height=700, scrolling=False)
+            components.html(pitch_component, height=700 + goals_extra_height, scrolling=False)
 
         except Exception as e:
             st.error(f"Error loading Match Center data: {e}")
@@ -1175,7 +1222,7 @@ elif current_page == "Socials":
                 a = player_assists.get(p, 0)
                 gi = g + a
                 motm = player_motm.get(p, 0)
-                win_pct = round(player_wins.get(p, 0) / apps * 100, 1) if apps > 0 else 0.0
+                win_pct = round(player_wins.get(p, 0) / apps * 100, 1) if apps > 0 and apps >= WIN_PCT_MIN_APPS["Socials"] else float("nan")
                 gpg = round(g / apps, 2) if apps > 0 else 0.0
                 apg = round(a / apps, 2) if apps > 0 else 0.0
                 gipg = round(gi / apps, 2) if apps > 0 else 0.0
@@ -1264,6 +1311,7 @@ elif current_page == "Socials":
             st.divider()
 
             st.markdown("### Socials Player Stats")
+            st.caption("Win % is shown once a player has made 5 or more appearances.")
 
             search_query = st.text_input("🔍 Search Player", "")
             sort_by = st.selectbox(
@@ -1463,7 +1511,7 @@ elif current_page == "Socials":
             formation = str(game_data.get("Formation", "4-3-3")).strip()
             st.subheader(f"Match Lineup ({formation})")
 
-            goal_counts, assist_counts = {}, {}
+            goal_counts, assist_counts, goal_events = {}, {}, []
             try:
                 goals_df = load_sheet("Socials_Goals")
                 match_col = (
@@ -1486,6 +1534,25 @@ elif current_page == "Socials":
                             row.get("Goalscorer", row.get("Scorer", ""))
                         ).strip()
                         assist = str(row.get("Assist", "")).strip()
+
+                        # Record each goal in sheet order for the goalscorers box
+                        _s = scorer.lower()
+                        if _s in ["own goal", "og"]:
+                            _scorer_label = "Own goal"
+                        elif _s == "unknown":
+                            _scorer_label = "Unknown scorer"
+                        elif scorer and _s not in ["none", "-", "nan"]:
+                            _scorer_label = scorer
+                        else:
+                            _scorer_label = ""
+                        if _scorer_label:
+                            _assist_label = (
+                                assist
+                                if assist and assist.lower() not in ["none", "-", "unassisted", "nan"]
+                                else ""
+                            )
+                            goal_events.append((_scorer_label, _assist_label))
+
                         if scorer and scorer.lower() not in [
                             "unknown",
                             "none",
@@ -1615,6 +1682,28 @@ elif current_page == "Socials":
             else:
                 subs_html = "<div style='font-size: 8px; color: #666; text-align: center;'>No substitutes listed</div>"
 
+            goals_box_html = ""
+            if goal_events:
+                goal_lines = ""
+                for scorer_name, assister_name in goal_events:
+                    assist_txt = (
+                        f" <span style='color: #9CA3AF;'>({html_lib.escape(assister_name)})</span>"
+                        if assister_name
+                        else ""
+                    )
+                    goal_lines += (
+                        f"<div style='font-size: 12px; color: #fff; padding: 3px 0;'>"
+                        f"⚽ {html_lib.escape(scorer_name)}{assist_txt}</div>"
+                    )
+                goals_box_html = (
+                    "<div style='background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; "
+                    "padding: 6px; box-sizing: border-box; width: 100%; text-align: center;'>"
+                    "<div style='font-size: 9px; color: #FFB81C; font-weight: bold; margin-bottom: 4px; "
+                    "text-align: center;'>GOALSCORERS</div>"
+                    f"{goal_lines}</div>"
+                )
+            goals_extra_height = (30 + 22 * len(goal_events)) if goal_events else 0
+
             pitch_component = f"""<!DOCTYPE html><html><head><style>
             body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
 
@@ -1714,10 +1803,11 @@ elif current_page == "Socials":
                     <div style="font-size: 9px; color: #FFB81C; font-weight: bold; margin-bottom: 4px; text-align: center;">SUBSTITUTES</div>
                     {subs_html}
                 </div>
+                {goals_box_html}
             </div>
             </body></html>"""
 
-            components.html(pitch_component, height=700, scrolling=False)
+            components.html(pitch_component, height=700 + goals_extra_height, scrolling=False)
 
         except Exception as e:
             st.error(f"Error loading Match Center data: {e}")
@@ -1832,7 +1922,7 @@ elif current_page == "Community":
                 a = player_assists.get(p, 0)
                 gi = g + a
                 motm = player_motm.get(p, 0)
-                win_pct = round(player_wins.get(p, 0) / apps * 100, 1) if apps > 0 else 0.0
+                win_pct = round(player_wins.get(p, 0) / apps * 100, 1) if apps > 0 and apps >= WIN_PCT_MIN_APPS["Community"] else float("nan")
                 gpg = round(g / apps, 2) if apps > 0 else 0.0
                 apg = round(a / apps, 2) if apps > 0 else 0.0
                 gipg = round(gi / apps, 2) if apps > 0 else 0.0
@@ -2112,7 +2202,7 @@ elif current_page == "Community":
             formation = str(game_data.get("Formation", "4-3-3")).strip()
             st.subheader(f"Match Lineup ({formation})")
 
-            goal_counts, assist_counts = {}, {}
+            goal_counts, assist_counts, goal_events = {}, {}, []
             try:
                 goals_df = load_sheet("Community_Goals")
                 match_col = (
@@ -2135,6 +2225,25 @@ elif current_page == "Community":
                             row.get("Goalscorer", row.get("Scorer", ""))
                         ).strip()
                         assist = str(row.get("Assist", "")).strip()
+
+                        # Record each goal in sheet order for the goalscorers box
+                        _s = scorer.lower()
+                        if _s in ["own goal", "og"]:
+                            _scorer_label = "Own goal"
+                        elif _s == "unknown":
+                            _scorer_label = "Unknown scorer"
+                        elif scorer and _s not in ["none", "-", "nan"]:
+                            _scorer_label = scorer
+                        else:
+                            _scorer_label = ""
+                        if _scorer_label:
+                            _assist_label = (
+                                assist
+                                if assist and assist.lower() not in ["none", "-", "unassisted", "nan"]
+                                else ""
+                            )
+                            goal_events.append((_scorer_label, _assist_label))
+
                         if scorer and scorer.lower() not in [
                             "unknown",
                             "none",
@@ -2264,6 +2373,28 @@ elif current_page == "Community":
             else:
                 subs_html = "<div style='font-size: 8px; color: #666; text-align: center;'>No substitutes listed</div>"
 
+            goals_box_html = ""
+            if goal_events:
+                goal_lines = ""
+                for scorer_name, assister_name in goal_events:
+                    assist_txt = (
+                        f" <span style='color: #9CA3AF;'>({html_lib.escape(assister_name)})</span>"
+                        if assister_name
+                        else ""
+                    )
+                    goal_lines += (
+                        f"<div style='font-size: 12px; color: #fff; padding: 3px 0;'>"
+                        f"⚽ {html_lib.escape(scorer_name)}{assist_txt}</div>"
+                    )
+                goals_box_html = (
+                    "<div style='background: #181a20; border: 2px solid #FFB81C; border-radius: 8px; "
+                    "padding: 6px; box-sizing: border-box; width: 100%; text-align: center;'>"
+                    "<div style='font-size: 9px; color: #FFB81C; font-weight: bold; margin-bottom: 4px; "
+                    "text-align: center;'>GOALSCORERS</div>"
+                    f"{goal_lines}</div>"
+                )
+            goals_extra_height = (30 + 22 * len(goal_events)) if goal_events else 0
+
             pitch_component = f"""<!DOCTYPE html><html><head><style>
             body {{ margin: 0; font-family: sans-serif; background-color: transparent; }}
 
@@ -2363,10 +2494,11 @@ elif current_page == "Community":
                     <div style="font-size: 9px; color: #FFB81C; font-weight: bold; margin-bottom: 4px; text-align: center;">SUBSTITUTES</div>
                     {subs_html}
                 </div>
+                {goals_box_html}
             </div>
             </body></html>"""
 
-            components.html(pitch_component, height=700, scrolling=False)
+            components.html(pitch_component, height=700 + goals_extra_height, scrolling=False)
 
         except Exception as e:
             st.error(f"Error loading Match Center data: {e}")
@@ -2454,7 +2586,7 @@ elif current_page == "Club":
                 a = master_assists.get(p, 0)
                 gi = g + a
                 motm = master_motm.get(p, 0)
-                win_pct = round(master_wins.get(p, 0) / apps * 100, 1) if apps > 0 else 0.0
+                win_pct = round(master_wins.get(p, 0) / apps * 100, 1) if apps > 0 and apps >= WIN_PCT_MIN_APPS["Club"] else float("nan")
                 gpg = round(g / apps, 2) if apps > 0 else 0.0
                 apg = round(a / apps, 2) if apps > 0 else 0.0
                 gipg = round(gi / apps, 2) if apps > 0 else 0.0
@@ -2545,6 +2677,7 @@ elif current_page == "Club":
             st.divider()
 
             st.markdown("### Combined Club Player Stats")
+            st.caption("Win % is shown once a player has made 5 or more appearances.")
 
             # Search and Sort Controls
             search_query = st.text_input("🔍 Search Player", "")
