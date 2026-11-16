@@ -439,6 +439,8 @@ elif current_page == "Penguins":
             player_apps = {}
             player_goals = {}
             player_assists = {}
+            player_wins = {}
+            player_motm = {}
 
             # Calculate Appearances from Penguins_Games
             if not games_df.empty:
@@ -457,8 +459,15 @@ elif current_page == "Penguins":
                             "unknown",
                         ]:
                             game_players.add(val)
+                    game_outcome = str(row.get("Outcome", "")).strip().upper()
                     for p in game_players:
                         player_apps[p] = player_apps.get(p, 0) + 1
+                        if game_outcome.startswith("W"):
+                            player_wins[p] = player_wins.get(p, 0) + 1
+
+                    motm_name = str(row.get("MOTM", "")).strip() if pd.notnull(row.get("MOTM", None)) else ""
+                    if motm_name and motm_name.lower() not in ["nan", "none", "-", "unknown"]:
+                        player_motm[motm_name] = player_motm.get(motm_name, 0) + 1
 
             # Calculate Goals and Assists from Penguins_Goals
             if not goals_df.empty:
@@ -508,6 +517,8 @@ elif current_page == "Penguins":
                 g = player_goals.get(p, 0)
                 a = player_assists.get(p, 0)
                 gi = g + a
+                motm = player_motm.get(p, 0)
+                win_pct = round(player_wins.get(p, 0) / apps * 100, 1) if apps > 0 else 0.0
                 gpg = round(g / apps, 2) if apps > 0 else 0.0
                 apg = round(a / apps, 2) if apps > 0 else 0.0
                 gipg = round(gi / apps, 2) if apps > 0 else 0.0
@@ -519,6 +530,8 @@ elif current_page == "Penguins":
                         "Goals": g,
                         "Assists": a,
                         "Goal Involvements": gi,
+                        "MOTM": motm,
+                        "Win %": win_pct,
                         "Goals Per Game": gpg,
                         "Assists Per Game": apg,
                         "Goal Involvements Per Game": gipg,
@@ -534,6 +547,8 @@ elif current_page == "Penguins":
                         "Goals",
                         "Assists",
                         "Goal Involvements",
+                        "MOTM",
+                        "Win %",
                         "Goals Per Game",
                         "Assists Per Game",
                         "Goal Involvements Per Game",
@@ -629,6 +644,8 @@ elif current_page == "Penguins":
                     val = row[col]
                     if pd.isnull(val):
                         formatted_val = "-"
+                    elif col == "Win %":
+                        formatted_val = f"{val:.0f}%"
                     elif isinstance(val, (int, float)):
                         if val % 1 == 0:
                             formatted_val = f"{int(val)}"
@@ -1079,6 +1096,8 @@ elif current_page == "Socials":
             player_apps = {}
             player_goals = {}
             player_assists = {}
+            player_wins = {}
+            player_motm = {}
 
             # Calculate Appearances from Socials_Games
             if not games_df.empty:
@@ -1097,8 +1116,15 @@ elif current_page == "Socials":
                             "unknown",
                         ]:
                             game_players.add(val)
+                    game_outcome = str(row.get("Outcome", "")).strip().upper()
                     for p in game_players:
                         player_apps[p] = player_apps.get(p, 0) + 1
+                        if game_outcome.startswith("W"):
+                            player_wins[p] = player_wins.get(p, 0) + 1
+
+                    motm_name = str(row.get("MOTM", "")).strip() if pd.notnull(row.get("MOTM", None)) else ""
+                    if motm_name and motm_name.lower() not in ["nan", "none", "-", "unknown"]:
+                        player_motm[motm_name] = player_motm.get(motm_name, 0) + 1
 
             # Calculate Goals and Assists from Socials_Goals
             if not goals_df.empty:
@@ -1148,6 +1174,8 @@ elif current_page == "Socials":
                 g = player_goals.get(p, 0)
                 a = player_assists.get(p, 0)
                 gi = g + a
+                motm = player_motm.get(p, 0)
+                win_pct = round(player_wins.get(p, 0) / apps * 100, 1) if apps > 0 else 0.0
                 gpg = round(g / apps, 2) if apps > 0 else 0.0
                 apg = round(a / apps, 2) if apps > 0 else 0.0
                 gipg = round(gi / apps, 2) if apps > 0 else 0.0
@@ -1159,6 +1187,8 @@ elif current_page == "Socials":
                         "Goals": g,
                         "Assists": a,
                         "Goal Involvements": gi,
+                        "MOTM": motm,
+                        "Win %": win_pct,
                         "Goals Per Game": gpg,
                         "Assists Per Game": apg,
                         "Goal Involvements Per Game": gipg,
@@ -1174,6 +1204,8 @@ elif current_page == "Socials":
                         "Goals",
                         "Assists",
                         "Goal Involvements",
+                        "MOTM",
+                        "Win %",
                         "Goals Per Game",
                         "Assists Per Game",
                         "Goal Involvements Per Game",
@@ -1269,6 +1301,8 @@ elif current_page == "Socials":
                     val = row[col]
                     if pd.isnull(val):
                         formatted_val = "-"
+                    elif col == "Win %":
+                        formatted_val = f"{val:.0f}%"
                     elif isinstance(val, (int, float)):
                         if val % 1 == 0:
                             formatted_val = f"{int(val)}"
@@ -1719,6 +1753,8 @@ elif current_page == "Community":
             player_apps = {}
             player_goals = {}
             player_assists = {}
+            player_wins = {}
+            player_motm = {}
 
             # Calculate Appearances from Community_Games
             if not games_df.empty:
@@ -1737,8 +1773,15 @@ elif current_page == "Community":
                             "unknown",
                         ]:
                             game_players.add(val)
+                    game_outcome = str(row.get("Outcome", "")).strip().upper()
                     for p in game_players:
                         player_apps[p] = player_apps.get(p, 0) + 1
+                        if game_outcome.startswith("W"):
+                            player_wins[p] = player_wins.get(p, 0) + 1
+
+                    motm_name = str(row.get("MOTM", "")).strip() if pd.notnull(row.get("MOTM", None)) else ""
+                    if motm_name and motm_name.lower() not in ["nan", "none", "-", "unknown"]:
+                        player_motm[motm_name] = player_motm.get(motm_name, 0) + 1
 
             # Calculate Goals and Assists from Community_Goals
             if not goals_df.empty:
@@ -1788,6 +1831,8 @@ elif current_page == "Community":
                 g = player_goals.get(p, 0)
                 a = player_assists.get(p, 0)
                 gi = g + a
+                motm = player_motm.get(p, 0)
+                win_pct = round(player_wins.get(p, 0) / apps * 100, 1) if apps > 0 else 0.0
                 gpg = round(g / apps, 2) if apps > 0 else 0.0
                 apg = round(a / apps, 2) if apps > 0 else 0.0
                 gipg = round(gi / apps, 2) if apps > 0 else 0.0
@@ -1799,6 +1844,8 @@ elif current_page == "Community":
                         "Goals": g,
                         "Assists": a,
                         "Goal Involvements": gi,
+                        "MOTM": motm,
+                        "Win %": win_pct,
                         "Goals Per Game": gpg,
                         "Assists Per Game": apg,
                         "Goal Involvements Per Game": gipg,
@@ -1814,6 +1861,8 @@ elif current_page == "Community":
                         "Goals",
                         "Assists",
                         "Goal Involvements",
+                        "MOTM",
+                        "Win %",
                         "Goals Per Game",
                         "Assists Per Game",
                         "Goal Involvements Per Game",
@@ -1906,6 +1955,8 @@ elif current_page == "Community":
                     val = row[col]
                     if pd.isnull(val):
                         formatted_val = "-"
+                    elif col == "Win %":
+                        formatted_val = f"{val:.0f}%"
                     elif isinstance(val, (int, float)):
                         if val % 1 == 0:
                             formatted_val = f"{int(val)}"
@@ -2336,6 +2387,8 @@ elif current_page == "Club":
             master_apps = {}
             master_goals = {}
             master_assists = {}
+            master_wins = {}
+            master_motm = {}
 
             for prefix in sections:
                 games_df = load_sheet(f"{prefix}_Games")
@@ -2352,8 +2405,15 @@ elif current_page == "Club":
                                 "nan", "none", "", "-", "unknown",
                             ]:
                                 game_players.add(val)
+                        game_outcome = str(row.get("Outcome", "")).strip().upper()
                         for p in game_players:
                             master_apps[p] = master_apps.get(p, 0) + 1
+                            if game_outcome.startswith("W"):
+                                master_wins[p] = master_wins.get(p, 0) + 1
+
+                        motm_name = str(row.get("MOTM", "")).strip() if pd.notnull(row.get("MOTM", None)) else ""
+                        if motm_name and motm_name.lower() not in ["nan", "none", "-", "unknown"]:
+                            master_motm[motm_name] = master_motm.get(motm_name, 0) + 1
 
                 # 2. Calculate Goals and Assists from Goals sheet
                 if goals_df is not None and not goals_df.empty:
@@ -2393,6 +2453,8 @@ elif current_page == "Club":
                 g = master_goals.get(p, 0)
                 a = master_assists.get(p, 0)
                 gi = g + a
+                motm = master_motm.get(p, 0)
+                win_pct = round(master_wins.get(p, 0) / apps * 100, 1) if apps > 0 else 0.0
                 gpg = round(g / apps, 2) if apps > 0 else 0.0
                 apg = round(a / apps, 2) if apps > 0 else 0.0
                 gipg = round(gi / apps, 2) if apps > 0 else 0.0
@@ -2404,6 +2466,8 @@ elif current_page == "Club":
                         "Goals": g,
                         "Assists": a,
                         "Goal Involvements": gi,
+                        "MOTM": motm,
+                        "Win %": win_pct,
                         "Goals Per Game": gpg,
                         "Assists Per Game": apg,
                         "Goal Involvements Per Game": gipg,
@@ -2419,6 +2483,8 @@ elif current_page == "Club":
                         "Goals",
                         "Assists",
                         "Goal Involvements",
+                        "MOTM",
+                        "Win %",
                         "Goals Per Game",
                         "Assists Per Game",
                         "Goal Involvements Per Game",
@@ -2518,6 +2584,8 @@ elif current_page == "Club":
                     val = row[col]
                     if pd.isnull(val):
                         formatted_val = "-"
+                    elif col == "Win %":
+                        formatted_val = f"{val:.0f}%"
                     elif isinstance(val, (int, float)):
                         if val % 1 == 0:
                             formatted_val = f"{int(val)}"
