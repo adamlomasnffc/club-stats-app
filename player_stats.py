@@ -134,6 +134,12 @@ def player_summary(records, name):
         "goals": sum(r["goals"][name] for r in mine),
         "assists": sum(r["assists"][name] for r in mine),
         "motm": sum(r["motm"] == name for r in mine),
+        "hat_tricks": sum(r["goals"][name] >= 3 for r in mine),
+        "braces": sum(r["goals"][name] == 2 for r in mine),
+        "home_goals": sum(r["goals"][name] for r in mine if r["venue"] == "H"),
+        "away_goals": sum(r["goals"][name] for r in mine if r["venue"] == "A"),
+        "home_assists": sum(r["assists"][name] for r in mine if r["venue"] == "H"),
+        "away_assists": sum(r["assists"][name] for r in mine if r["venue"] == "A"),
         "streak_wins": longest_streak(r["outcome"] == "W" for r in played),
         "streak_scored": longest_streak(r["goals"][name] > 0 for r in played),
         "streak_assisted": longest_streak(r["assists"][name] > 0 for r in played),
@@ -156,6 +162,8 @@ def team_summary(records):
     home = [r for r in played if r["venue"] == "H"]
     away = [r for r in played if r["venue"] == "A"]
     scored = [r for r in played if r["gf"] is not None]
+    home_scored = [r for r in scored if r["venue"] == "H"]
+    away_scored = [r for r in scored if r["venue"] == "A"]
     wins, draws, losses = wdl(played)
     gf = sum(r["gf"] for r in scored)
     ga = sum(r["ga"] for r in scored)
@@ -166,6 +174,10 @@ def team_summary(records):
         "streak_losses": longest_streak(r["outcome"] == "L" for r in played),
         "home": wdl(home), "away": wdl(away),
         "gf": gf, "ga": ga, "scored_games": len(scored),
+        "home_gf": sum(r["gf"] for r in home_scored), "home_ga": sum(r["ga"] for r in home_scored),
+        "home_scored_games": len(home_scored),
+        "away_gf": sum(r["gf"] for r in away_scored), "away_ga": sum(r["ga"] for r in away_scored),
+        "away_scored_games": len(away_scored),
         "clean_sheets": sum(r["ga"] == 0 for r in scored),
     }
 
@@ -237,6 +249,11 @@ def render_player_profile(load_sheet, team, name):
         ("🔥 Goal Involvements", str(s["goals"] + s["assists"]), None),
     )
 
+    _metric_pair(
+        ("🎩 Hat Tricks", str(s["hat_tricks"]), None),
+        ("✌️ Braces", str(s["braces"]), None),
+    )
+
     st.markdown("### Best runs")
     st.caption("Counted across the games this player appeared in.")
     _metric_pair(
@@ -254,6 +271,18 @@ def render_player_profile(load_sheet, team, name):
          f"{s['home_wins']} of {s['home_games']} games" if s["home_games"] else None),
         ("🚌 Win % away", _pct(s["away_wins"], s["away_games"]),
          f"{s['away_wins']} of {s['away_games']} games" if s["away_games"] else None),
+    )
+
+    def per_game(total, games):
+        return f"{total / games:.1f} per game" if games else None
+
+    _metric_pair(
+        ("🏠 Home goals", str(s["home_goals"]), per_game(s["home_goals"], s["home_games"])),
+        ("🚌 Away goals", str(s["away_goals"]), per_game(s["away_goals"], s["away_games"])),
+    )
+    _metric_pair(
+        ("🏠 Home assists", str(s["home_assists"]), per_game(s["home_assists"], s["home_games"])),
+        ("🚌 Away assists", str(s["away_assists"]), per_game(s["away_assists"], s["away_games"])),
     )
 
 
@@ -303,6 +332,20 @@ def render_team_stats(load_sheet, team):
             ("⚽ Goals scored", str(t["gf"]), f"{t['gf'] / per_game:.1f} per game"),
             ("🥅 Goals conceded", str(t["ga"]), f"{t['ga'] / per_game:.1f} per game"),
         )
+
+        def avg(total, games):
+            return f"{total / games:.1f} per game" if games else None
+
+        hg, ag = t["home_scored_games"], t["away_scored_games"]
+        _metric_pair(
+            ("🏠 Home goals scored", str(t["home_gf"]), avg(t["home_gf"], hg)),
+            ("🏠 Home goals conceded", str(t["home_ga"]), avg(t["home_ga"], hg)),
+        )
+        _metric_pair(
+            ("🚌 Away goals scored", str(t["away_gf"]), avg(t["away_gf"], ag)),
+            ("🚌 Away goals conceded", str(t["away_ga"]), avg(t["away_ga"], ag)),
+        )
+
         diff = t["gf"] - t["ga"]
         _metric_pair(
             ("➕ Goal difference", f"{diff:+d}", None),
