@@ -286,7 +286,9 @@ def load_mffl_table(url="https://mffl.co.uk/leagues/champ-east/"):
     headers = {"User-Agent": "Mozilla/5.0"}
     resp = requests.get(url, headers=headers, timeout=10)
     resp.raise_for_status()
-    tables = pd.read_html(StringIO(resp.text))
+    
+    # Explicitly using flavor='lxml' avoids looking for html5lib entirely
+    tables = pd.read_html(StringIO(resp.text), flavor='lxml')
     if not tables:
         return pd.DataFrame()
     df = tables[0]
