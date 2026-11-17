@@ -3,4 +3,5 @@ pandas
 st-gsheets-connection
 requests
 lxml
+html5lib
 beautifulsoup4
