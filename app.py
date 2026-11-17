@@ -243,6 +243,17 @@ div.stButton > button[kind="secondary"]:hover {{
     margin-top: 10px;
     margin-bottom: 20px;
 }}
+
+/* BIGGER TEXT ON DESKTOP / LAPTOP SCREENS (phones are unchanged) */
+@media (min-width: 900px) {{
+    html {{
+        font-size: 112.5% !important;
+    }}
+    .mobile-table-container th,
+    .mobile-table-container td {{
+        font-size: 14px !important;
+    }}
+}}
 </style>
 """
 render_html(style_html)
